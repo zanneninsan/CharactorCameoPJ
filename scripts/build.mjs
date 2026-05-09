@@ -43,6 +43,7 @@ async function build() {
       await mkdir(characterDir, { recursive: true });
       await mkdir(promptDir, { recursive: true });
       await copyCharacterAssets(character, characterDir);
+      await generateBrandAssets(character, characterDir);
       await generateVisualReferenceAssets(character, characterDir);
       await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
       await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
@@ -66,6 +67,142 @@ async function copyCharacterAssets(character, characterDir) {
   }
 
   await cp(assetsDir, path.join(characterDir, "assets"), { recursive: true });
+}
+
+async function generateBrandAssets(character, characterDir) {
+  const logo = character.brandAssets?.logo;
+  const banner = character.brandAssets?.banner;
+  if (!logo?.source && !banner?.source) {
+    return;
+  }
+
+  const outputDir = path.join(characterDir, "assets", "generated", "brand");
+  await mkdir(outputDir, { recursive: true });
+
+  let logoBuffer = null;
+  let bannerLogoBuffer = null;
+
+  if (logo?.source) {
+    const logoSource = path.join(contentDir, character.id, logo.source);
+    logoBuffer = await createTransparentLogoBuffer(logoSource);
+    bannerLogoBuffer = logoBuffer;
+
+    for (const width of [320, 640, 1024]) {
+      await sharp(logoBuffer)
+        .resize({ width, withoutEnlargement: true })
+        .webp({ quality: 88, alphaQuality: 95 })
+        .toFile(path.join(outputDir, `logo-${width}.webp`));
+    }
+  }
+
+  if (banner?.source) {
+    const bannerSource = path.join(contentDir, character.id, banner.source);
+    const sourceMeta = await sharp(bannerSource).metadata();
+    const sourceWidth = sourceMeta.width ?? 1800;
+    const bannerWidth = Math.min(1800, sourceWidth);
+    const bannerImage = sharp(bannerSource).resize({ width: bannerWidth, withoutEnlargement: true });
+    const scale = bannerWidth / sourceWidth;
+    const placement = banner.logoPlacement ?? {};
+    const logoWidth = Math.round((placement.width ?? 650) * scale);
+    const logoLeft = Math.round((placement.left ?? 140) * scale);
+
+    const composites = [];
+    if (bannerLogoBuffer) {
+      const resizedBannerLogo = await sharp(bannerLogoBuffer)
+        .resize({ width: logoWidth, withoutEnlargement: true })
+        .png()
+        .toBuffer();
+      const resizedLogoMeta = await sharp(resizedBannerLogo).metadata();
+      const bannerHeight = Math.round((sourceMeta.height ?? 724) * scale);
+      const logoTop = Math.max(0, Math.round((bannerHeight - (resizedLogoMeta.height ?? 0)) / 2));
+      const logoOutline = await createSolidLogoBuffer(resizedBannerLogo, { red: 255, green: 255, blue: 255 }, 0.88);
+
+      composites.push({
+        input: await sharp(await createSolidLogoBuffer(resizedBannerLogo, { red: 0, green: 0, blue: 0 }, 0.82)).blur(10).png().toBuffer(),
+        left: logoLeft,
+        top: logoTop,
+        opacity: 0.54
+      });
+      for (const [offsetX, offsetY] of [
+        [-3, 0],
+        [3, 0],
+        [0, -3],
+        [0, 3],
+        [-2, -2],
+        [2, -2],
+        [-2, 2],
+        [2, 2]
+      ]) {
+        composites.push({
+          input: logoOutline,
+          left: logoLeft + offsetX,
+          top: logoTop + offsetY
+        });
+      }
+      composites.push({
+        input: resizedBannerLogo,
+        left: logoLeft,
+        top: logoTop
+      });
+    }
+
+    await bannerImage
+      .composite(composites)
+      .webp({ quality: 80 })
+      .toFile(path.join(outputDir, "banner-logo.webp"));
+  }
+}
+
+async function createTransparentLogoBuffer(sourcePath) {
+  const image = sharp(sourcePath)
+    .trim({ background: "#ffffff", threshold: 24 })
+    .ensureAlpha();
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+
+  for (let index = 0; index < data.length; index += 4) {
+    const red = data[index];
+    const green = data[index + 1];
+    const blue = data[index + 2];
+    const nearWhite = red > 238 && green > 238 && blue > 238;
+    if (nearWhite) {
+      data[index + 3] = 0;
+    }
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4
+    }
+  })
+    .trim({ background: { r: 255, g: 255, b: 255, alpha: 0 }, threshold: 8 })
+    .png()
+    .toBuffer();
+}
+
+async function createSolidLogoBuffer(inputBuffer, color, alphaScale = 1) {
+  const { data, info } = await sharp(inputBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let index = 0; index < data.length; index += 4) {
+    data[index] = color.red;
+    data[index + 1] = color.green;
+    data[index + 2] = color.blue;
+    data[index + 3] = Math.round(data[index + 3] * alphaScale);
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4
+    }
+  })
+    .png()
+    .toBuffer();
 }
 
 async function generateVisualReferenceAssets(character, characterDir) {
@@ -173,6 +310,7 @@ function renderCharacter(character) {
     body: `
       <main>
         <section class="character-hero">
+          ${renderBrandBanner(character)}
           <div class="shell">
             <a class="back-link" href="../">公式設定アーカイブ</a>
             <p class="eyebrow">✨ Official Profile</p>
@@ -250,6 +388,19 @@ function renderCharacter(character) {
   });
 }
 
+function renderBrandBanner(character) {
+  if (!character.brandAssets?.banner?.source) {
+    return "";
+  }
+
+  const alt = character.brandAssets.banner.alt ?? `${character.displayName} バナー`;
+  return `
+    <div class="brand-banner-shell" id="top">
+      <img class="brand-banner" src="./assets/generated/brand/banner-logo.webp" alt="${escapeHtml(alt)}">
+    </div>
+  `;
+}
+
 function renderHeroFacts(character) {
   const keys = ["年齢", "身長", "好きな食べ物", "チャームポイント"];
   const facts = keys
@@ -296,8 +447,11 @@ function renderPageMenu(character) {
 
   return `
     <nav class="page-menu" aria-label="ページ内メニュー">
-      <div class="shell page-menu-scroll">
-        ${visibleItems.map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`).join("")}
+      <div class="shell page-menu-inner">
+        <span class="page-menu-label">MENU</span>
+        <div class="page-menu-scroll">
+          ${visibleItems.map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`).join("")}
+        </div>
       </div>
     </nav>
   `;
@@ -737,6 +891,24 @@ a {
   box-shadow: 0 18px 42px rgba(21, 18, 23, 0.12);
 }
 
+.brand-banner-shell {
+  position: relative;
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto 18px;
+}
+
+.brand-banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 62%, #000000);
+  border-radius: 8px;
+  background: var(--theme-primary);
+  box-shadow: 0 18px 46px rgba(21, 18, 23, 0.24);
+}
+
 .eyebrow,
 .status {
   margin: 0 0 10px;
@@ -829,12 +1001,32 @@ h3 {
   backdrop-filter: blur(12px);
 }
 
+.page-menu-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.page-menu-label {
+  display: inline-flex;
+  min-height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: var(--theme-primary);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .page-menu-scroll {
   display: flex;
   gap: 8px;
+  min-width: 0;
   overflow-x: auto;
-  padding-top: 10px;
-  padding-bottom: 10px;
   scrollbar-width: none;
 }
 
@@ -1180,6 +1372,16 @@ time {
     padding: 16px 14px 18px;
   }
 
+  .brand-banner-shell {
+    width: min(100% - 18px, 1120px);
+    margin-bottom: 12px;
+  }
+
+  .brand-banner {
+    aspect-ratio: 3 / 1;
+    border-radius: 6px;
+  }
+
   h1 {
     font-size: clamp(2.2rem, 13vw, 3.6rem);
     line-height: 1.06;
@@ -1215,10 +1417,20 @@ time {
     top: 0;
   }
 
-  .page-menu-scroll {
+  .page-menu-inner {
     width: 100%;
     padding-left: 10px;
     padding-right: 10px;
+    gap: 8px;
+  }
+
+  .page-menu-label {
+    min-height: 38px;
+    padding: 8px 12px;
+  }
+
+  .page-menu-scroll {
+    flex: 1 1 auto;
   }
 
   .page-menu a {

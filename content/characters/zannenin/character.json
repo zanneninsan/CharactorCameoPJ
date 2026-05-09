@@ -12,6 +12,21 @@
     "text": "#1f1a12",
     "muted": "#756b5e"
   },
+  "brandAssets": {
+    "logo": {
+      "source": "assets/brand/logo-source.png",
+      "alt": "残念院さん ロゴ"
+    },
+    "banner": {
+      "source": "assets/brand/banner-source.png",
+      "alt": "残念院さん キービジュアルバナー",
+      "logoPlacement": {
+        "left": 150,
+        "top": 248,
+        "width": 780
+      }
+    }
+  },
   "profile": {
     "呼称": "残念院さん",
     "名前形式": "苗字・名前に分割しない呼称",

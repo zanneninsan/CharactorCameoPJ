@@ -20,6 +20,35 @@
         "muted": { "type": "string" }
       }
     },
+    "brandAssets": {
+      "type": "object",
+      "properties": {
+        "logo": {
+          "type": "object",
+          "required": ["source"],
+          "properties": {
+            "source": { "type": "string" },
+            "alt": { "type": "string" }
+          }
+        },
+        "banner": {
+          "type": "object",
+          "required": ["source"],
+          "properties": {
+            "source": { "type": "string" },
+            "alt": { "type": "string" },
+            "logoPlacement": {
+              "type": "object",
+              "properties": {
+                "left": { "type": "number" },
+                "top": { "type": "number" },
+                "width": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
     "profile": {
       "type": "object",
       "additionalProperties": { "type": "string" }
