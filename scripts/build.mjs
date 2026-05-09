@@ -855,7 +855,10 @@ function renderSourceCallout({ eyebrow, title, description, links, panel = false
       </div>
       <div class="source-links">
         ${links.map((link) => `
-          <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
+          <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">
+            ${renderLinkIcon(link)}
+            ${escapeHtml(link.label)}
+          </a>
         `).join("")}
       </div>
     </section>
@@ -2099,14 +2102,27 @@ h3 {
   min-height: 38px;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   border: 1px solid var(--theme-primary);
   border-radius: 999px;
-  padding: 8px 13px;
+  padding: 7px 13px 7px 9px;
   background: var(--theme-primary);
   color: #ffffff;
   font-size: 0.88rem;
   font-weight: 900;
   text-decoration: none;
+}
+
+.source-links .link-icon {
+  grid-row: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.source-links .link-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .source-links a:hover,
@@ -2214,6 +2230,14 @@ h3 {
 
 .link-icon-googleDrive {
   background: #1a73e8;
+}
+
+.link-icon-github {
+  background: #24292f;
+}
+
+.link-icon-json {
+  background: #7c3aed;
 }
 
 .link-icon-x {
@@ -3136,6 +3160,8 @@ function renderLinkIcon(link) {
     tiktok: '<path d="M13.5 5v9.2a3.4 3.4 0 1 1-3-3.4" /><path d="M13.5 5c.8 2.3 2.3 3.7 4.8 4.1" />',
     discord: '<path d="M7.5 8.5c3-1.5 6-1.5 9 0l1.1 7.2c-3.5 2.2-7.7 2.2-11.2 0z" /><circle cx="10" cy="12.3" r="0.8" fill="currentColor" stroke="none" /><circle cx="14" cy="12.3" r="0.8" fill="currentColor" stroke="none" />',
     googleDrive: '<path d="M8.4 4.5h7.2l5.4 9.4h-7.2z" /><path d="M8.4 4.5 3 13.9l3.6 6.2 5.4-9.4z" /><path d="M6.6 20.1h10.8l3.6-6.2H10.2z" />',
+    github: '<path d="M9 19c-4 1.2-4-2-5.5-2.5" /><path d="M15 22v-3.6a3.1 3.1 0 0 0-.9-2.4c3-.3 6.1-1.5 6.1-6.6a5.1 5.1 0 0 0-1.4-3.6 4.7 4.7 0 0 0-.1-3.5s-1.1-.4-3.7 1.4a12.8 12.8 0 0 0-6.8 0C5.6 1.9 4.5 2.3 4.5 2.3a4.7 4.7 0 0 0-.1 3.5A5.1 5.1 0 0 0 3 9.4c0 5.1 3.1 6.3 6.1 6.6a3.1 3.1 0 0 0-.9 2.4V22" />',
+    json: '<path d="M8 8c-1.4 0-2 .7-2 2v.8c0 .8-.4 1.2-1.2 1.2.8 0 1.2.4 1.2 1.2v.8c0 1.3.6 2 2 2" /><path d="M16 8c1.4 0 2 .7 2 2v.8c0 .8.4 1.2 1.2 1.2-.8 0-1.2.4-1.2 1.2v.8c0 1.3-.6 2-2 2" /><path d="M10 14l4-4" />',
     link: '<path d="M10 13a5 5 0 0 0 7.1 0l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8" /><path d="M14 11a5 5 0 0 0-7.1 0l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8" />'
   };
 
@@ -3149,10 +3175,16 @@ function renderLinkIcon(link) {
 }
 
 function detectLinkBrand(link) {
-  const raw = `${link.label ?? ""} ${link.url ?? ""}`.toLowerCase();
+  const raw = `${link.label ?? ""} ${link.url ?? ""} ${link.href ?? ""}`.toLowerCase();
 
   if (raw.includes("x.com") || raw.includes("twitter.com") || raw.includes("x ")) {
     return { key: "x", label: "X" };
+  }
+  if (raw.includes(".json") || raw.includes("json")) {
+    return { key: "json", label: "JSON" };
+  }
+  if (raw.includes("github.com") || raw.includes("github")) {
+    return { key: "github", label: "GitHub" };
   }
   if (raw.includes("youtube.com") || raw.includes("youtu.be") || raw.includes("youtube")) {
     return { key: "youtube", label: "YouTube" };
