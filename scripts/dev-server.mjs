@@ -13,6 +13,7 @@ const watchDirs = [
   path.join(rootDir, "scripts")
 ];
 const requestedPort = Number(process.env.PORT ?? 4173);
+const buildDebounceMs = Number(process.env.BUILD_DEBOUNCE_MS ?? 2500);
 const clients = new Set();
 let buildTimer;
 let isBuilding = false;
@@ -27,6 +28,7 @@ console.log(`Character Cameo dev server`);
 console.log(`Local: http://127.0.0.1:${port}/`);
 console.log(`Zannenin: http://127.0.0.1:${port}/zannenin/`);
 console.log(`Watching content/, schemas/, scripts/`);
+console.log(`Build debounce: ${buildDebounceMs}ms`);
 
 async function listenWithFallback(startPort) {
   for (let port = startPort; port < startPort + 20; port += 1) {
@@ -161,7 +163,7 @@ function scheduleBuild() {
       needsBuild = false;
       scheduleBuild();
     }
-  }, 150);
+  }, buildDebounceMs);
 }
 
 async function runBuild({ allowFailure = false } = {}) {

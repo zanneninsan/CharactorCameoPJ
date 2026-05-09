@@ -6,6 +6,7 @@ import sharp from "sharp";
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = path.join(rootDir, "content", "characters");
 const distDir = path.join(rootDir, "dist");
+const buildLockDir = path.join(rootDir, ".build-lock");
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
 const sectionLabels = {
@@ -41,35 +42,70 @@ async function build() {
   const characters = await loadCharacters();
 
   if (!isCheck) {
-    await rm(distDir, { recursive: true, force: true });
-    await mkdir(distDir, { recursive: true });
-    await mkdir(path.join(distDir, "prompts"), { recursive: true });
+    const releaseBuildLock = await acquireBuildLock();
+    try {
+      await rm(distDir, { recursive: true, force: true });
+      await mkdir(distDir, { recursive: true });
+      await mkdir(path.join(distDir, "prompts"), { recursive: true });
 
-    await writeFile(path.join(distDir, "index.html"), renderIndex(characters), "utf8");
-    await writeFile(path.join(distDir, "styles.css"), renderCss(), "utf8");
+      await writeFile(path.join(distDir, "index.html"), renderIndex(characters), "utf8");
+      await writeFile(path.join(distDir, "styles.css"), renderCss(), "utf8");
 
-    for (const character of characters) {
-      const characterDir = path.join(distDir, character.id);
-      const promptDir = path.join(distDir, "prompts", character.id);
-      await mkdir(characterDir, { recursive: true });
-      await mkdir(promptDir, { recursive: true });
-      await copyCharacterAssets(character, characterDir);
-      await generateBrandAssets(character, characterDir);
-      await generateVisualReferenceAssets(character, characterDir);
-      await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
-      if (character.fanworkGuidelines) {
-        await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
+      for (const character of characters) {
+        const characterDir = path.join(distDir, character.id);
+        const promptDir = path.join(distDir, "prompts", character.id);
+        await mkdir(characterDir, { recursive: true });
+        await mkdir(promptDir, { recursive: true });
+        await copyCharacterAssets(character, characterDir);
+        await generateBrandAssets(character, characterDir);
+        await generateVisualReferenceAssets(character, characterDir);
+        await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
+        if (character.fanworkGuidelines) {
+          await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
+        }
+        await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
+        await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
+        await writeFile(path.join(promptDir, "image-default.md"), renderImagePrompt(character, { outfitMode: "default" }), "utf8");
+        await writeFile(path.join(promptDir, "video-default.md"), renderVideoPrompt(character, { outfitMode: "default" }), "utf8");
+        await writeFile(path.join(promptDir, "image-outfit-change.md"), renderImagePrompt(character, { outfitMode: "outfit-change" }), "utf8");
+        await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
       }
-      await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
-      await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
-      await writeFile(path.join(promptDir, "image-default.md"), renderImagePrompt(character, { outfitMode: "default" }), "utf8");
-      await writeFile(path.join(promptDir, "video-default.md"), renderVideoPrompt(character, { outfitMode: "default" }), "utf8");
-      await writeFile(path.join(promptDir, "image-outfit-change.md"), renderImagePrompt(character, { outfitMode: "outfit-change" }), "utf8");
-      await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
+    } finally {
+      await releaseBuildLock();
     }
   }
 
   console.log(`Loaded ${characters.length} character(s).`);
+}
+
+async function acquireBuildLock() {
+  const staleAfterMs = 10 * 60 * 1000;
+
+  while (true) {
+    try {
+      await mkdir(buildLockDir);
+      await writeFile(path.join(buildLockDir, "pid"), `${process.pid}\n${Date.now()}\n`, "utf8");
+      return async () => {
+        await rm(buildLockDir, { recursive: true, force: true });
+      };
+    } catch (error) {
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
+
+      const lockStat = await stat(buildLockDir).catch(() => null);
+      if (lockStat && Date.now() - lockStat.mtimeMs > staleAfterMs) {
+        await rm(buildLockDir, { recursive: true, force: true });
+        continue;
+      }
+
+      await sleep(500);
+    }
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function copyCharacterAssets(character, characterDir) {
@@ -585,23 +621,29 @@ function renderVisualReferences(character) {
         </div>
       ` : ""}
       ${driveReferences.length > 0 ? `
-        <details class="visual-archive">
-          <summary>
+        <div class="visual-archive" data-progressive-gallery data-initial="8" data-mobile-initial="2" data-step="8" data-mobile-step="4">
+          <div class="visual-archive-header">
             <span>Google Drive資料集</span>
-            <small>${driveReferences.length}件の追加資料を表示</small>
-          </summary>
-          <div class="visual-grid">
-            ${driveReferences.map((item) => renderVisualReferenceCard(item)).join("")}
+            <small>公式資料集から取り込んだ追加資料 ${driveReferences.length}件</small>
           </div>
-        </details>
+          <div class="visual-grid">
+            ${driveReferences.map((item, index) => renderVisualReferenceCard(item, { hidden: index >= 2 })).join("")}
+          </div>
+          ${driveReferences.length > 8 ? `
+            <button class="visual-more" type="button" data-gallery-more>
+              もっと表示
+              <span data-gallery-count>2 / ${driveReferences.length}</span>
+            </button>
+          ` : ""}
+        </div>
       ` : ""}
     </section>
   `;
 }
 
-function renderVisualReferenceCard(item) {
+function renderVisualReferenceCard(item, { hidden = false } = {}) {
   return `
-    <figure class="visual-card">
+    <figure class="visual-card"${hidden ? " hidden" : ""}>
       <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
         <img src="./${escapeHtml(visualReferenceThumbPath(item.path))}" alt="${escapeHtml(item.label)}" loading="lazy">
         <span>タップで拡大</span>
@@ -952,8 +994,105 @@ function htmlPage({ title, body, theme }) {
   </head>
   <body${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
+    ${renderClientScript()}
   </body>
 </html>`;
+}
+
+function renderClientScript() {
+  return `
+<script>
+(() => {
+  const pageMenu = document.querySelector(".page-menu");
+  const menuLinks = Array.from(document.querySelectorAll(".page-menu a[href^='#']"));
+  const sections = menuLinks
+    .map((link) => document.getElementById(link.getAttribute("href").slice(1)))
+    .filter(Boolean);
+
+  if (pageMenu && menuLinks.length && sections.length) {
+    let activeId = "";
+    let ticking = false;
+
+    const setActive = (id, shouldScrollMenu = true) => {
+      if (!id || id === activeId) return;
+      activeId = id;
+      for (const link of menuLinks) {
+        const active = link.getAttribute("href") === "#" + id;
+        link.classList.toggle("is-active", active);
+        if (active) {
+          link.setAttribute("aria-current", "true");
+          if (shouldScrollMenu) {
+            link.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+          }
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      }
+    };
+
+    const updateActiveSection = () => {
+      ticking = false;
+      const offset = pageMenu.offsetHeight + 28;
+      let currentId = sections[0].id;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top - offset <= 0) {
+          currentId = section.id;
+        } else {
+          break;
+        }
+      }
+      setActive(currentId);
+    };
+
+    const requestUpdate = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(updateActiveSection);
+    };
+
+    for (const link of menuLinks) {
+      link.addEventListener("click", () => {
+        setActive(link.getAttribute("href").slice(1), false);
+      });
+    }
+
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+    window.addEventListener("hashchange", requestUpdate);
+    updateActiveSection();
+  }
+
+  for (const gallery of document.querySelectorAll("[data-progressive-gallery]")) {
+    const mobile = window.matchMedia("(max-width: 760px)").matches;
+    const initial = Number(gallery.dataset[mobile ? "mobileInitial" : "initial"] || 8);
+    const step = Number(gallery.dataset[mobile ? "mobileStep" : "step"] || 8);
+    const cards = Array.from(gallery.querySelectorAll(".visual-card"));
+    const button = gallery.querySelector("[data-gallery-more]");
+    const count = gallery.querySelector("[data-gallery-count]");
+    if (!button) continue;
+
+    cards.forEach((card, index) => {
+      card.hidden = index >= initial;
+    });
+
+    const update = () => {
+      const visible = cards.filter((card) => !card.hidden).length;
+      if (count) count.textContent = visible + " / " + cards.length;
+      if (visible >= cards.length) button.remove();
+    };
+
+    button.addEventListener("click", () => {
+      const hiddenCards = cards.filter((card) => card.hidden).slice(0, step);
+      for (const card of hiddenCards) {
+        card.hidden = false;
+      }
+      update();
+    });
+
+    update();
+  }
+})();
+</script>`;
 }
 
 function renderThemeStyle(theme) {
@@ -1180,7 +1319,6 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  max-width: 880px;
   margin-top: 22px;
 }
 
@@ -1196,6 +1334,7 @@ h3 {
   box-shadow: 0 8px 18px rgba(138, 100, 18, 0.12);
   color: var(--ink);
   font-size: 0.92rem;
+  white-space: nowrap;
 }
 
 .hero-facts strong {
@@ -1263,10 +1402,17 @@ h3 {
 }
 
 .page-menu a:hover,
-.page-menu a:focus-visible {
+.page-menu a:focus-visible,
+.page-menu a.is-active,
+.page-menu a[aria-current="true"] {
   border-color: var(--theme-secondary);
   background: var(--theme-primary);
   color: #ffffff;
+}
+
+.page-menu a.is-active,
+.page-menu a[aria-current="true"] {
+  box-shadow: 0 10px 20px rgba(21, 18, 23, 0.18);
 }
 
 .section {
@@ -1277,6 +1423,7 @@ h3 {
 .content-layout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 18px;
 }
 
@@ -1358,7 +1505,8 @@ h3 {
 
 .link-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  justify-content: center;
   gap: 12px;
 }
 
@@ -1489,10 +1637,9 @@ h3 {
   overflow: hidden;
 }
 
-.visual-archive summary {
+.visual-archive-header {
   display: flex;
   min-height: 58px;
-  cursor: pointer;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -1501,11 +1648,7 @@ h3 {
   font-weight: 900;
 }
 
-.visual-archive summary::marker {
-  color: var(--theme-secondary);
-}
-
-.visual-archive summary small {
+.visual-archive-header small {
   color: var(--theme-muted);
   font-weight: 800;
 }
@@ -1514,6 +1657,32 @@ h3 {
   padding: 16px;
   border-top: 1px solid color-mix(in srgb, var(--theme-secondary) 28%, var(--line));
   background: #ffffff;
+}
+
+.visual-more {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--theme-secondary) 28%, var(--line));
+  background: var(--theme-primary);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+}
+
+.visual-more:hover,
+.visual-more:focus-visible {
+  background: color-mix(in srgb, var(--theme-primary) 84%, var(--theme-secondary));
+}
+
+.visual-more span {
+  color: #f8dda0;
+  font-size: 0.86rem;
 }
 
 .visual-card {
@@ -1700,6 +1869,7 @@ time {
     width: min(1560px, calc(100% - 96px));
     grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-auto-flow: dense;
+    align-items: start;
     gap: 22px;
   }
 
@@ -1714,9 +1884,13 @@ time {
 
   .content-layout:not(.guideline-layout) #visual {
     grid-column: 1 / span 7;
+    grid-row: span 2;
   }
 
-  .content-layout:not(.guideline-layout) #fanworks,
+  .content-layout:not(.guideline-layout) #fanworks {
+    grid-column: 8 / -1;
+  }
+
   .content-layout:not(.guideline-layout) #prompts {
     grid-column: 8 / -1;
   }
@@ -1731,8 +1905,16 @@ time {
     grid-column: span 8;
   }
 
-  .link-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .content-layout:not(.guideline-layout) #profile {
+    grid-column: 1 / span 4;
+  }
+
+  .content-layout:not(.guideline-layout) #glossary {
+    grid-column: 5 / span 4;
+  }
+
+  .content-layout:not(.guideline-layout) #side-flavors {
+    grid-column: 9 / span 4;
   }
 }
 
@@ -1790,6 +1972,7 @@ time {
     width: 100%;
     justify-content: space-between;
     border-radius: 8px;
+    white-space: normal;
   }
 
   .page-menu {
@@ -1915,7 +2098,7 @@ time {
     border-radius: 0;
   }
 
-  .visual-archive summary {
+  .visual-archive-header {
     padding-left: 16px;
     padding-right: 16px;
   }
