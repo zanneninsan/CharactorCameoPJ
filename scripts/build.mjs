@@ -509,16 +509,6 @@ function renderCharacter(character) {
         </section>
         ${renderPageMenu(character)}
         <div class="shell content-layout">
-          ${renderSourceCallout({
-            eyebrow: "Source",
-            title: "このサイトのソース",
-            description: `${character.displayName} の公式設定データは GitHub 上の JSON で管理しています。追記・修正の協力や、設定追加の提案を歓迎します。`,
-            links: [
-              { label: "このキャラの設定JSON", href: sourceFileUrl(`content/characters/${character.id}/character.json`) },
-              { label: "GitHubリポジトリ", href: sourceRepoUrl }
-            ],
-            panel: true
-          })}
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
           ${renderFanworkGuidelinesCard(character)}
@@ -568,6 +558,16 @@ function renderCharacter(character) {
             ${renderSectionHeading("timeline")}
             ${renderTimelineGroups(character.timeline)}
           </section>
+          ${renderSourceCallout({
+            eyebrow: "Source",
+            title: "このサイトのソース",
+            description: `${character.displayName} の公式設定データは GitHub 上の JSON で管理しています。追記・修正の協力や、設定追加の提案を歓迎します。`,
+            links: [
+              { label: "このキャラの設定JSON", href: sourceFileUrl(`content/characters/${character.id}/character.json`) },
+              { label: "GitHubリポジトリ", href: sourceRepoUrl }
+            ],
+            panel: true
+          })}
         </div>
       </main>
     `
