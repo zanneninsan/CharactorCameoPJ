@@ -77,6 +77,7 @@ dist/
 `character.json` は次の考え方で分ける。
 
 - `profile`: 年齢、身長体重、好きな食べ物などのプロフィール
+- `theme`: Webページのデザインに使うイメージカラー。キャラクターごとに配色を変える
 - `links`: SNSアカウントなど、Litlink的に表示するソーシャルリンク
 - `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL
 - `glossary`: 用語集

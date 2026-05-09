@@ -152,8 +152,10 @@ function scheduleBuild() {
       return;
     }
 
-    await runBuild();
-    broadcastReload();
+    const built = await runBuild({ allowFailure: true });
+    if (built) {
+      broadcastReload();
+    }
 
     if (needsBuild) {
       needsBuild = false;
@@ -162,7 +164,7 @@ function scheduleBuild() {
   }, 150);
 }
 
-async function runBuild() {
+async function runBuild({ allowFailure = false } = {}) {
   isBuilding = true;
   try {
     await new Promise((resolve, reject) => {
@@ -176,6 +178,13 @@ async function runBuild() {
       });
       child.on("error", reject);
     });
+    return true;
+  } catch (error) {
+    console.error(error);
+    if (!allowFailure) {
+      throw error;
+    }
+    return false;
   } finally {
     isBuilding = false;
   }

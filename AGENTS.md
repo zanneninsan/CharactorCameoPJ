@@ -79,6 +79,7 @@ Critical rule: missing character information must remain undefined.
 `character.json` の主な領域:
 
 - `profile`: 年齢、身長体重、好きな食べ物、一人称など
+- `theme`: Webページのデザインに使うイメージカラー。`primary`, `secondary`, `accent`, `paper`, `panel`, `text`, `muted` を指定できる
 - `likes`: 好きなものの簡易リスト
 - `links`: SNSアカウントなど、Webサイトに表示するソーシャルリンク
 - `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL

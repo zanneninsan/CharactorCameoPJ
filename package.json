@@ -7,5 +7,8 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/build.mjs --check"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }

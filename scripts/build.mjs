@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = path.join(rootDir, "content", "characters");
@@ -42,6 +43,7 @@ async function build() {
       await mkdir(characterDir, { recursive: true });
       await mkdir(promptDir, { recursive: true });
       await copyCharacterAssets(character, characterDir);
+      await generateVisualReferenceAssets(character, characterDir);
       await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
       await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
       await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
@@ -64,6 +66,37 @@ async function copyCharacterAssets(character, characterDir) {
   }
 
   await cp(assetsDir, path.join(characterDir, "assets"), { recursive: true });
+}
+
+async function generateVisualReferenceAssets(character, characterDir) {
+  if (!Array.isArray(character.visualReferences)) {
+    return;
+  }
+
+  const outputDir = path.join(characterDir, "assets", "generated");
+  await mkdir(outputDir, { recursive: true });
+
+  for (const item of character.visualReferences) {
+    if (!item.path) continue;
+
+    const sourcePath = path.join(contentDir, character.id, item.path);
+    const parsed = path.parse(item.path);
+    const baseName = parsed.name;
+
+    try {
+      await sharp(sourcePath)
+        .resize({ width: 920, withoutEnlargement: true })
+        .webp({ quality: 72 })
+        .toFile(path.join(outputDir, `${baseName}-thumb.webp`));
+
+      await sharp(sourcePath)
+        .resize({ width: 1800, withoutEnlargement: true })
+        .webp({ quality: 84 })
+        .toFile(path.join(outputDir, `${baseName}-large.webp`));
+    } catch (error) {
+      throw new Error(`Failed to generate visual reference assets for ${character.id}/${item.path}: ${error.message}`);
+    }
+  }
 }
 
 async function loadCharacters() {
@@ -136,21 +169,24 @@ function renderIndex(characters) {
 function renderCharacter(character) {
   return htmlPage({
     title: character.displayName,
+    theme: character.theme,
     body: `
       <main>
         <section class="character-hero">
           <div class="shell">
-            <a class="back-link" href="../">Character Canon</a>
-            <p class="eyebrow">Official Profile</p>
+            <a class="back-link" href="../">公式設定アーカイブ</a>
+            <p class="eyebrow">✨ Official Profile</p>
             <h1>${escapeHtml(character.displayName)}</h1>
             ${character.catchphrase ? `<p class="catchphrase">${escapeHtml(character.catchphrase)}</p>` : ""}
             <p class="lead">${escapeHtml(character.summary)}</p>
+            ${renderHeroFacts(character)}
           </div>
         </section>
+        ${renderPageMenu(character)}
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
-          <section class="panel">
+          <section class="panel" id="profile">
             <h2>Profile</h2>
             <dl class="profile-list">
               ${Object.entries(character.profile).map(([key, value]) => `
@@ -161,7 +197,7 @@ function renderCharacter(character) {
               `).join("")}
             </dl>
           </section>
-          <section class="panel">
+          <section class="panel" id="glossary">
             <h2>Glossary</h2>
             <div class="stack">
               ${character.glossary.map((item) => `
@@ -172,7 +208,7 @@ function renderCharacter(character) {
               `).join("")}
             </div>
           </section>
-          <section class="panel wide">
+          <section class="panel wide" id="settings">
             <h2>Settings</h2>
             <div class="stack">
               ${character.settings.map((item) => `
@@ -185,7 +221,7 @@ function renderCharacter(character) {
             </div>
           </section>
           ${renderSideFlavors(character)}
-          <section class="panel wide">
+          <section class="panel wide" id="timeline">
             <h2>Timeline</h2>
             <ol class="timeline">
               ${character.timeline.map((item) => `
@@ -199,7 +235,7 @@ function renderCharacter(character) {
               `).join("")}
             </ol>
           </section>
-          <section class="panel wide">
+          <section class="panel wide" id="prompts">
             <h2>AI Prompts</h2>
             <div class="links">
               <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
@@ -214,13 +250,66 @@ function renderCharacter(character) {
   });
 }
 
+function renderHeroFacts(character) {
+  const keys = ["年齢", "身長", "好きな食べ物", "チャームポイント"];
+  const facts = keys
+    .map((key) => [key, character.profile?.[key]])
+    .filter(([, value]) => value && value !== "未定義");
+
+  if (facts.length === 0) {
+    return "";
+  }
+
+  return `
+    <div class="hero-facts">
+      ${facts.map(([key, value]) => `
+        <span><strong>${escapeHtml(key)}</strong>${escapeHtml(value)}</span>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderPageMenu(character) {
+  const items = [
+    ["links", "Links"],
+    ["visual", "Visual"],
+    ["profile", "Profile"],
+    ["glossary", "Glossary"],
+    ["settings", "Settings"],
+    ["side-flavors", "Flavor"],
+    ["timeline", "Timeline"],
+    ["prompts", "AI"]
+  ];
+
+  const visibleItems = items.filter(([id]) => {
+    if (id === "links") {
+      return hasItems(character.links) || hasItems(character.contentLinks);
+    }
+    if (id === "visual") {
+      return hasItems(character.visualReferences);
+    }
+    if (id === "side-flavors") {
+      return hasItems(character.sideFlavors);
+    }
+    return true;
+  });
+
+  return `
+    <nav class="page-menu" aria-label="ページ内メニュー">
+      <div class="shell page-menu-scroll">
+        ${visibleItems.map(([id, label]) => `<a href="#${id}">${escapeHtml(label)}</a>`).join("")}
+      </div>
+    </nav>
+  `;
+}
+
 function renderSideFlavors(character) {
   if (!Array.isArray(character.sideFlavors) || character.sideFlavors.length === 0) {
     return "";
   }
 
   return `
-    <section class="panel wide">
+    <section class="panel wide" id="side-flavors">
       <h2>Side Flavors</h2>
       <div class="stack">
         ${character.sideFlavors.map((item) => `
@@ -241,13 +330,16 @@ function renderVisualReferences(character) {
   }
 
   return `
-    <section class="panel wide visual-references">
-      <p class="eyebrow">Visual Reference</p>
+    <section class="panel wide visual-references" id="visual">
+      <p class="eyebrow">🎀 Visual Reference</p>
       <h2>ビジュアル資料</h2>
       <div class="visual-grid">
         ${character.visualReferences.map((item) => `
           <figure class="visual-card">
-            <img src="./${escapeHtml(item.path)}" alt="${escapeHtml(item.label)}" loading="lazy">
+            <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
+              <img src="./${escapeHtml(visualReferenceThumbPath(item.path))}" alt="${escapeHtml(item.label)}" loading="lazy">
+              <span>タップで拡大</span>
+            </a>
             <figcaption>
               <strong>${escapeHtml(item.label)}</strong>
               ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
@@ -259,6 +351,16 @@ function renderVisualReferences(character) {
   `;
 }
 
+function visualReferenceThumbPath(assetPath) {
+  const parsed = path.parse(assetPath);
+  return `assets/generated/${parsed.name}-thumb.webp`;
+}
+
+function visualReferenceLargePath(assetPath) {
+  const parsed = path.parse(assetPath);
+  return `assets/generated/${parsed.name}-large.webp`;
+}
+
 function renderOfficialLinks(character) {
   const socialLinks = Array.isArray(character.links) ? character.links : [];
   const contentLinks = Array.isArray(character.contentLinks) ? character.contentLinks : [];
@@ -268,9 +370,9 @@ function renderOfficialLinks(character) {
   }
 
   return `
-    <section class="panel wide official-links">
-      <p class="eyebrow">Official Links</p>
-      <h2>${escapeHtml(character.displayName)}</h2>
+    <section class="panel wide official-links" id="links">
+      <p class="eyebrow">🔗 Official Links</p>
+      <h2>Links</h2>
       ${renderLinkGroup("Contents", contentLinks)}
       ${renderLinkGroup("Social", socialLinks)}
     </section>
@@ -300,6 +402,10 @@ function renderLinkCard(link) {
       <small>${escapeHtml(formatUrl(link.url))}</small>
     </a>
   `;
+}
+
+function hasItems(value) {
+  return Array.isArray(value) && value.length > 0;
 }
 
 function renderAgentPrompt(character) {
@@ -486,7 +592,7 @@ ${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ?
 `;
 }
 
-function htmlPage({ title, body }) {
+function htmlPage({ title, body, theme }) {
   return `<!doctype html>
 <html lang="ja">
   <head>
@@ -498,25 +604,56 @@ function htmlPage({ title, body }) {
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
     <link rel="stylesheet" href="${title === "Character Canon" ? "./styles.css" : "../styles.css"}">
   </head>
-  <body>
+  <body${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
   </body>
 </html>`;
+}
+
+function renderThemeStyle(theme) {
+  const variables = {
+    "--theme-primary": theme.primary,
+    "--theme-secondary": theme.secondary,
+    "--theme-accent": theme.accent,
+    "--theme-paper": theme.paper,
+    "--theme-panel": theme.panel,
+    "--theme-text": theme.text,
+    "--theme-muted": theme.muted
+  };
+
+  return Object.entries(variables)
+    .filter(([, value]) => isCssColor(value))
+    .map(([key, value]) => `${key}: ${value}`)
+    .join("; ");
+}
+
+function isCssColor(value) {
+  return typeof value === "string" && /^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|rgb\(|rgba\(|hsl\(|hsla\()/.test(value.trim());
 }
 
 function renderCss() {
   return `
 :root {
   color-scheme: light;
-  --ink: #1d2433;
-  --muted: #667085;
-  --line: #d8dee8;
-  --paper: #f6f2ea;
-  --panel: #ffffff;
-  --accent: #0f766e;
-  --accent-dark: #115e59;
-  --warm: #b45309;
-  --shadow: 0 18px 40px rgba(31, 41, 55, 0.12);
+  --theme-primary: #151217;
+  --theme-secondary: #d4a72c;
+  --theme-accent: #fff3c4;
+  --theme-paper: #fffaf0;
+  --theme-panel: #ffffff;
+  --theme-text: #1f1a12;
+  --theme-muted: #756b5e;
+  --ink: var(--theme-text);
+  --muted: var(--theme-muted);
+  --line: #eadfca;
+  --paper: var(--theme-paper);
+  --panel: var(--theme-panel);
+  --accent: var(--theme-secondary);
+  --accent-dark: var(--theme-primary);
+  --mint: #0f766e;
+  --gold: var(--theme-secondary);
+  --warm: #c2410c;
+  --black: var(--theme-primary);
+  --shadow: 0 18px 44px rgba(21, 18, 23, 0.13);
   --font-sans:
     "Zen Kaku Gothic New",
     "BIZ UDPGothic",
@@ -550,7 +687,11 @@ function renderCss() {
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--paper);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--theme-secondary) 13%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(21, 18, 23, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, var(--theme-paper) 0%, #fffdf8 48%, var(--theme-accent) 100%);
+  background-size: 28px 28px, 28px 28px, auto;
 }
 
 a {
@@ -571,14 +712,35 @@ a {
 }
 
 .character-hero {
-  background: linear-gradient(135deg, #ffffff 0%, #f4efe4 48%, #e7f3f1 100%);
-  border-bottom: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--theme-secondary) 24%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--theme-accent) 0%, #ffffff 64%, color-mix(in srgb, var(--theme-secondary) 18%, #ffffff) 100%);
+  border-bottom: 1px solid #dcc58d;
+}
+
+.character-hero::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 8px;
+  background: repeating-linear-gradient(90deg, var(--theme-primary) 0 28px, var(--theme-secondary) 28px 56px);
+}
+
+.character-hero .shell {
+  position: relative;
+  border-left: 8px solid var(--theme-primary);
+  border-radius: 8px;
+  padding: 22px 24px 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 42px rgba(21, 18, 23, 0.12);
 }
 
 .eyebrow,
 .status {
   margin: 0 0 10px;
-  color: var(--warm);
+  color: var(--accent-dark);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -600,6 +762,8 @@ h1 {
   font-size: clamp(2.3rem, 6vw, 4.9rem);
   line-height: 1.02;
   letter-spacing: 0;
+  color: var(--theme-primary);
+  text-shadow: 0 3px 0 color-mix(in srgb, var(--theme-secondary) 28%, transparent);
 }
 
 h2 {
@@ -619,14 +783,87 @@ h3 {
 .lead,
 .catchphrase {
   max-width: 780px;
-  color: var(--muted);
+  color: var(--theme-muted);
   font-size: 1.08rem;
   line-height: 1.75;
 }
 
 .catchphrase {
-  color: var(--accent-dark);
+  color: var(--theme-primary);
   font-weight: 800;
+}
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 880px;
+  margin-top: 22px;
+}
+
+.hero-facts span {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e8d29b;
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8px 18px rgba(138, 100, 18, 0.12);
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.hero-facts strong {
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+}
+
+.page-menu {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--theme-paper) 88%, #ffffff);
+  backdrop-filter: blur(12px);
+}
+
+.page-menu-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.page-menu-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.page-menu a {
+  display: inline-flex;
+  min-height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8d29b;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #ffffff;
+  color: var(--theme-primary);
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 8px 16px rgba(21, 18, 23, 0.06);
+}
+
+.page-menu a:hover,
+.page-menu a:focus-visible {
+  border-color: var(--theme-secondary);
+  background: var(--theme-primary);
+  color: #ffffff;
 }
 
 .section {
@@ -647,6 +884,19 @@ h3 {
   border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 22px;
+}
+
+.panel {
+  position: relative;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
 }
 
 .character-card p,
@@ -671,17 +921,19 @@ h3 {
   min-height: 36px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--accent);
+  border: 1px solid #e8d29b;
   border-radius: 999px;
   padding: 7px 13px;
-  background: #ecfdf5;
+  background: #fff7df;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .official-links {
-  background: #102a2a;
+  background:
+    linear-gradient(135deg, var(--theme-primary) 0%, color-mix(in srgb, var(--theme-primary) 76%, var(--theme-secondary)) 58%, color-mix(in srgb, var(--theme-primary) 48%, var(--theme-secondary)) 100%);
   color: #ffffff;
+  border-color: #2a1824;
 }
 
 .official-links h2 {
@@ -716,7 +968,7 @@ h3 {
   min-height: 76px;
   align-content: center;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 14px;
   background: rgba(255, 255, 255, 0.08);
@@ -767,8 +1019,9 @@ h3 {
 
 .link-card:hover,
 .link-card:focus-visible {
-  border-color: #fbbf24;
-  background: rgba(255, 255, 255, 0.14);
+  border-color: #f6d36b;
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
 }
 
 .link-card span {
@@ -792,13 +1045,42 @@ h3 {
   margin: 0;
 }
 
-.visual-card img {
+.visual-link {
+  position: relative;
+  display: block;
+  width: min(100%, 920px);
+  margin: 0 auto;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.visual-link img {
   display: block;
   width: 100%;
   height: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
+  box-shadow: 0 14px 30px rgba(37, 25, 35, 0.1);
+}
+
+.visual-link span {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: rgba(21, 18, 23, 0.72);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.visual-link:hover img,
+.visual-link:focus-visible img {
+  border-color: #f9a8d4;
+  box-shadow: 0 18px 38px rgba(138, 100, 18, 0.18);
 }
 
 .visual-card figcaption {
@@ -814,11 +1096,23 @@ h3 {
 
 .back-link {
   display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border: 1px solid #e8d29b;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.72);
   margin-bottom: 28px;
+  text-decoration: none;
 }
 
 .content-layout {
   padding: 32px 0 64px;
+  scroll-margin-top: 78px;
+}
+
+.panel {
+  scroll-margin-top: 76px;
 }
 
 .profile-list {
@@ -836,7 +1130,7 @@ h3 {
 }
 
 dt {
-  color: var(--muted);
+  color: var(--accent-dark);
   font-weight: 700;
 }
 
@@ -867,14 +1161,74 @@ dd {
 }
 
 time {
-  color: var(--accent-dark);
+  color: var(--mint);
   font-weight: 800;
 }
 
 @media (max-width: 760px) {
+  .shell {
+    width: min(100% - 20px, 520px);
+  }
+
   .hero,
   .character-hero {
-    padding: 36px 0 28px;
+    padding: 28px 0 22px;
+  }
+
+  .character-hero .shell {
+    border-left-width: 5px;
+    padding: 16px 14px 18px;
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 13vw, 3.6rem);
+    line-height: 1.06;
+  }
+
+  h2 {
+    margin-bottom: 14px;
+    font-size: 1.26rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  .lead,
+  .catchphrase {
+    font-size: 0.98rem;
+    line-height: 1.72;
+  }
+
+  .hero-facts {
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .hero-facts span {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 8px;
+  }
+
+  .page-menu {
+    top: 0;
+  }
+
+  .page-menu-scroll {
+    width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .page-menu a {
+    min-height: 38px;
+    padding: 8px 13px;
+    font-size: 0.88rem;
+  }
+
+  .back-link {
+    margin-bottom: 18px;
   }
 
   .character-grid,
@@ -882,17 +1236,98 @@ time {
     grid-template-columns: 1fr;
   }
 
+  .content-layout {
+    gap: 12px;
+    padding: 14px 0 44px;
+  }
+
+  .character-card,
+  .panel {
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 10px 24px rgba(31, 41, 55, 0.09);
+  }
+
+  .official-links {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 18px 14px;
+  }
+
+  .official-links h2 {
+    margin-bottom: 12px;
+  }
+
+  .link-group + .link-group {
+    margin-top: 16px;
+  }
+
   .profile-list div,
   .timeline li {
     grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .links a {
     width: 100%;
+    min-height: 42px;
   }
 
   .link-list {
     grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .link-card {
+    min-height: 64px;
+    padding: 12px;
+  }
+
+  .link-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .link-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .visual-references {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .visual-references .eyebrow,
+  .visual-references h2,
+  .visual-card figcaption {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .visual-card {
+    gap: 10px;
+  }
+
+  .visual-link {
+    width: 100%;
+  }
+
+  .visual-link img {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    max-height: 72vh;
+    object-fit: contain;
+  }
+
+  .visual-link span {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .timeline {
+    gap: 12px;
   }
 }
 `;
