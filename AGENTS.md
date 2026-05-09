@@ -47,10 +47,12 @@ PowerShellでは `npm` が実行ポリシーで止まることがあるため、
 ```powershell
 npm.cmd run build
 npm.cmd run check
+npm.cmd run dev
 ```
 
 - `build`: `dist/` にサイトとプロンプトを生成する
 - `check`: キャラクターJSONを読み込めるか軽く検証する
+- `dev`: ローカル確認用サーバーを起動する。`PORT` 未指定時はワークツリーのパスから安定した既定ポートを自動選択するため、複数ワークツリーを同時に開いても競合しにくい。必ず起動ログに表示された `Local: http://127.0.0.1:{port}/` を使うこと。固定したい場合だけ `$env:PORT=4180; npm.cmd run dev` のように明示する。
 
 ## How To Add Character Information
 

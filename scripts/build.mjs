@@ -521,7 +521,7 @@ function renderCharacter(character) {
                   ${Object.entries(character.profile).map(([key, value]) => `
                     <div>
                       <dt>${escapeHtml(key)}</dt>
-                      <dd>${escapeHtml(value)}</dd>
+                      <dd>${renderProfileValue(value)}</dd>
                     </div>
                   `).join("")}
                 </dl>
@@ -634,11 +634,16 @@ function isHttpUrl(value) {
 
 function renderAiPrompts(character) {
   const promptDocs = promptDocuments(character);
+  const hasFanworkGuidelines = Boolean(character.fanworkGuidelines);
+  const sectionClass = hasFanworkGuidelines ? "panel wide" : "panel wide prompts-solo";
+  const note = hasFanworkGuidelines
+    ? `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。`
+    : `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。公式設定に記載された範囲を参照し、未定義の内容は補完せずに扱います。`;
 
   return `
-    <section class="panel wide" id="prompts">
+    <section class="${sectionClass}" id="prompts">
       ${renderSectionHeading("prompts")}
-      <p class="section-note">「${escapeHtml(character.displayName)}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。</p>
+      <p class="section-note">${escapeHtml(note)}</p>
       <div class="links">
         ${promptDocs.map((prompt) => `<a href="../${escapeHtml(prompt.path)}">${escapeHtml(prompt.label)}</a>`).join("")}
       </div>
@@ -1046,6 +1051,26 @@ function renderVisualReferenceCard(item, { hidden = false } = {}) {
       </figcaption>
     </figure>
   `;
+}
+
+function renderProfileValue(value) {
+  const text = String(value);
+  const colorPattern = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
+  const matches = Array.from(text.matchAll(colorPattern));
+  if (matches.length === 0) {
+    return escapeHtml(text);
+  }
+
+  let html = "";
+  let lastIndex = 0;
+  for (const match of matches) {
+    const color = match[0];
+    html += escapeHtml(text.slice(lastIndex, match.index));
+    html += `<span class="profile-color-token"><span>${escapeHtml(color)}</span><span class="color-swatch" style="--swatch-color: ${escapeHtml(color)}" aria-label="${escapeHtml(color)}"></span></span>`;
+    lastIndex = match.index + color.length;
+  }
+  html += escapeHtml(text.slice(lastIndex));
+  return html;
 }
 
 function visualReferenceThumbPath(assetPath) {
@@ -2776,6 +2801,25 @@ dd {
   font-weight: 800;
 }
 
+.profile-color-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38em;
+  margin-right: 0.22em;
+  white-space: nowrap;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 1.12em;
+  height: 1.12em;
+  border: 1px solid rgba(31, 26, 18, 0.22);
+  border-radius: 4px;
+  background: var(--swatch-color);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  vertical-align: -0.16em;
+}
+
 .stack {
   display: grid;
   gap: 16px;
@@ -2898,6 +2942,10 @@ time {
 
   .content-layout:not(.guideline-layout) #prompts {
     grid-column: 7 / -1;
+  }
+
+  .content-layout:not(.guideline-layout) #prompts.prompts-solo {
+    grid-column: 1 / -1;
   }
 
   .content-layout:not(.guideline-layout) .detail-layout {
