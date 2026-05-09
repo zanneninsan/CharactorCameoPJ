@@ -511,7 +511,7 @@ function renderCharacter(character) {
         <div class="shell content-layout">
           ${renderSourceCallout({
             eyebrow: "Source",
-            title: "このページのソース",
+            title: "このサイトのソース",
             description: `${character.displayName} の公式設定データは GitHub 上の JSON で管理しています。追記・修正の協力や、設定追加の提案を歓迎します。`,
             links: [
               { label: "このキャラの設定JSON", href: sourceFileUrl(`content/characters/${character.id}/character.json`) },
@@ -2713,6 +2713,10 @@ time {
 
   .content-layout:not(.guideline-layout) .wide {
     grid-column: auto;
+  }
+
+  .content-layout:not(.guideline-layout) > .source-callout {
+    grid-column: 1 / -1;
   }
 
   .content-layout:not(.guideline-layout) #links,
