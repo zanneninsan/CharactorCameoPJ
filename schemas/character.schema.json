@@ -167,7 +167,11 @@
         "properties": {
           "date": { "type": "string" },
           "event": { "type": "string" },
-          "detail": { "type": "string" }
+          "detail": { "type": "string" },
+          "timelineType": {
+            "type": "string",
+            "enum": ["fictional", "real"]
+          }
         }
       }
     },

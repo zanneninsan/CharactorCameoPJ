@@ -74,6 +74,20 @@ Critical rule: missing character information must remain undefined.
 
 公式設定にないことは断定しないでください。迷う内容は勝手に公式化せず、`draft` や inbox の確認待ちとして扱います。
 
+### New Character Workflow
+
+新規キャラクターページを作るときは、まず `docs/new-character-workflow.md` を読んでください。
+
+このワークフローには、ユーザと対話しながら初期ページを作るための確認順、`character.json` の初期形、未定義ルール、二次創作ガイドラインの初期案、完了報告テンプレートがまとまっています。
+
+特に、新規キャラクター作成では以下を守ってください。
+
+- 最初に聞くのは、キャラクター表示名、URL用ID、概要、確定プロフィール、イメージカラーを中心にする。
+- 一度に質問しすぎない。追加質問は最大3つまで。
+- 「まず入れられるところから」と言われたら、未定義を残して初期ページを作る。
+- 苗字・名前形式ではないキャラクター名にも耐える。
+- 足りない情報は推測せず `未定義` のままにする。
+
 ## Character Data Notes
 
 `character.json` の主な領域:
@@ -87,7 +101,7 @@ Critical rule: missing character information must remain undefined.
 - `settings`: 世界観、関係性、能力、話し方、禁止事項など
 - `sideFlavors`: 本筋の公式設定とは別枠のサブ設定、ネタ、背景フック
 - `visualReferences`: 衣装三面図など、公式ビジュアル参照画像と説明
-- `timeline`: 年表、作中時系列、公開時系列
+- `timeline`: 年表。年齢固定キャラクターでは `timelineType: "fictional"` を架空年表、`timelineType: "real"` を実年表として分ける
 - `promptGuidance.agent`: 会話AI/カスタムエージェント向けの振る舞い
 - `promptGuidance.t2t`: Text-to-Text向けの文章生成ルール
 - `promptGuidance.image`: 画像生成AI向けの外見・構図・制約

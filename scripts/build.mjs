@@ -520,17 +520,7 @@ function renderCharacter(character) {
           ${renderSideFlavors(character)}
           <section class="panel wide" id="timeline">
             ${renderSectionHeading("timeline")}
-            <ol class="timeline">
-              ${character.timeline.map((item) => `
-                <li>
-                  ${renderTimelineDate(item.date)}
-                  <div>
-                    <h3>${escapeHtml(item.event)}</h3>
-                    ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
-                  </div>
-                </li>
-              `).join("")}
-            </ol>
+            ${renderTimelineGroups(character.timeline)}
           </section>
         </div>
       </main>
@@ -728,6 +718,56 @@ function renderSideFlavors(character) {
   `;
 }
 
+function renderTimelineGroups(timeline) {
+  const groups = [
+    {
+      type: "fictional",
+      title: "Fictional Timeline",
+      subtitle: "架空年表",
+      note: "年齢が固定されるキャラクター内時間、作中前史、自己申告ベースの出来事。"
+    },
+    {
+      type: "real",
+      title: "Real Timeline",
+      subtitle: "実年表",
+      note: "公開日、活動履歴、SNSやサービス上で実際に発生した出来事。"
+    }
+  ];
+
+  const entriesByType = new Map();
+  for (const item of timeline) {
+    const type = item.timelineType === "real" ? "real" : "fictional";
+    entriesByType.set(type, [...(entriesByType.get(type) ?? []), item]);
+  }
+
+  return groups
+    .filter((group) => (entriesByType.get(group.type) ?? []).length > 0)
+    .map((group) => `
+      <section class="timeline-group timeline-group-${escapeHtml(group.type)}">
+        <div class="timeline-group-heading">
+          <div>
+            <h3>${escapeHtml(group.title)}</h3>
+            <p>${escapeHtml(group.subtitle)}</p>
+          </div>
+          <span>${escapeHtml(group.type === "real" ? "Observed" : "In-Canon")}</span>
+        </div>
+        <p class="timeline-note">${escapeHtml(group.note)}</p>
+        <ol class="timeline">
+          ${(entriesByType.get(group.type) ?? []).map((item) => `
+            <li>
+              ${renderTimelineDate(item.date)}
+              <div>
+                <h3>${escapeHtml(item.event)}</h3>
+                ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
+              </div>
+            </li>
+          `).join("")}
+        </ol>
+      </section>
+    `)
+    .join("");
+}
+
 function renderVisualReferences(character) {
   if (!Array.isArray(character.visualReferences) || character.visualReferences.length === 0) {
     return "";
@@ -894,7 +934,7 @@ ${renderVisualReferencesMarkdown(character)}
 
 ## Timeline
 
-${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
+${renderTimelineMarkdown(character)}
 
 ## Behavior Rules
 
@@ -942,7 +982,7 @@ ${renderVisualReferencesMarkdown(character)}
 
 ## Timeline
 
-${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
+${renderTimelineMarkdown(character)}
 
 ## Text Generation Rules
 
@@ -966,6 +1006,28 @@ function renderLinksMarkdown(character) {
 
 ${renderLinksMarkdownGroup("Contents", contentLinks)}
 ${renderLinksMarkdownGroup("Social", socialLinks)}`;
+}
+
+function renderTimelineMarkdown(character) {
+  const groups = [
+    ["fictional", "Fictional Timeline / 架空年表"],
+    ["real", "Real Timeline / 実年表"]
+  ];
+
+  const entries = character.timeline ?? [];
+  return groups
+    .map(([type, title]) => {
+      const items = entries.filter((item) => (item.timelineType === "real" ? "real" : "fictional") === type);
+      if (items.length === 0) {
+        return "";
+      }
+
+      return `### ${title}
+
+${items.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}`;
+    })
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function renderLinksMarkdownGroup(title, links) {
@@ -1063,7 +1125,7 @@ ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).
 
 ## Timeline Awareness
 
-${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
+${renderTimelineMarkdown(character)}
 `;
 }
 
@@ -2079,6 +2141,48 @@ dd {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.timeline-group {
+  display: grid;
+  gap: 14px;
+}
+
+.timeline-group + .timeline-group {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px dashed color-mix(in srgb, var(--theme-secondary) 44%, var(--line));
+}
+
+.timeline-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.timeline-group-heading h3 {
+  margin: 0;
+}
+
+.timeline-group-heading p,
+.timeline-note {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.timeline-group-heading span {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 46%, var(--line));
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: color-mix(in srgb, var(--theme-accent) 46%, #ffffff);
+  color: var(--theme-primary);
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .timeline li {
