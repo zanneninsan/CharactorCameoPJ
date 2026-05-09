@@ -88,6 +88,12 @@ dist/
 - `promptGuidance`: AIに渡すときの振る舞い、文章生成、見た目、動画演出の補助情報
 - `sources`: 原典や出典
 
+ビジュアル資料は、ベース資料とGoogle Drive由来の追加資料を分けて表示する。Drive由来の資料は `source: "google-drive"` と `driveId` を持ち、`scripts/import-drive-visuals.mjs` による手動取り込みで `assets/drive-visuals/` にWebP化して保存する。サイト側では段階表示、スマホ2カラム、遅延ロード、モーダル表示、左右移動、別タブ表示を提供する。
+
+生成サイトは、GitHub Pages公開とクローラ閲覧を前提に、OGP/Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`.nojekyll` を出力する。公開URLやソースURLは環境変数で上書きできる。
+
+ルートページと個別キャラクターページには、編集協力のためのソースリンクを表示する。個別ページでは末尾に該当 `character.json` とGitHubリポジトリへのリンクを出す。
+
 ## キャラクター情報を育てるサイクル
 
 1. 収集: ユーザーがCodexに原典、SNS投稿、台本、画像指示、作者メモなどを渡す

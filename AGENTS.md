@@ -31,11 +31,15 @@ schemas/
   character.schema.json   # character.jsonの目安スキーマ
 scripts/
   build.mjs               # 公式サイトとAIプロンプトを生成
+  dev-server.mjs          # ローカル確認用のライブリロードサーバー
+  import-drive-visuals.mjs # Google Drive資料集から画像を取り込む補助スクリプト
 dist/
   ...                     # 生成物。基本的に手編集しない
 docs/
   architecture.md         # 設計メモ
   codex-workflow.md       # Codex主導の運用
+  fanwork-guideline-templates.md # 二次創作ガイドラインのテンプレート
+  new-character-workflow.md # 新規キャラクター作成手順
 ```
 
 `dist/` は生成物です。手で編集せず、`content/` と `scripts/` を更新して再生成してください。
@@ -48,11 +52,13 @@ PowerShellでは `npm` が実行ポリシーで止まることがあるため、
 npm.cmd run build
 npm.cmd run check
 npm.cmd run dev
+npm.cmd run import:drive-visuals -- zannenin
 ```
 
 - `build`: `dist/` にサイトとプロンプトを生成する
 - `check`: キャラクターJSONを読み込めるか軽く検証する
 - `dev`: ローカル確認用サーバーを起動する。`PORT` 未指定時はワークツリーのパスから安定した既定ポートを自動選択するため、複数ワークツリーを同時に開いても競合しにくい。必ず起動ログに表示された `Local: http://127.0.0.1:{port}/` を使うこと。固定したい場合だけ `$env:PORT=4180; npm.cmd run dev` のように明示する。
+- `import:drive-visuals`: Google Drive資料集から画像を取り込む手動同期。第1引数にキャラクターID、第2引数に任意のDriveフォルダIDを指定できる。取り込み後は `character.json` の `visualReferences`、生成サムネイル、ページ表示を確認する。
 
 ## How To Add Character Information
 
@@ -118,6 +124,12 @@ Critical rule: missing character information must remain undefined.
 - `sources`: 出典や根拠
 
 二次創作ガイドラインを公開する場合は、末尾に `revisionHistory` を入れ、改訂日と変更概要を残してください。ガイドラインページではPDF出力導線も確認してください。
+
+ビジュアル資料では、通常の三面図などをベース資料として扱い、`source: "google-drive"` の追加資料は段階表示されます。Drive資料は初期表示を絞り、「もっと表示」で展開し、スマホでは2カラム表示にします。画像はサムネイルと大きめ画像を生成し、遅延ロード、モーダル表示、左右移動、別タブ表示ができることを確認してください。
+
+サイトにはソース導線を出します。ルートページにはリポジトリと `content/characters` へのリンク、個別キャラクターページ末尾には `character.json` とリポジトリへのリンクを表示します。JSON/GitHubリンクには対応するアイコンが付く想定です。
+
+クローラ向けには、`ogp.png`、OGP/Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`.nojekyll` を生成します。公開URLは `SITE_URL` または `GITHUB_PAGES_URL`、ソースURLは `SOURCE_REPO_URL`、sitemapの日付は `SITEMAP_LASTMOD` で上書きできます。
 
 AI出力に強く影響する要素、特に口調、外見、服装、色、持ち物、世界観の禁止事項は優先して整理してください。
 

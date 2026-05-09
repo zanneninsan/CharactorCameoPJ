@@ -243,6 +243,10 @@ SNSは `links`、公式ゲーム・Discord・資料集・ショップなどは `
 
 画像ファイルは `content/characters/{characterId}/assets/` 以下に置く。
 
+Google Drive資料集を取り込む場合は `npm.cmd run import:drive-visuals -- {characterId}` を使う。必要なら第2引数にDriveフォルダIDを指定する。これは自動同期ではなく手動取り込みなので、実行後に `character.json` の `visualReferences`、`content/characters/{characterId}/assets/drive-visuals/`、生成されたサムネイル/大きめ画像、ページ表示を確認する。
+
+サイト表示では、通常の三面図など `source` がない資料はベース資料として大きめに表示される。`source: "google-drive"` の資料は追加資料として段階表示され、「もっと表示」で展開する。スマホではDrive資料集は2カラム表示、画像は遅延ロード、タップ時はモーダル表示、左右移動、別タブ表示ができることを確認する。
+
 ### brandAssets / OGP
 
 ヒーローバナーやロゴ画像がある場合だけ入れる。ページ上部、ルートページのキャラクターカード、OGPに強く影響するため、初期ページができた後の次アクションとして提案してよい。
@@ -273,6 +277,10 @@ SNSは `links`、公式ゲーム・Discord・資料集・ショップなどは `
 - OGP画像内の日本語テキストが文字化けしていないこと
 
 バナーやロゴがない場合でも、ビルドスクリプトが `ogp.png` を生成する。日本語名が入るキャラクターでは、生成後のOGPを目視確認する。
+
+公開用にはOGP/Twitter Card、JSON-LD、`robots.txt`、`sitemap.xml`、`.nojekyll` も生成される。GitHub Pagesや独自URLで公開する場合は、必要に応じて `SITE_URL`、`GITHUB_PAGES_URL`、`SOURCE_REPO_URL`、`SITEMAP_LASTMOD` を設定してからビルドする。
+
+ルートページと個別キャラクターページには「このサイトのソース」導線が出る。個別ページではページ末尾に、該当キャラクターの `character.json` とGitHubリポジトリへのリンクが表示される。
 
 ### AI向けプロンプト誘導メタデータ
 
@@ -370,7 +378,7 @@ SNSは `links`、公式ゲーム・Discord・資料集・ショップなどは `
 5. ユーザが希望した場合は `fanworkGuidelines` を追加する。希望未確認の場合は、次に確認したい項目として inbox または完了報告に残す。
 6. `npm.cmd run build` を実行する。
 7. `npm.cmd run check` を実行する。
-8. ローカルで `http://127.0.0.1:4173/{characterId}/` を確認する。
+8. `npm.cmd run dev` を起動し、ログに表示された `Local: http://127.0.0.1:{port}/` の `{port}` を使って `http://127.0.0.1:{port}/{characterId}/` を確認する。`PORT` 未指定時はワークツリーごとに既定ポートが変わるため、`4173` 固定で判断しない。
 9. `dist/{characterId}/assets/generated/ogp.png` を目視確認する。バナーやロゴを入れた場合は、ヒーローバナー表示、ルートページのキャラクターカード、OGPも確認する。
 10. トップページHTMLにAI向けプロンプト誘導メタデータが出ているか確認する。
 11. 変更内容、未定義のままにした項目、次に聞くとよい項目をユーザに報告する。
