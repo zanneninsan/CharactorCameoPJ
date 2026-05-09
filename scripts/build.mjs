@@ -814,7 +814,7 @@ function renderVisualReferenceCard(item, { hidden = false } = {}) {
 
   return `
     <figure class="visual-card"${hidden ? " hidden" : ""}>
-      <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
+      <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" data-lightbox-image aria-label="${escapeHtml(item.label)}を拡大表示">
         <img ${imageAttributes} alt="${escapeHtml(item.label)}" loading="lazy">
         <span>タップで拡大</span>
       </a>
@@ -1357,6 +1357,47 @@ function renderClientScript() {
     window.addEventListener("resize", requestUpdate);
     window.addEventListener("hashchange", requestUpdate);
     updateActiveSection();
+  }
+
+  const lightboxLinks = Array.from(document.querySelectorAll("[data-lightbox-image]"));
+  if (lightboxLinks.length) {
+    const modal = document.createElement("dialog");
+    modal.className = "image-modal";
+    modal.innerHTML = '<div class="image-modal-frame"><div class="image-modal-toolbar"><strong data-modal-title></strong><div class="image-modal-actions"><a data-modal-open target="_blank" rel="noopener noreferrer">別タブで画像のみ表示</a><button type="button" data-modal-close aria-label="閉じる">閉じる</button></div></div><img data-modal-image alt=""><p data-modal-caption></p></div>';
+    document.body.append(modal);
+
+    const modalImage = modal.querySelector("[data-modal-image]");
+    const modalTitle = modal.querySelector("[data-modal-title]");
+    const modalCaption = modal.querySelector("[data-modal-caption]");
+    const modalOpen = modal.querySelector("[data-modal-open]");
+    const modalClose = modal.querySelector("[data-modal-close]");
+
+    const closeModal = () => {
+      if (modal.open) modal.close();
+    };
+
+    modalClose.addEventListener("click", closeModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    for (const link of lightboxLinks) {
+      link.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+        event.preventDefault();
+        const image = link.querySelector("img");
+        const caption = link.closest(".visual-card")?.querySelector("figcaption")?.innerText?.trim() ?? "";
+        const title = image?.alt || "Visual Reference";
+        modalTitle.textContent = title;
+        modalCaption.textContent = caption;
+        modalImage.src = link.href;
+        modalImage.alt = title;
+        modalOpen.href = link.href;
+        modal.showModal();
+      });
+    }
   }
 
   for (const gallery of document.querySelectorAll("[data-progressive-gallery]")) {
@@ -2054,6 +2095,101 @@ h3 {
   color: var(--ink);
 }
 
+.image-modal {
+  width: min(96vw, 1180px);
+  max-width: 1180px;
+  max-height: 94vh;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 45%, #ffffff);
+  border-radius: 8px;
+  padding: 0;
+  background: #0b0a0d;
+  color: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+}
+
+.image-modal::backdrop {
+  background: rgba(8, 7, 10, 0.78);
+  backdrop-filter: blur(5px);
+}
+
+.image-modal-frame {
+  display: grid;
+  max-height: 94vh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.image-modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(21, 18, 23, 0.96);
+}
+
+.image-modal-toolbar strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.98rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-modal-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-modal-actions a,
+.image-modal-actions button {
+  display: inline-flex;
+  min-height: 34px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.image-modal-actions a:hover,
+.image-modal-actions a:focus-visible,
+.image-modal-actions button:hover,
+.image-modal-actions button:focus-visible {
+  border-color: var(--theme-secondary);
+  background: var(--theme-secondary);
+  color: var(--theme-primary);
+}
+
+.image-modal img {
+  display: block;
+  width: 100%;
+  max-height: calc(94vh - 132px);
+  object-fit: contain;
+  background: #111014;
+}
+
+.image-modal-caption {
+  margin: 0;
+}
+
+.image-modal [data-modal-caption] {
+  margin: 0;
+  padding: 10px 14px 14px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
 .guideline-layout {
   max-width: 980px;
 }
@@ -2480,6 +2616,37 @@ time {
   .visual-link span {
     right: 10px;
     bottom: 10px;
+  }
+
+  .image-modal {
+    width: 96vw;
+    max-height: 92vh;
+  }
+
+  .image-modal-frame {
+    max-height: 92vh;
+  }
+
+  .image-modal-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .image-modal-actions {
+    width: 100%;
+  }
+
+  .image-modal-actions a,
+  .image-modal-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .image-modal img {
+    max-height: calc(92vh - 174px);
   }
 
   .timeline {
