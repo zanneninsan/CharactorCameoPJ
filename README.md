@@ -39,7 +39,10 @@ npm.cmd run import:drive-visuals -- zannenin
 1. 原典、メモ、会話ログ、画像指示、既存設定などを `content/inbox/{characterId}/` に置く
 2. 確定した公式設定を `content/characters/{characterId}/character.json` に追記する
 3. `npm.cmd run build` でサイトとAI向けプロンプトを再生成する
-4. GitHub Pagesに公開する
+4. 作業ブランチからPull Requestを作る
+5. レビュー後に `main` へmergeし、GitHub Pagesに公開する
+
+共同編集ではPull Request運用をデフォルトにします。`main` への直接pushは、自己利用の小さな変更や明示的に直pushしたい場合だけにしてください。
 
 各ページには「このサイトのソース」導線があります。ルートページはリポジトリとキャラクター設定ディレクトリへ、個別キャラクターページは末尾から該当 `character.json` とリポジトリへリンクします。
 
