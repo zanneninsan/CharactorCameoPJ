@@ -890,7 +890,7 @@ function outfitChangeGuidance(character) {
   const reference = outfit ? `\n- 通常衣装の参考情報: ${outfit.body}` : "";
   return `- 衣装は変更可能。通常衣装の構造や配色を必ず維持する必要はない。
 - ただし、残念院さん本人としての顔立ち、銀色のツーサイドアップ、魅力的なおでこ、八重歯、グレーの目元、華奢でフラットな体型、黒と金のイメージカラーは必要に応じて保持する。
-- 年齢は17歳として扱い、成人向けまたは性的な衣装・演出へ寄せない。${reference}`;
+- 年齢は自称17歳（成人済）として扱い、キャラクター性に反する性的な衣装・演出へ寄せない。${reference}`;
 }
 
 function htmlPage({ title, body, theme }) {
@@ -1568,6 +1568,55 @@ time {
 .date-range-separator {
   color: var(--theme-secondary);
   font-size: 0.82rem;
+}
+
+@media (min-width: 1440px) {
+  .shell {
+    width: min(1440px, calc(100% - 80px));
+  }
+
+  .character-hero .shell {
+    width: min(1320px, calc(100% - 96px));
+  }
+
+  .content-layout:not(.guideline-layout) {
+    width: min(1560px, calc(100% - 96px));
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-flow: dense;
+    gap: 22px;
+  }
+
+  .content-layout:not(.guideline-layout) .wide {
+    grid-column: auto;
+  }
+
+  .content-layout:not(.guideline-layout) #links,
+  .content-layout:not(.guideline-layout) #timeline {
+    grid-column: 1 / -1;
+  }
+
+  .content-layout:not(.guideline-layout) #visual {
+    grid-column: 1 / span 7;
+  }
+
+  .content-layout:not(.guideline-layout) #fanworks,
+  .content-layout:not(.guideline-layout) #prompts {
+    grid-column: 8 / -1;
+  }
+
+  .content-layout:not(.guideline-layout) #profile,
+  .content-layout:not(.guideline-layout) #glossary,
+  .content-layout:not(.guideline-layout) #side-flavors {
+    grid-column: span 4;
+  }
+
+  .content-layout:not(.guideline-layout) #settings {
+    grid-column: span 8;
+  }
+
+  .link-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
