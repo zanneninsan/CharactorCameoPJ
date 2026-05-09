@@ -593,11 +593,16 @@ function renderFanworkGuidelinesCard(character) {
 
 function renderAiPrompts(character) {
   const promptDocs = promptDocuments(character);
+  const hasFanworkGuidelines = Boolean(character.fanworkGuidelines);
+  const sectionClass = hasFanworkGuidelines ? "panel wide" : "panel wide prompts-solo";
+  const note = hasFanworkGuidelines
+    ? `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。`
+    : `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。公式設定に記載された範囲を参照し、未定義の内容は補完せずに扱います。`;
 
   return `
-    <section class="panel wide" id="prompts">
+    <section class="${sectionClass}" id="prompts">
       ${renderSectionHeading("prompts")}
-      <p class="section-note">「${escapeHtml(character.displayName)}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。</p>
+      <p class="section-note">${escapeHtml(note)}</p>
       <div class="links">
         ${promptDocs.map((prompt) => `<a href="../${escapeHtml(prompt.path)}">${escapeHtml(prompt.label)}</a>`).join("")}
       </div>
@@ -2774,6 +2779,10 @@ time {
 
   .content-layout:not(.guideline-layout) #prompts {
     grid-column: 7 / -1;
+  }
+
+  .content-layout:not(.guideline-layout) #prompts.prompts-solo {
+    grid-column: 1 / -1;
   }
 
   .content-layout:not(.guideline-layout) .detail-layout {
