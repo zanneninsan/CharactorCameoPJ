@@ -579,13 +579,16 @@ function renderFanworkGuidelinesCard(character) {
     return "";
   }
 
+  const isDraft = character.fanworkGuidelines.status !== "official";
+  const linkLabel = isDraft ? "ガイドライン案を見る" : "ガイドラインを見る";
+
   return `
     <section class="panel wide guideline-card" id="fanworks">
       <p class="eyebrow">Fanworks</p>
       ${renderSectionHeading("fanworks")}
       <p>${escapeHtml(character.fanworkGuidelines.summary)}</p>
       <div class="links">
-        <a href="./fanworks.html">ガイドラインを見る</a>
+        <a href="./fanworks.html">${escapeHtml(linkLabel)}</a>
       </div>
     </section>
   `;
@@ -594,10 +597,13 @@ function renderFanworkGuidelinesCard(character) {
 function renderAiPrompts(character) {
   const promptDocs = promptDocuments(character);
   const hasFanworkGuidelines = Boolean(character.fanworkGuidelines);
+  const hasOfficialFanworkGuidelines = character.fanworkGuidelines?.status === "official";
   const sectionClass = hasFanworkGuidelines ? "panel wide" : "panel wide prompts-solo";
-  const note = hasFanworkGuidelines
+  const note = hasOfficialFanworkGuidelines
     ? `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。`
-    : `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。公式設定に記載された範囲を参照し、未定義の内容は補完せずに扱います。`;
+    : hasFanworkGuidelines
+      ? `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。二次創作ガイドライン案と公式設定に記載された範囲を参照し、未定義の内容は補完せずに扱います。`
+      : `「${character.displayName}」をAI生成で利用する際の推奨プロンプトです。公式設定に記載された範囲を参照し、未定義の内容は補完せずに扱います。`;
 
   return `
     <section class="${sectionClass}" id="prompts">
@@ -697,8 +703,9 @@ function renderAiPromptHeadMetadata(character) {
 
 function renderFanworkGuidelines(character) {
   const guidelines = character.fanworkGuidelines;
+  const isDraft = guidelines.status !== "official";
   return htmlPage({
-    title: `${character.displayName} 二次創作ガイドライン`,
+    title: guidelines.title,
     description: guidelines.summary,
     urlPath: `${character.id}/fanworks.html`,
     imagePath: `${character.id}/assets/generated/ogp.png`,
@@ -732,14 +739,14 @@ function renderFanworkGuidelines(character) {
             <p class="lead">${escapeHtml(guidelines.summary)}</p>
             <div class="hero-facts">
               <span><strong>Status</strong>${escapeHtml(guidelines.status)}</span>
-              <span><strong>Use</strong>ガイドライン参照</span>
+              <span><strong>Use</strong>${isDraft ? "ガイドライン案参照" : "ガイドライン参照"}</span>
             </div>
           </div>
         </section>
         <div class="shell content-layout guideline-layout">
           <section class="panel wide guideline-notice">
             <h2>利用の前提</h2>
-            <p>このページは二次創作をしやすくするためのドラフトです。内容は今後、公式運用に合わせて更新される可能性があります。</p>
+            <p>${isDraft ? "このページは二次創作をしやすくするためのドラフトです。内容は今後、公式運用に合わせて更新される可能性があります。" : "このページは二次創作をしやすくするためのガイドラインです。内容は公式運用に合わせて更新される可能性があります。"}</p>
             ${guidelines.contact ? `<p>${escapeHtml(guidelines.contact)}</p>` : ""}
           </section>
           ${guidelines.sections.map((section) => `
