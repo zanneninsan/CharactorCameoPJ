@@ -2957,7 +2957,9 @@ time {
   }
 
   .visual-archive .visual-grid {
-    padding: 0 0 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
   }
 
   .visual-grid {
@@ -2979,6 +2981,19 @@ time {
   .visual-link span {
     right: 10px;
     bottom: 10px;
+  }
+
+  .visual-archive .visual-link img {
+    height: clamp(140px, 34vw, 190px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .visual-archive .visual-card figcaption {
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
   }
 
   .image-modal {
