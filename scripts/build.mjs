@@ -46,6 +46,9 @@ async function build() {
       await generateBrandAssets(character, characterDir);
       await generateVisualReferenceAssets(character, characterDir);
       await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
+      if (character.fanworkGuidelines) {
+        await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
+      }
       await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
       await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
       await writeFile(path.join(promptDir, "image-default.md"), renderImagePrompt(character, { outfitMode: "default" }), "utf8");
@@ -328,6 +331,8 @@ function renderCharacter(character) {
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
+          ${renderFanworkGuidelinesCard(character)}
+          ${renderAiPrompts(character)}
           <section class="panel" id="profile">
             <h2>Profile</h2>
             <dl class="profile-list">
@@ -377,17 +382,80 @@ function renderCharacter(character) {
               `).join("")}
             </ol>
           </section>
-          <section class="panel wide" id="prompts">
-            <h2>AI Prompts</h2>
-            <div class="links">
-              <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
-              <a href="../prompts/${escapeHtml(character.id)}/t2t.md">Text-to-Text</a>
-              <a href="../prompts/${escapeHtml(character.id)}/image-default.md">画像生成（通常衣装）</a>
-              <a href="../prompts/${escapeHtml(character.id)}/video-default.md">動画生成（通常衣装）</a>
-              <a href="../prompts/${escapeHtml(character.id)}/image-outfit-change.md">画像生成（衣装変更用）</a>
-              <a href="../prompts/${escapeHtml(character.id)}/video-outfit-change.md">動画生成（衣装変更用）</a>
+        </div>
+      </main>
+    `
+  });
+}
+
+function renderFanworkGuidelinesCard(character) {
+  if (!character.fanworkGuidelines) {
+    return "";
+  }
+
+  return `
+    <section class="panel wide guideline-card" id="fanworks">
+      <p class="eyebrow">Fanworks</p>
+      <h2>二次創作ガイドライン</h2>
+      <p>${escapeHtml(character.fanworkGuidelines.summary)}</p>
+      <div class="links">
+        <a href="./fanworks.html">ガイドラインを見る</a>
+      </div>
+    </section>
+  `;
+}
+
+function renderAiPrompts(character) {
+  return `
+    <section class="panel wide" id="prompts">
+      <h2>AI Prompts</h2>
+      <p class="section-note">「${escapeHtml(character.displayName)}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。</p>
+      <div class="links">
+        <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
+        <a href="../prompts/${escapeHtml(character.id)}/t2t.md">Text-to-Text</a>
+        <a href="../prompts/${escapeHtml(character.id)}/image-default.md">画像生成（通常衣装）</a>
+        <a href="../prompts/${escapeHtml(character.id)}/video-default.md">動画生成（通常衣装）</a>
+        <a href="../prompts/${escapeHtml(character.id)}/image-outfit-change.md">画像生成（衣装変更用）</a>
+        <a href="../prompts/${escapeHtml(character.id)}/video-outfit-change.md">動画生成（衣装変更用）</a>
+      </div>
+    </section>
+  `;
+}
+
+function renderFanworkGuidelines(character) {
+  const guidelines = character.fanworkGuidelines;
+  return htmlPage({
+    title: `${character.displayName} 二次創作ガイドライン`,
+    theme: character.theme,
+    body: `
+      <main>
+        <section class="character-hero guideline-hero">
+          <div class="shell">
+            <a class="back-link" href="./">公式サイトへ戻る</a>
+            <p class="eyebrow">Fanwork Guidelines</p>
+            <h1>${escapeHtml(guidelines.title)}</h1>
+            <p class="lead">${escapeHtml(guidelines.summary)}</p>
+            <div class="hero-facts">
+              <span><strong>Status</strong>${escapeHtml(guidelines.status)}</span>
+              <span><strong>Commercial</strong>応相談</span>
+              <span><strong>Ad Revenue</strong>許可</span>
             </div>
+          </div>
+        </section>
+        <div class="shell content-layout guideline-layout">
+          <section class="panel wide guideline-notice">
+            <h2>利用の前提</h2>
+            <p>このページは二次創作をしやすくするためのドラフトです。内容は今後、公式運用に合わせて更新される可能性があります。</p>
+            ${guidelines.contact ? `<p>${escapeHtml(guidelines.contact)}</p>` : ""}
           </section>
+          ${guidelines.sections.map((section) => `
+            <section class="panel wide guideline-section">
+              <h2>${escapeHtml(section.title)}</h2>
+              <ul class="guideline-list">
+                ${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+              </ul>
+            </section>
+          `).join("")}
         </div>
       </main>
     `
@@ -430,12 +498,13 @@ function renderPageMenu(character) {
   const items = [
     ["links", "Links"],
     ["visual", "Visual"],
+    ["fanworks", "Fanworks"],
+    ["prompts", "AI"],
     ["profile", "Profile"],
     ["glossary", "Glossary"],
     ["settings", "Settings"],
     ["side-flavors", "Flavor"],
-    ["timeline", "Timeline"],
-    ["prompts", "AI"]
+    ["timeline", "Timeline"]
   ];
 
   const visibleItems = items.filter(([id]) => {
@@ -444,6 +513,9 @@ function renderPageMenu(character) {
     }
     if (id === "visual") {
       return hasItems(character.visualReferences);
+    }
+    if (id === "fanworks") {
+      return Boolean(character.fanworkGuidelines);
     }
     if (id === "side-flavors") {
       return hasItems(character.sideFlavors);
@@ -560,6 +632,7 @@ function renderLinkCard(link) {
       ${renderLinkIcon(link)}
       <span>${escapeHtml(link.label)}</span>
       <small>${escapeHtml(formatUrl(link))}</small>
+      ${link.description ? `<em>${escapeHtml(link.description)}</em>` : ""}
     </a>
   `;
 }
@@ -1315,6 +1388,14 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.link-card em {
+  grid-column: 2;
+  color: #f8dda0;
+  font-size: 0.84rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
 .visual-grid {
   display: grid;
   gap: 16px;
@@ -1373,6 +1454,37 @@ h3 {
 
 .visual-card strong {
   color: var(--ink);
+}
+
+.guideline-layout {
+  max-width: 980px;
+}
+
+.guideline-card p,
+.guideline-notice p,
+.guideline-section p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.guideline-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.guideline-list li::marker {
+  color: var(--theme-secondary);
+}
+
+.section-note {
+  max-width: 760px;
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.75;
 }
 
 .back-link {

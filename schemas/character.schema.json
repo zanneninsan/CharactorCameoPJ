@@ -67,7 +67,8 @@
           "url": { "type": "string" },
           "type": { "type": "string" },
           "icon": { "type": "string" },
-          "displayUrl": { "type": "string" }
+          "displayUrl": { "type": "string" },
+          "description": { "type": "string" }
         }
       }
     },
@@ -81,7 +82,32 @@
           "url": { "type": "string" },
           "type": { "type": "string" },
           "icon": { "type": "string" },
-          "displayUrl": { "type": "string" }
+          "displayUrl": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "fanworkGuidelines": {
+      "type": "object",
+      "required": ["title", "summary", "status", "sections"],
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "status": { "type": "string" },
+        "contact": { "type": "string" },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "items"],
+            "properties": {
+              "title": { "type": "string" },
+              "items": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
         }
       }
     },
