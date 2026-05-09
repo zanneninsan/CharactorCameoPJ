@@ -435,6 +435,7 @@ function renderIndex(characters) {
           <div class="character-grid">
             ${characters.map((character) => `
               <article class="character-card">
+                ${renderCharacterCardMedia(character)}
                 <h3><a href="./${escapeHtml(character.id)}/">${escapeHtml(character.displayName)}</a></h3>
                 <p>${escapeHtml(character.summary)}</p>
                 <div class="links">
@@ -455,6 +456,20 @@ function renderIndex(characters) {
   });
 }
 
+function renderCharacterCardMedia(character) {
+  const banner = character.brandAssets?.banner;
+  if (!banner?.source) {
+    return "";
+  }
+
+  const alt = banner.alt ?? `${character.displayName} バナー`;
+  return `
+    <a class="character-card-media" href="./${escapeHtml(character.id)}/" aria-label="${escapeHtml(character.displayName)}の公式サイトを見る">
+      <img src="./${escapeHtml(character.id)}/assets/generated/brand/banner-logo.webp" alt="${escapeHtml(alt)}" loading="lazy">
+    </a>
+  `;
+}
+
 function renderCharacter(character) {
   return htmlPage({
     title: character.displayName,
@@ -463,6 +478,7 @@ function renderCharacter(character) {
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
+    headExtra: renderAiPromptHeadMetadata(character),
     theme: character.theme,
     body: `
       <main>
@@ -546,19 +562,101 @@ function renderFanworkGuidelinesCard(character) {
 }
 
 function renderAiPrompts(character) {
+  const promptDocs = promptDocuments(character);
+
   return `
     <section class="panel wide" id="prompts">
       ${renderSectionHeading("prompts")}
       <p class="section-note">「${escapeHtml(character.displayName)}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。</p>
       <div class="links">
-        <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
-        <a href="../prompts/${escapeHtml(character.id)}/t2t.md">Text-to-Text</a>
-        <a href="../prompts/${escapeHtml(character.id)}/image-default.md">画像生成（通常衣装）</a>
-        <a href="../prompts/${escapeHtml(character.id)}/video-default.md">動画生成（通常衣装）</a>
-        <a href="../prompts/${escapeHtml(character.id)}/image-outfit-change.md">画像生成（衣装変更用）</a>
-        <a href="../prompts/${escapeHtml(character.id)}/video-outfit-change.md">動画生成（衣装変更用）</a>
+        ${promptDocs.map((prompt) => `<a href="../${escapeHtml(prompt.path)}">${escapeHtml(prompt.label)}</a>`).join("")}
       </div>
     </section>
+  `;
+}
+
+function promptDocuments(character) {
+  const basePath = `prompts/${character.id}`;
+  return [
+    {
+      key: "agent",
+      label: "AI Agent",
+      title: `${character.displayName} AI Agent Prompt`,
+      path: `${basePath}/agent.md`,
+      description: "会話AI/カスタムエージェント向けの人格・応答ルール。"
+    },
+    {
+      key: "t2t",
+      label: "Text-to-Text",
+      title: `${character.displayName} Text-to-Text Character Context`,
+      path: `${basePath}/t2t.md`,
+      description: "文章生成、設定参照、台本生成向けのキャラクター文脈。"
+    },
+    {
+      key: "image-default",
+      label: "画像生成（通常衣装）",
+      title: `${character.displayName} Image Generation Prompt - Default Outfit`,
+      path: `${basePath}/image-default.md`,
+      description: "通常衣装での画像生成向けプロンプト。"
+    },
+    {
+      key: "video-default",
+      label: "動画生成（通常衣装）",
+      title: `${character.displayName} Video Generation Prompt - Default Outfit`,
+      path: `${basePath}/video-default.md`,
+      description: "通常衣装での動画生成向けプロンプト。"
+    },
+    {
+      key: "image-outfit-change",
+      label: "画像生成（衣装変更用）",
+      title: `${character.displayName} Image Generation Prompt - Outfit Change`,
+      path: `${basePath}/image-outfit-change.md`,
+      description: "衣装変更を許容する画像生成向けプロンプト。"
+    },
+    {
+      key: "video-outfit-change",
+      label: "動画生成（衣装変更用）",
+      title: `${character.displayName} Video Generation Prompt - Outfit Change`,
+      path: `${basePath}/video-outfit-change.md`,
+      description: "衣装変更を許容する動画生成向けプロンプト。"
+    }
+  ];
+}
+
+function renderAiPromptHeadMetadata(character) {
+  const promptDocs = promptDocuments(character).map((prompt) => ({
+    ...prompt,
+    url: absoluteUrl(prompt.path),
+    encodingFormat: "text/markdown",
+    inLanguage: "ja"
+  }));
+  const manifest = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${character.displayName} AI prompt markdown index`,
+    description: `${character.displayName} の生成AI向けMarkdownプロンプト一覧。`,
+    characterId: character.id,
+    characterName: character.displayName,
+    itemListElement: promptDocs.map((prompt, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "CreativeWork",
+        name: prompt.title,
+        description: prompt.description,
+        url: prompt.url,
+        encodingFormat: prompt.encodingFormat,
+        inLanguage: prompt.inLanguage
+      }
+    }))
+  };
+
+  return `
+    <meta name="ai:prompt-index" content="${escapeHtml(absoluteUrl(`prompts/${character.id}/agent.md`))}">
+    ${promptDocs.map((prompt) => `
+    <meta name="ai:prompt:${escapeHtml(prompt.key)}" content="${escapeHtml(prompt.url)}">
+    <link rel="alternate" type="text/markdown" title="${escapeHtml(prompt.title)}" href="${escapeHtml(prompt.url)}">`).join("")}
+    <script type="application/json" id="ai-prompt-manifest">${escapeScriptJson(manifest)}</script>
   `;
 }
 
@@ -599,8 +697,7 @@ function renderFanworkGuidelines(character) {
             <p class="lead">${escapeHtml(guidelines.summary)}</p>
             <div class="hero-facts">
               <span><strong>Status</strong>${escapeHtml(guidelines.status)}</span>
-              <span><strong>Commercial</strong>応相談</span>
-              <span><strong>Ad Revenue</strong>許可</span>
+              <span><strong>Use</strong>ガイドライン参照</span>
             </div>
           </div>
         </section>
@@ -1172,7 +1269,7 @@ function outfitChangeGuidance(character) {
 - 年齢は自称17歳（成人済）として扱い、キャラクター性に反する性的な衣装・演出へ寄せない。${reference}`;
 }
 
-function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData }) {
+function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData, headExtra = "" }) {
   const canonicalUrl = absoluteUrl(urlPath);
   const seoDescription = normalizeDescription(description ?? title);
   const absoluteImageUrl = imagePath ? absoluteUrl(imagePath) : null;
@@ -1213,6 +1310,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
     <link rel="stylesheet" href="${title === "Character Canon" ? "./styles.css" : "../styles.css"}">
+    ${headExtra}
     ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
   <body${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
@@ -1244,6 +1342,15 @@ function characterStructuredData(character, urlPath) {
   const sameAs = [...(character.links ?? []), ...(character.contentLinks ?? [])]
     .map((link) => link.url)
     .filter(Boolean);
+  const promptWorks = promptDocuments(character).map((prompt) => ({
+    "@type": "CreativeWork",
+    name: prompt.title,
+    description: prompt.description,
+    url: absoluteUrl(prompt.path),
+    encodingFormat: "text/markdown",
+    inLanguage: "ja",
+    about: character.displayName
+  }));
 
   return {
     "@context": "https://schema.org",
@@ -1264,7 +1371,8 @@ function characterStructuredData(character, urlPath) {
       "@type": "WebSite",
       name: "Character Canon",
       url: absoluteUrl("")
-    }
+    },
+    subjectOf: promptWorks
   };
 }
 
@@ -1310,6 +1418,14 @@ function renderClientScript() {
     let activeId = "";
     let ticking = false;
 
+    const centerMenuLink = (link) => {
+      const scroller = link.closest(".page-menu-scroll");
+      if (!scroller) return;
+      const linkCenter = link.offsetLeft + link.offsetWidth / 2;
+      const targetLeft = Math.max(0, linkCenter - scroller.clientWidth / 2);
+      scroller.scrollTo({ left: targetLeft, behavior: "smooth" });
+    };
+
     const setActive = (id, shouldScrollMenu = true) => {
       if (!id || id === activeId) return;
       activeId = id;
@@ -1319,7 +1435,7 @@ function renderClientScript() {
         if (active) {
           link.setAttribute("aria-current", "true");
           if (shouldScrollMenu) {
-            link.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+            centerMenuLink(link);
           }
         } else {
           link.removeAttribute("aria-current");
@@ -1787,6 +1903,32 @@ h3 {
   border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 22px;
+}
+
+.character-card {
+  overflow: hidden;
+}
+
+.character-card-media {
+  display: block;
+  margin: -22px -22px 18px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.character-card-media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  object-fit: cover;
+  object-position: center;
+  background: var(--theme-primary);
+  border-bottom: 1px solid var(--line);
+}
+
+.character-card-media:hover img,
+.character-card-media:focus-visible img {
+  filter: saturate(1.08) brightness(1.02);
 }
 
 .panel {
@@ -2510,6 +2652,10 @@ time {
     border-radius: 8px;
     padding: 16px;
     box-shadow: 0 10px 24px rgba(31, 41, 55, 0.09);
+  }
+
+  .character-card-media {
+    margin: -16px -16px 14px;
   }
 
   .official-links {
