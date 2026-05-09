@@ -65,7 +65,9 @@
         "properties": {
           "label": { "type": "string" },
           "url": { "type": "string" },
-          "type": { "type": "string" }
+          "type": { "type": "string" },
+          "icon": { "type": "string" },
+          "displayUrl": { "type": "string" }
         }
       }
     },
@@ -77,7 +79,9 @@
         "properties": {
           "label": { "type": "string" },
           "url": { "type": "string" },
-          "type": { "type": "string" }
+          "type": { "type": "string" },
+          "icon": { "type": "string" },
+          "displayUrl": { "type": "string" }
         }
       }
     },

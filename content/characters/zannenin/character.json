@@ -30,7 +30,11 @@
   "profile": {
     "呼称": "残念院さん",
     "名前形式": "苗字・名前に分割しない呼称",
+    "本名": "残念院ちる子",
     "年齢": "17歳",
+    "産まれ": "ブリテン（自称）",
+    "出身": "ネオサイタマ",
+    "姉": "御礼参殴子",
     "身長": "148cm",
     "体重": "39kg",
     "体型": "控えめで華奢な体つき。痩せ型でフラットな体型。",
@@ -68,12 +72,20 @@
     {
       "label": "公式ゲーム",
       "url": "https://zannenin-sisters-leaderboard.web.app/",
-      "type": "game"
+      "type": "game",
+      "icon": "assets/links/official-game-icon.png",
+      "displayUrl": "公式ゲームサイト"
     },
     {
       "label": "公式Discord",
       "url": "https://discord.gg/sora2jp",
       "type": "community"
+    },
+    {
+      "label": "公式資料集",
+      "url": "https://drive.google.com/drive/folders/1JiEWJgxa6w5T--V_8YlxrBjfnUMqbnpF?usp=sharing",
+      "type": "reference",
+      "displayUrl": "Google Drive"
     }
   ],
   "glossary": [
@@ -113,8 +125,13 @@
       "status": "official"
     },
     {
+      "title": "家族",
+      "body": "姉の名前は御礼参殴子。",
+      "status": "official"
+    },
+    {
       "title": "未定義領域",
-      "body": "本名、家族構成、出身地、苦手なもの、満足教の詳細な教義や組織構造は未定義。",
+      "body": "苦手なもの、満足教の詳細な教義や組織構造は未定義。",
       "status": "draft"
     }
   ],
@@ -134,6 +151,16 @@
     }
   ],
   "timeline": [
+    {
+      "date": "2026-04-26",
+      "event": "1stシーズン終了",
+      "detail": "Sora2サ終に伴い、1stシーズンを終了する。"
+    },
+    {
+      "date": "2026-04-27〜2026-04-28",
+      "event": "モラトリアム期間が発生",
+      "detail": "Sora2が謎に生き続けているせいで、モラトリアム期間が発生する。"
+    },
     {
       "date": "未定義",
       "event": "満足教の開祖となる",

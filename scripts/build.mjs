@@ -48,8 +48,10 @@ async function build() {
       await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
       await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
       await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
-      await writeFile(path.join(promptDir, "image.md"), renderImagePrompt(character), "utf8");
-      await writeFile(path.join(promptDir, "video.md"), renderVideoPrompt(character), "utf8");
+      await writeFile(path.join(promptDir, "image-default.md"), renderImagePrompt(character, { outfitMode: "default" }), "utf8");
+      await writeFile(path.join(promptDir, "video-default.md"), renderVideoPrompt(character, { outfitMode: "default" }), "utf8");
+      await writeFile(path.join(promptDir, "image-outfit-change.md"), renderImagePrompt(character, { outfitMode: "outfit-change" }), "utf8");
+      await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
     }
   }
 
@@ -291,8 +293,10 @@ function renderIndex(characters) {
                   <a href="./${escapeHtml(character.id)}/">公式サイト</a>
                   <a href="./prompts/${escapeHtml(character.id)}/agent.md">Agent</a>
                   <a href="./prompts/${escapeHtml(character.id)}/t2t.md">T2T</a>
-                  <a href="./prompts/${escapeHtml(character.id)}/image.md">Image</a>
-                  <a href="./prompts/${escapeHtml(character.id)}/video.md">Video</a>
+                  <a href="./prompts/${escapeHtml(character.id)}/image-default.md">Image</a>
+                  <a href="./prompts/${escapeHtml(character.id)}/video-default.md">Video</a>
+                  <a href="./prompts/${escapeHtml(character.id)}/image-outfit-change.md">Image Outfit</a>
+                  <a href="./prompts/${escapeHtml(character.id)}/video-outfit-change.md">Video Outfit</a>
                 </div>
               </article>
             `).join("")}
@@ -364,7 +368,7 @@ function renderCharacter(character) {
             <ol class="timeline">
               ${character.timeline.map((item) => `
                 <li>
-                  <time>${escapeHtml(item.date)}</time>
+                  ${renderTimelineDate(item.date)}
                   <div>
                     <h3>${escapeHtml(item.event)}</h3>
                     ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
@@ -378,8 +382,10 @@ function renderCharacter(character) {
             <div class="links">
               <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
               <a href="../prompts/${escapeHtml(character.id)}/t2t.md">Text-to-Text</a>
-              <a href="../prompts/${escapeHtml(character.id)}/image.md">画像生成</a>
-              <a href="../prompts/${escapeHtml(character.id)}/video.md">動画生成</a>
+              <a href="../prompts/${escapeHtml(character.id)}/image-default.md">画像生成（通常衣装）</a>
+              <a href="../prompts/${escapeHtml(character.id)}/video-default.md">動画生成（通常衣装）</a>
+              <a href="../prompts/${escapeHtml(character.id)}/image-outfit-change.md">画像生成（衣装変更用）</a>
+              <a href="../prompts/${escapeHtml(character.id)}/video-outfit-change.md">動画生成（衣装変更用）</a>
             </div>
           </section>
         </div>
@@ -553,7 +559,7 @@ function renderLinkCard(link) {
     <a class="link-card" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
       ${renderLinkIcon(link)}
       <span>${escapeHtml(link.label)}</span>
-      <small>${escapeHtml(formatUrl(link.url))}</small>
+      <small>${escapeHtml(formatUrl(link))}</small>
     </a>
   `;
 }
@@ -702,8 +708,18 @@ function renderVisualReferencesMarkdown(character) {
 ${character.visualReferences.map((item) => `- ${item.label}: ${item.description ?? item.path}`).join("\n")}`;
 }
 
-function renderImagePrompt(character) {
-  return `# ${character.displayName} Image Generation Prompt
+function renderImagePrompt(character, { outfitMode }) {
+  const isOutfitChange = outfitMode === "outfit-change";
+  const titleSuffix = isOutfitChange ? "Image Generation Prompt - Outfit Change" : "Image Generation Prompt - Default Outfit";
+  const visualGuidance = isOutfitChange
+    ? withoutOutfitGuidance(character.promptGuidance.image)
+    : character.promptGuidance.image;
+
+  return `# ${character.displayName} ${titleSuffix}
+
+## Mode
+
+${isOutfitChange ? outfitChangeModeText("画像") : defaultOutfitModeText("画像")}
 
 ## Character Canon
 
@@ -715,18 +731,29 @@ ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).
 
 ## Visual Guidance
 
-${character.promptGuidance.image.map((item) => `- ${item}`).join("\n")}
+${visualGuidance.map((item) => `- ${item}`).join("\n")}
+
+## Outfit Guidance
+
+${isOutfitChange ? outfitChangeGuidance(character) : defaultOutfitGuidance(character)}
 
 ${renderVisualReferencesMarkdown(character)}
 
 ## World / Setting
 
-${character.settings.map((item) => `- ${item.title}: ${item.body}`).join("\n")}
+${renderSettingsMarkdown(character, { includeOutfit: !isOutfitChange })}
 `;
 }
 
-function renderVideoPrompt(character) {
-  return `# ${character.displayName} Video Generation Prompt
+function renderVideoPrompt(character, { outfitMode }) {
+  const isOutfitChange = outfitMode === "outfit-change";
+  const titleSuffix = isOutfitChange ? "Video Generation Prompt - Outfit Change" : "Video Generation Prompt - Default Outfit";
+
+  return `# ${character.displayName} ${titleSuffix}
+
+## Mode
+
+${isOutfitChange ? outfitChangeModeText("動画") : defaultOutfitModeText("動画")}
 
 ## Character Canon
 
@@ -736,6 +763,10 @@ ${character.summary}
 
 ${character.promptGuidance.video.map((item) => `- ${item}`).join("\n")}
 
+## Outfit Guidance
+
+${isOutfitChange ? outfitChangeGuidance(character) : defaultOutfitGuidance(character)}
+
 ## Profile
 
 ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).join("\n")}
@@ -744,6 +775,49 @@ ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).
 
 ${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
 `;
+}
+
+function withoutOutfitGuidance(items = []) {
+  const outfitWords = ["衣装", "修道服", "黒襟", "肩掛け", "金縁", "金ボタン", "チェーン", "タッセル", "フレアスカート", "編み上げブーツ"];
+  return items.filter((item) => !outfitWords.some((word) => item.includes(word)));
+}
+
+function renderSettingsMarkdown(character, { includeOutfit = true } = {}) {
+  return character.settings
+    .filter((item) => includeOutfit || item.title !== "衣装")
+    .map((item) => `- ${item.title}: ${item.body}`)
+    .join("\n");
+}
+
+function defaultOutfitModeText(mediaLabel) {
+  return `- このプロンプトは${mediaLabel}生成で通常衣装を使うためのもの。
+- 通常衣装の指定を優先し、衣装を別デザインへ変更しない。
+- 未定義の要素は推測で補完せず、必要に応じて未定義として扱う。`;
+}
+
+function outfitChangeModeText(mediaLabel) {
+  return `- このプロンプトは${mediaLabel}生成で衣装を変更するためのもの。
+- キャラクター本人の識別情報、顔、髪、体型、年齢、口調や雰囲気は維持する。
+- 通常衣装は参照情報として扱い、衣装デザインを固定しない。
+- ユーザーが指定した衣装を優先する。衣装指定がない場合、通常衣装へ自動で戻さず、衣装は未指定として扱う。
+- 未定義の要素は推測で補完せず、必要に応じて未定義として扱う。`;
+}
+
+function defaultOutfitGuidance(character) {
+  const outfit = character.settings.find((item) => item.title === "衣装");
+  if (!outfit) {
+    return "- 通常衣装は未定義。推測で補完しない。";
+  }
+
+  return `- 通常衣装: ${outfit.body}`;
+}
+
+function outfitChangeGuidance(character) {
+  const outfit = character.settings.find((item) => item.title === "衣装");
+  const reference = outfit ? `\n- 通常衣装の参考情報: ${outfit.body}` : "";
+  return `- 衣装は変更可能。通常衣装の構造や配色を必ず維持する必要はない。
+- ただし、残念院さん本人としての顔立ち、銀色のツーサイドアップ、魅力的なおでこ、八重歯、グレーの目元、華奢でフラットな体型、黒と金のイメージカラーは必要に応じて保持する。
+- 年齢は17歳として扱い、成人向けまたは性的な衣装・演出へ寄せない。${reference}`;
 }
 
 function htmlPage({ title, body, theme }) {
@@ -893,8 +967,8 @@ a {
 
 .brand-banner-shell {
   position: relative;
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto 18px;
+  width: min(1800px, calc(100% - 48px));
+  margin: 0 auto 22px;
 }
 
 .brand-banner {
@@ -1189,6 +1263,17 @@ h3 {
   stroke-linejoin: round;
 }
 
+.link-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.link-icon-image {
+  background: transparent;
+}
+
 .link-icon-youtube {
   background: #dc2626;
 }
@@ -1203,6 +1288,10 @@ h3 {
 
 .link-icon-discord {
   background: #5865f2;
+}
+
+.link-icon-googleDrive {
+  background: #1a73e8;
 }
 
 .link-icon-x {
@@ -1355,6 +1444,18 @@ dd {
 time {
   color: var(--mint);
   font-weight: 800;
+}
+
+.date-range {
+  display: inline-grid;
+  gap: 2px;
+  justify-items: start;
+  line-height: 1.16;
+}
+
+.date-range-separator {
+  color: var(--theme-secondary);
+  font-size: 0.82rem;
 }
 
 @media (max-width: 760px) {
@@ -1541,6 +1642,18 @@ time {
   .timeline {
     gap: 12px;
   }
+
+  .timeline li {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .date-range {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: baseline;
+  }
 }
 `;
 }
@@ -1554,16 +1667,53 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function formatUrl(value) {
+function formatUrl(link) {
+  const value = typeof link === "string" ? link : link.url;
+  if (typeof link === "object" && link.displayUrl) {
+    return link.displayUrl;
+  }
+
   try {
     const url = new URL(value);
+    if (url.hostname === "drive.google.com") {
+      return "Google Drive";
+    }
     return `${url.hostname}${url.pathname}`.replace(/\/$/, "");
   } catch {
     return value;
   }
 }
 
+function renderTimelineDate(date) {
+  const value = String(date);
+  const separator = value.includes("〜") ? "〜" : value.includes("~") ? "~" : null;
+  if (!separator) {
+    return `<time>${escapeHtml(value)}</time>`;
+  }
+
+  const [start, end] = value.split(separator).map((part) => part.trim());
+  if (!start || !end) {
+    return `<time>${escapeHtml(value)}</time>`;
+  }
+
+  return `
+    <time class="date-range" datetime="${escapeHtml(start)}">
+      <span>${escapeHtml(start)}</span>
+      <span class="date-range-separator">〜</span>
+      <span>${escapeHtml(end)}</span>
+    </time>
+  `;
+}
+
 function renderLinkIcon(link) {
+  if (link.icon) {
+    return `
+      <span class="link-icon link-icon-image" aria-label="${escapeHtml(link.label ?? "Link")}">
+        <img src="./${escapeHtml(link.icon)}" alt="" loading="lazy">
+      </span>
+    `;
+  }
+
   const brand = detectLinkBrand(link);
   const label = escapeHtml(brand.label);
 
@@ -1573,6 +1723,7 @@ function renderLinkIcon(link) {
     instagram: '<rect x="5" y="5" width="14" height="14" rx="4" /><circle cx="12" cy="12" r="3.2" /><circle cx="16.4" cy="7.7" r="0.8" fill="currentColor" stroke="none" />',
     tiktok: '<path d="M13.5 5v9.2a3.4 3.4 0 1 1-3-3.4" /><path d="M13.5 5c.8 2.3 2.3 3.7 4.8 4.1" />',
     discord: '<path d="M7.5 8.5c3-1.5 6-1.5 9 0l1.1 7.2c-3.5 2.2-7.7 2.2-11.2 0z" /><circle cx="10" cy="12.3" r="0.8" fill="currentColor" stroke="none" /><circle cx="14" cy="12.3" r="0.8" fill="currentColor" stroke="none" />',
+    googleDrive: '<path d="M8.4 4.5h7.2l5.4 9.4h-7.2z" /><path d="M8.4 4.5 3 13.9l3.6 6.2 5.4-9.4z" /><path d="M6.6 20.1h10.8l3.6-6.2H10.2z" />',
     link: '<path d="M10 13a5 5 0 0 0 7.1 0l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8" /><path d="M14 11a5 5 0 0 0-7.1 0l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8" />'
   };
 
@@ -1602,6 +1753,9 @@ function detectLinkBrand(link) {
   }
   if (raw.includes("discord.gg") || raw.includes("discord.com") || raw.includes("discord")) {
     return { key: "discord", label: "Discord" };
+  }
+  if (raw.includes("drive.google.com") || raw.includes("google drive") || raw.includes("googledrive") || raw.includes("資料集")) {
+    return { key: "googleDrive", label: "Google Drive" };
   }
 
   return { key: "link", label: "External link" };
