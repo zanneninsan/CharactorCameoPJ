@@ -8,6 +8,7 @@ const contentDir = path.join(rootDir, "content", "characters");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
 const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
+const sourceRepoUrl = normalizeRepoUrl(process.env.SOURCE_REPO_URL ?? "https://github.com/zanneninsan/CharactorCameoPJ");
 const sitemapLastmod = process.env.SITEMAP_LASTMOD ?? new Date().toISOString().slice(0, 10);
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
@@ -117,6 +118,10 @@ function sleep(ms) {
 
 function normalizeSiteUrl(value) {
   return `${String(value).trim().replace(/\/+$/, "")}/`;
+}
+
+function normalizeRepoUrl(value) {
+  return String(value).trim().replace(/\/+$/, "");
 }
 
 async function copyCharacterAssets(character, characterDir) {
@@ -430,6 +435,15 @@ function renderIndex(characters) {
           <h1>公式設定を育て、サイトとAIプロンプトへ反映する。</h1>
           <p class="lead">キャラクターごとの正本データから、公式サイト、会話AI向けプロンプト、画像生成AI向けプロンプト、動画生成AI向けプロンプトを生成します。</p>
         </section>
+        ${renderSourceCallout({
+          eyebrow: "Open Source Canon",
+          title: "このサイトのソース",
+          description: "キャラクター設定、サイト生成ロジック、AIプロンプト生成ルールは GitHub で管理しています。編集協力や改善提案も歓迎です。",
+          links: [
+            { label: "GitHubでソースを見る", href: sourceRepoUrl },
+            { label: "キャラクター設定を見る", href: sourceFileUrl("content/characters") }
+          ]
+        })}
         <section class="section">
           <h2>Characters</h2>
           <div class="character-grid">
@@ -495,45 +509,61 @@ function renderCharacter(character) {
         </section>
         ${renderPageMenu(character)}
         <div class="shell content-layout">
+          ${renderSourceCallout({
+            eyebrow: "Source",
+            title: "このページのソース",
+            description: `${character.displayName} の公式設定データは GitHub 上の JSON で管理しています。追記・修正の協力や、設定追加の提案を歓迎します。`,
+            links: [
+              { label: "このキャラの設定JSON", href: sourceFileUrl(`content/characters/${character.id}/character.json`) },
+              { label: "GitHubリポジトリ", href: sourceRepoUrl }
+            ],
+            panel: true
+          })}
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
           ${renderFanworkGuidelinesCard(character)}
           ${renderAiPrompts(character)}
-          <section class="panel" id="profile">
-            ${renderSectionHeading("profile")}
-            <dl class="profile-list">
-              ${Object.entries(character.profile).map(([key, value]) => `
-                <div>
-                  <dt>${escapeHtml(key)}</dt>
-                  <dd>${escapeHtml(value)}</dd>
+          <div class="detail-layout wide">
+            <div class="detail-main">
+              <section class="panel" id="profile">
+                ${renderSectionHeading("profile")}
+                <dl class="profile-list">
+                  ${Object.entries(character.profile).map(([key, value]) => `
+                    <div>
+                      <dt>${escapeHtml(key)}</dt>
+                      <dd>${escapeHtml(value)}</dd>
+                    </div>
+                  `).join("")}
+                </dl>
+              </section>
+            </div>
+            <div class="detail-stack">
+              <section class="panel" id="glossary">
+                ${renderSectionHeading("glossary")}
+                <div class="stack">
+                  ${character.glossary.map((item) => `
+                    <article>
+                      <h3>${escapeHtml(item.term)}</h3>
+                      <p>${escapeHtml(item.definition)}</p>
+                    </article>
+                  `).join("")}
                 </div>
-              `).join("")}
-            </dl>
-          </section>
-          <section class="panel" id="glossary">
-            ${renderSectionHeading("glossary")}
-            <div class="stack">
-              ${character.glossary.map((item) => `
-                <article>
-                  <h3>${escapeHtml(item.term)}</h3>
-                  <p>${escapeHtml(item.definition)}</p>
-                </article>
-              `).join("")}
+              </section>
+              ${renderSideFlavors(character)}
+              <section class="panel wide" id="settings">
+                ${renderSectionHeading("settings")}
+                <div class="stack">
+                  ${character.settings.map((item) => `
+                    <article>
+                      <p class="status">${escapeHtml(item.status ?? "official")}</p>
+                      <h3>${escapeHtml(item.title)}</h3>
+                      <p>${escapeHtml(item.body)}</p>
+                    </article>
+                  `).join("")}
+                </div>
+              </section>
             </div>
-          </section>
-          <section class="panel wide" id="settings">
-            ${renderSectionHeading("settings")}
-            <div class="stack">
-              ${character.settings.map((item) => `
-                <article>
-                  <p class="status">${escapeHtml(item.status ?? "official")}</p>
-                  <h3>${escapeHtml(item.title)}</h3>
-                  <p>${escapeHtml(item.body)}</p>
-                </article>
-              `).join("")}
-            </div>
-          </section>
-          ${renderSideFlavors(character)}
+          </div>
           <section class="panel wide" id="timeline">
             ${renderSectionHeading("timeline")}
             ${renderTimelineGroups(character.timeline)}
@@ -813,6 +843,29 @@ function renderSideFlavors(character) {
       </div>
     </section>
   `;
+}
+
+function renderSourceCallout({ eyebrow, title, description, links, panel = false }) {
+  return `
+    <section class="source-callout${panel ? " panel wide" : ""}">
+      <div>
+        <p class="eyebrow">${escapeHtml(eyebrow)}</p>
+        <h2>${escapeHtml(title)}</h2>
+        <p>${escapeHtml(description)}</p>
+      </div>
+      <div class="source-links">
+        ${links.map((link) => `
+          <a href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function sourceFileUrl(filePath) {
+  const normalizedPath = String(filePath).replace(/^\/+/, "");
+  const route = path.extname(normalizedPath) ? "blob" : "tree";
+  return `${sourceRepoUrl}/${route}/main/${normalizedPath}`;
 }
 
 function renderTimelineGroups(timeline) {
@@ -1479,41 +1532,67 @@ function renderClientScript() {
   if (lightboxLinks.length) {
     const modal = document.createElement("dialog");
     modal.className = "image-modal";
-    modal.innerHTML = '<div class="image-modal-frame"><div class="image-modal-toolbar"><strong data-modal-title></strong><div class="image-modal-actions"><a data-modal-open target="_blank" rel="noopener noreferrer">別タブで画像のみ表示</a><button type="button" data-modal-close aria-label="閉じる">閉じる</button></div></div><img data-modal-image alt=""><p data-modal-caption></p></div>';
+    modal.innerHTML = '<div class="image-modal-frame"><div class="image-modal-toolbar"><strong data-modal-title></strong><div class="image-modal-actions"><span data-modal-count></span><a data-modal-open target="_blank" rel="noopener noreferrer">別タブで画像のみ表示</a><button type="button" data-modal-close aria-label="閉じる">閉じる</button></div></div><div class="image-modal-stage"><button class="image-modal-nav image-modal-prev" type="button" data-modal-prev aria-label="前の画像">‹</button><img data-modal-image alt=""><button class="image-modal-nav image-modal-next" type="button" data-modal-next aria-label="次の画像">›</button></div><p data-modal-caption></p></div>';
     document.body.append(modal);
 
     const modalImage = modal.querySelector("[data-modal-image]");
     const modalTitle = modal.querySelector("[data-modal-title]");
     const modalCaption = modal.querySelector("[data-modal-caption]");
+    const modalCount = modal.querySelector("[data-modal-count]");
     const modalOpen = modal.querySelector("[data-modal-open]");
     const modalClose = modal.querySelector("[data-modal-close]");
+    const modalPrev = modal.querySelector("[data-modal-prev]");
+    const modalNext = modal.querySelector("[data-modal-next]");
+    let currentImageIndex = 0;
+
+    const getLightboxItem = (link) => {
+      const image = link.querySelector("img");
+      const caption = link.closest(".visual-card")?.querySelector("figcaption")?.innerText?.trim() ?? "";
+      return {
+        href: link.href,
+        title: image?.alt || "Visual Reference",
+        caption
+      };
+    };
+
+    const showImageAt = (index) => {
+      currentImageIndex = (index + lightboxLinks.length) % lightboxLinks.length;
+      const item = getLightboxItem(lightboxLinks[currentImageIndex]);
+      modalTitle.textContent = item.title;
+      modalCaption.textContent = item.caption;
+      modalCount.textContent = (currentImageIndex + 1) + " / " + lightboxLinks.length;
+      modalImage.src = item.href;
+      modalImage.alt = item.title;
+      modalOpen.href = item.href;
+    };
 
     const closeModal = () => {
       if (modal.open) modal.close();
     };
+    const showPrevious = () => showImageAt(currentImageIndex - 1);
+    const showNext = () => showImageAt(currentImageIndex + 1);
 
     modalClose.addEventListener("click", closeModal);
+    modalPrev.addEventListener("click", showPrevious);
+    modalNext.addEventListener("click", showNext);
     modal.addEventListener("click", (event) => {
       if (event.target === modal) closeModal();
     });
+    modal.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") showPrevious();
+      if (event.key === "ArrowRight") showNext();
+    });
 
-    for (const link of lightboxLinks) {
+    lightboxLinks.forEach((link, index) => {
       link.addEventListener("click", (event) => {
         if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
           return;
         }
         event.preventDefault();
-        const image = link.querySelector("img");
-        const caption = link.closest(".visual-card")?.querySelector("figcaption")?.innerText?.trim() ?? "";
-        const title = image?.alt || "Visual Reference";
-        modalTitle.textContent = title;
-        modalCaption.textContent = caption;
-        modalImage.src = link.href;
-        modalImage.alt = title;
-        modalOpen.href = link.href;
+        showImageAt(index);
         modal.showModal();
       });
-    }
+    });
   }
 
   for (const gallery of document.querySelectorAll("[data-progressive-gallery]")) {
@@ -1974,6 +2053,69 @@ h3 {
   white-space: nowrap;
 }
 
+.source-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin: 22px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 34%, var(--line));
+  border-radius: 8px;
+  padding: 18px;
+  background: color-mix(in srgb, var(--theme-accent) 34%, #ffffff);
+  box-shadow: 0 14px 30px rgba(21, 18, 23, 0.08);
+}
+
+.source-callout.panel {
+  margin: 0;
+}
+
+.source-callout .eyebrow,
+.source-callout h2,
+.source-callout p {
+  margin: 0;
+}
+
+.source-callout h2 {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+}
+
+.source-callout p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.source-links a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--theme-primary);
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: var(--theme-primary);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.source-links a:hover,
+.source-links a:focus-visible {
+  border-color: var(--theme-secondary);
+  background: var(--theme-secondary);
+  color: var(--theme-primary);
+}
+
 .official-links {
   background:
     linear-gradient(135deg, var(--theme-primary) 0%, color-mix(in srgb, var(--theme-primary) 76%, var(--theme-secondary)) 58%, color-mix(in srgb, var(--theme-primary) 48%, var(--theme-secondary)) 100%);
@@ -2285,6 +2427,13 @@ h3 {
   gap: 8px;
 }
 
+.image-modal-actions [data-modal-count] {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.86rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .image-modal-actions a,
 .image-modal-actions button {
   display: inline-flex;
@@ -2312,6 +2461,14 @@ h3 {
   color: var(--theme-primary);
 }
 
+.image-modal-stage {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  place-items: center;
+  background: #111014;
+}
+
 .image-modal img {
   display: block;
   width: 100%;
@@ -2320,8 +2477,40 @@ h3 {
   background: #111014;
 }
 
-.image-modal-caption {
-  margin: 0;
+.image-modal-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: inline-flex;
+  width: 44px;
+  height: 64px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(8, 7, 10, 0.62);
+  color: #ffffff;
+  font: inherit;
+  font-size: 2.6rem;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+}
+
+.image-modal-prev {
+  left: 14px;
+}
+
+.image-modal-next {
+  right: 14px;
+}
+
+.image-modal-nav:hover,
+.image-modal-nav:focus-visible {
+  border-color: var(--theme-secondary);
+  background: var(--theme-secondary);
+  color: var(--theme-primary);
 }
 
 .image-modal [data-modal-caption] {
@@ -2378,6 +2567,23 @@ h3 {
 .content-layout {
   padding: 32px 0 64px;
   scroll-margin-top: 78px;
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.detail-main,
+.detail-stack {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.detail-stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .panel {
@@ -2527,26 +2733,19 @@ time {
     grid-column: 7 / -1;
   }
 
-  .content-layout:not(.guideline-layout) #profile,
-  .content-layout:not(.guideline-layout) #glossary,
-  .content-layout:not(.guideline-layout) #side-flavors {
-    grid-column: span 4;
+  .content-layout:not(.guideline-layout) .detail-layout {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(640px, 0.62fr) minmax(420px, 0.38fr);
+    gap: 22px;
   }
 
-  .content-layout:not(.guideline-layout) #settings {
-    grid-column: span 8;
+  .content-layout:not(.guideline-layout) .detail-stack {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
   }
 
-  .content-layout:not(.guideline-layout) #profile {
-    grid-column: 1 / span 4;
-  }
-
-  .content-layout:not(.guideline-layout) #glossary {
-    grid-column: 5 / span 4;
-  }
-
-  .content-layout:not(.guideline-layout) #side-flavors {
-    grid-column: 9 / span 4;
+  .content-layout:not(.guideline-layout) .detail-stack #settings {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2683,6 +2882,20 @@ time {
     min-height: 42px;
   }
 
+  .source-callout {
+    grid-template-columns: 1fr;
+    margin-top: 16px;
+    padding: 16px;
+  }
+
+  .source-links {
+    justify-content: stretch;
+  }
+
+  .source-links a {
+    width: 100%;
+  }
+
   .link-list {
     grid-template-columns: 1fr;
     gap: 9px;
@@ -2781,6 +2994,12 @@ time {
 
   .image-modal-actions {
     width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .image-modal-actions [data-modal-count] {
+    width: 100%;
+    text-align: center;
   }
 
   .image-modal-actions a,
@@ -2793,6 +3012,20 @@ time {
 
   .image-modal img {
     max-height: calc(92vh - 174px);
+  }
+
+  .image-modal-nav {
+    width: 38px;
+    height: 54px;
+    font-size: 2.1rem;
+  }
+
+  .image-modal-prev {
+    left: 8px;
+  }
+
+  .image-modal-next {
+    right: 8px;
   }
 
   .timeline {
