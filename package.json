@@ -1,0 +1,11 @@
+{
+  "name": "character-cameo-pj",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev-server.mjs",
+    "check": "node scripts/build.mjs --check"
+  }
+}

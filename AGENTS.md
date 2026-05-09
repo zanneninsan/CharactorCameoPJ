@@ -1,0 +1,128 @@
+# AGENTS.md
+
+このリポジトリは、キャラクターと世界観の公式設定を育て、公式サイトとAI向けプロンプトへ自動反映するためのプロジェクトです。
+
+新しいコンテキストで作業するCodexは、まずこのファイルを読んでから進めてください。
+
+## Project Intent
+
+目的は「キャラクター情報を育てていくサイクル」を作ることです。
+
+- キャラクターのプロフィール、用語集、その他設定、年表を蓄積する
+- 蓄積した公式設定からキャラクター公式サイトを生成する
+- 同じ公式設定からAI向けプロンプトを生成する
+- 同じ仕組みを別キャラクターにも転用できるようにする
+
+主な入力口はWebフォームではなく、Codexです。ユーザーがCodexに原典、メモ、URL、既存設定、会話ログ、画像生成結果の評価などを渡し、Codexが整理して正本データへ反映します。
+
+## Current Architecture
+
+現時点の正本はGit管理のJSON/Markdownです。
+
+```text
+content/
+  characters/
+    {characterId}/
+      character.json      # 公式設定の正本
+  inbox/
+    {characterId}/
+      *.md                # 未整理の原典、メモ、確認待ち
+schemas/
+  character.schema.json   # character.jsonの目安スキーマ
+scripts/
+  build.mjs               # 公式サイトとAIプロンプトを生成
+dist/
+  ...                     # 生成物。基本的に手編集しない
+docs/
+  architecture.md         # 設計メモ
+  codex-workflow.md       # Codex主導の運用
+```
+
+`dist/` は生成物です。手で編集せず、`content/` と `scripts/` を更新して再生成してください。
+
+## Commands
+
+PowerShellでは `npm` が実行ポリシーで止まることがあるため、基本は `npm.cmd` を使います。
+
+```powershell
+npm.cmd run build
+npm.cmd run check
+```
+
+- `build`: `dist/` にサイトとプロンプトを生成する
+- `check`: キャラクターJSONを読み込めるか軽く検証する
+
+## How To Add Character Information
+
+Critical rule: missing character information must remain undefined.
+
+- Do not infer, invent, or complete missing facts.
+- If a known field has no provided value, use `未定義`.
+- If an optional list has no provided items, leave it empty.
+- Do not split a character name into family/given names unless the source explicitly defines that structure.
+- When reporting changes, clearly separate confirmed canon from undefined or pending items.
+
+ユーザーからキャラクター情報を受け取ったら、次の順で処理してください。
+
+1. 対象キャラクターIDを確認する
+2. `content/characters/{characterId}/character.json` を読む
+3. 受け取った情報を既存設定と照合する
+4. 確定できる内容は `character.json` に反映する
+5. 未確定、矛盾候補、判断材料は `content/inbox/{characterId}/` にMarkdownで残す
+6. `npm.cmd run build` または `npm.cmd run check` を実行する
+7. 何を公式化し、何を保留したかをユーザーに短く報告する
+
+公式設定にないことは断定しないでください。迷う内容は勝手に公式化せず、`draft` や inbox の確認待ちとして扱います。
+
+## Character Data Notes
+
+`character.json` の主な領域:
+
+- `profile`: 年齢、身長体重、好きな食べ物、一人称など
+- `likes`: 好きなものの簡易リスト
+- `links`: SNSアカウントなど、Webサイトに表示するソーシャルリンク
+- `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL
+- `glossary`: 用語集
+- `settings`: 世界観、関係性、能力、話し方、禁止事項など
+- `timeline`: 年表、作中時系列、公開時系列
+- `promptGuidance.agent`: 会話AI/カスタムエージェント向けの振る舞い
+- `promptGuidance.t2t`: Text-to-Text向けの文章生成ルール
+- `promptGuidance.image`: 画像生成AI向けの外見・構図・制約
+- `promptGuidance.video`: 動画生成AI向けの動き・演出・制約
+- `sources`: 出典や根拠
+
+AI出力に強く影響する要素、特に口調、外見、服装、色、持ち物、世界観の禁止事項は優先して整理してください。
+
+## Multi-Tenant Rule
+
+別キャラクターを追加する場合は、`content/characters/{newCharacterId}/character.json` を作ります。
+
+`characterId` はURLにも使うため、英小文字、数字、ハイフンのみを推奨します。
+
+## Firebase / Web Editing Direction
+
+FirebaseやFirestoreへの外部化は将来のPhase 2候補です。
+
+現時点では、Git/JSONを公式確定版として扱います。Firestoreを導入する場合も、役割は次のように分ける想定です。
+
+- Git/JSON: 公式確定版、履歴、レビュー、バックアップ
+- Firestore: Web編集、下書き、即時更新、共同編集
+- Codex: 情報整理、矛盾検出、公式化、プロンプト改善
+- Build script: JSONまたはFirestoreからサイト/プロンプトを生成
+
+Webからの入力フォームやCMSは便利ですが、初期優先度は低いです。まずはCodex主導で設定の型と運用サイクルを固めてください。
+
+## Editing Rules
+
+- `dist/` を直接編集しない
+- 既存の未コミット変更を勝手に戻さない
+- 変更範囲はユーザーの依頼に必要な部分へ絞る
+- 日本語文書はUTF-8で扱う
+- ビルドや検証を実行したら、結果を最終報告に含める
+
+## Useful Docs
+
+- `README.md`: 基本的な使い方
+- `docs/architecture.md`: 技術選定と全体設計
+- `docs/codex-workflow.md`: Codexで設定を追加する運用
+- `schemas/character.schema.json`: キャラクター正本データの構造目安

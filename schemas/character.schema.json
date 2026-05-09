@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Character Canon",
+  "type": "object",
+  "required": ["id", "displayName", "summary", "profile", "glossary", "settings", "timeline", "promptGuidance"],
+  "properties": {
+    "id": { "type": "string" },
+    "displayName": { "type": "string" },
+    "catchphrase": { "type": "string" },
+    "summary": { "type": "string" },
+    "profile": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "likes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "url"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "contentLinks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "url"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "glossary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["term", "definition"],
+        "properties": {
+          "term": { "type": "string" },
+          "definition": { "type": "string" }
+        }
+      }
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "body"],
+        "properties": {
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "event"],
+        "properties": {
+          "date": { "type": "string" },
+          "event": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "promptGuidance": {
+      "type": "object",
+      "required": ["agent", "image", "video"],
+      "properties": {
+        "agent": { "type": "array", "items": { "type": "string" } },
+        "t2t": { "type": "array", "items": { "type": "string" } },
+        "image": { "type": "array", "items": { "type": "string" } },
+        "video": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}
