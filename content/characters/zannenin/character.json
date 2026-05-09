@@ -42,14 +42,15 @@
     "チャームポイント": "魅力的なおでこ、八重歯。",
     "顔の特徴": "目の輪郭、まつ毛、アイラインは髪色と同じグレー。",
     "イメージカラー": "黒と金のツートン",
-    "好きな食べ物": "ラーメン、ヤンヤンつけボー",
+    "好きな食べ物": "ラーメン、ヤンヤンつけボー、食用菊",
     "苦手なもの": "未定義",
     "一人称": "公的な場では「わたくし」。プライベートでは「あたし」。",
     "愛称": "ざんち、残ちゃん、ザネキ、教祖、きょーそ"
   },
   "likes": [
     "ラーメン",
-    "ヤンヤンつけボー"
+    "ヤンヤンつけボー",
+    "食用菊"
   ],
   "links": [
     {
@@ -211,6 +212,478 @@
       "path": "assets/outfit-reference.png",
       "type": "outfit",
       "description": "残念院さんの衣装リファレンス。正面、側面、背面。黒を基調に白と金の装飾を合わせたミリタリーテイストの修道服。"
+    },
+    {
+      "label": "有志作: HHI3x4AboAAbbwA",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhi3x4aboaabbwa-jfif-10oyxkh.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHI3x4AboAAbbwA.jfif",
+      "source": "google-drive",
+      "driveId": "1JDSHSPgtCrJGbVxvJTW0zQdtGaLQW13B"
+    },
+    {
+      "label": "有志作: HHIcBCabsAAceS8",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhicbcabsaaces8-jfif-10c6uoz.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHIcBCabsAAceS8.jfif",
+      "source": "google-drive",
+      "driveId": "1Kuc8qj6pHh-wmpgqGu7-1lIVT-omrOwf"
+    },
+    {
+      "label": "有志作: HHJiB5_bgAAeqz2",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhjib5-bgaaeqz2-jfif-1ue8nk5.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHJiB5_bgAAeqz2.jfif",
+      "source": "google-drive",
+      "driveId": "10mQG10-onD6vtMO6Ly93jSBdyaOKhY7U"
+    },
+    {
+      "label": "有志作: HHJjyTdbUAAf5Eu",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhjjytdbuaaf5eu-jfif-16uxntq.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHJjyTdbUAAf5Eu.jfif",
+      "source": "google-drive",
+      "driveId": "13RfvfYvdgUo-ANKSzos0iEhHgFKDz_gh"
+    },
+    {
+      "label": "有志作: HHJP_mSa8AAgAiX",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhjp-msa8aagaix-jfif-zd638g.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHJP_mSa8AAgAiX.jfif",
+      "source": "google-drive",
+      "driveId": "1CXULztrpoP5XdnhQ3tUSQcgah-46kL87"
+    },
+    {
+      "label": "有志作: HHJxFmsbIAA10jN",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhjxfmsbiaa10jn-jfif-1fk0aut.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHJxFmsbIAA10jN.jfif",
+      "source": "google-drive",
+      "driveId": "1URh8o6Yl8YBjEBjbWn_Doye5fpQelEbo"
+    },
+    {
+      "label": "有志作: HHKgL7EbcAETk1J",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhkgl7ebcaetk1j-jfif-o67rok.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHKgL7EbcAETk1J.jfif",
+      "source": "google-drive",
+      "driveId": "1ngK4lJfM-Hw8r7mCZC3GCh7nwwskFVhF"
+    },
+    {
+      "label": "有志作: HHLEvembQAAUc0P",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhlevembqaauc0p-jfif-1e2xlvd.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHLEvembQAAUc0P.jfif",
+      "source": "google-drive",
+      "driveId": "1J7cW_inEhW4oTU-6winl33CQ4fBzNM3O"
+    },
+    {
+      "label": "有志作: HHMl7-FbgAAW5Bx",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhml7-fbgaaw5bx-jfif-11uvq49.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHMl7-FbgAAW5Bx.jfif",
+      "source": "google-drive",
+      "driveId": "12JUjSOvx-iYjEiojnozrDrNUDZgPfxNY"
+    },
+    {
+      "label": "有志作: HHMOCkObUAA-aVK",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhmockobuaa-avk-jfif-jc70nc.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHMOCkObUAA-aVK.jfif",
+      "source": "google-drive",
+      "driveId": "1vciFgTz6Diw59KM80jhMlP1AIWAdn9vw"
+    },
+    {
+      "label": "有志作: HHMQ5egbwAAJmb5",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhmq5egbwaajmb5-jfif-kxjff3.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHMQ5egbwAAJmb5.jfif",
+      "source": "google-drive",
+      "driveId": "12tnFNaFfZGpspHKWfcebFxlXb8bzUycs"
+    },
+    {
+      "label": "有志作: HHMZ955bUAAK1bF",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhmz955buaak1bf-jfif-v3kism.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHMZ955bUAAK1bF.jfif",
+      "source": "google-drive",
+      "driveId": "1LP15mLNe_ozVtQftkiYq9MURTr9E0r_u"
+    },
+    {
+      "label": "有志作: HHN7ccKbAAARZZv",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhn7cckbaaarzzv-jfif-gj8rgg.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHN7ccKbAAARZZv.jfif",
+      "source": "google-drive",
+      "driveId": "1NRuLMwGDGL_K6fi3t-K7ebTOBr3pVK0k"
+    },
+    {
+      "label": "有志作: HHNApd1a4AAKuFC",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhnapd1a4aakufc-jfif-cdgso3.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHNApd1a4AAKuFC.jfif",
+      "source": "google-drive",
+      "driveId": "1gsY56eNhExiCS-19mYJCsruhAE7UGyP5"
+    },
+    {
+      "label": "有志作: HHNBnwtawAAzF4w",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhnbnwtawaazf4w-jfif-l2kmfx.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHNBnwtawAAzF4w.jfif",
+      "source": "google-drive",
+      "driveId": "1ysf1ZCv0XcF51wVqIBJSRW4CmWsQBXZ8"
+    },
+    {
+      "label": "有志作: HHNd9KSbIAAjVBe",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhnd9ksbiaajvbe-jfif-10q6xis.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHNd9KSbIAAjVBe.jfif",
+      "source": "google-drive",
+      "driveId": "1-6GePiK3MdTQvMeUx299P6kjIC7rmQbE"
+    },
+    {
+      "label": "有志作: HHNfWhwbgAAlWkk",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhnfwhwbgaalwkk-jfif-gh6x49.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHNfWhwbgAAlWkk.jfif",
+      "source": "google-drive",
+      "driveId": "1cA_Ir7uuw8dsjDOTois7kb60P9YwGh3S"
+    },
+    {
+      "label": "有志作: HHNnIojbcAAkdjA",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhnniojbcaakdja-jfif-1brs1cc.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHNnIojbcAAkdjA.jfif",
+      "source": "google-drive",
+      "driveId": "1sjXd3pOLJEoClAgJLzcOIbA-ES8VHPA4"
+    },
+    {
+      "label": "有志作: HHOdqd7aYAAcYE8",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhodqd7ayaacye8-jfif-1grr5at.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHOdqd7aYAAcYE8.jfif",
+      "source": "google-drive",
+      "driveId": "1EA_V9QXsjb6L1st5X2q1SJCSs1KzpbTb"
+    },
+    {
+      "label": "有志作: HHOdqg2bEAAEPFI",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhodqg2beaaepfi-jfif-16r1j4v.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHOdqg2bEAAEPFI.jfif",
+      "source": "google-drive",
+      "driveId": "1sA3og7iWlaAWL_T2W3igTFJ2B7ffxLKQ"
+    },
+    {
+      "label": "有志作: HHOdqnxaYAAbwX-",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhodqnxayaabwx-jfif-12b6v1v.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHOdqnxaYAAbwX-.jfif",
+      "source": "google-drive",
+      "driveId": "1xPXAI7DSZDspg7Xg3MaCGHTJzmrTLW8r"
+    },
+    {
+      "label": "有志作: HHOdqqNa4AA70Xv",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhodqqna4aa70xv-jfif-8pi6h2.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHOdqqNa4AA70Xv.jfif",
+      "source": "google-drive",
+      "driveId": "1dc5a0RARYKPfvYEY7rTLPnJTeJIiWPl2"
+    },
+    {
+      "label": "有志作: HHPIX9xbEAENQYi",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhpix9xbeaenqyi-jfif-1o0r31z.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHPIX9xbEAENQYi.jfif",
+      "source": "google-drive",
+      "driveId": "1f6rH06qGJZ8vSslNLG_BG5vHMKr29nqH"
+    },
+    {
+      "label": "有志作: HHQpVpYaQAAyyZd",
+      "path": "assets/drive-visuals/ネタ系-有志作-hhqpvpyaqaayyzd-jfif-ch9udd.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系 / 有志作」から取り込んだビジュアル資料。元ファイル名: HHQpVpYaQAAyyZd.jfif",
+      "source": "google-drive",
+      "driveId": "1lc3XMVBx2DyjbWMtIdLX5Ar6R1J3iUCm"
+    },
+    {
+      "label": "ネタ系: ChatGPT Image 2026年4月26日 17_09_43",
+      "path": "assets/drive-visuals/ネタ系-chatgpt-image-2026年4月26日-17-09-43-png-1m8o4nl.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月26日 17_09_43.png",
+      "source": "google-drive",
+      "driveId": "1d3wXyWao6qPVWUpXHRQcZbgPJr52qoyI"
+    },
+    {
+      "label": "ネタ系: ChatGPT Image 2026年4月26日 17_12_17",
+      "path": "assets/drive-visuals/ネタ系-chatgpt-image-2026年4月26日-17-12-17-png-13arp7w.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月26日 17_12_17.png",
+      "source": "google-drive",
+      "driveId": "1GbOaw_j5Xeu9PI1XGmtpFqGkwCxztnI2"
+    },
+    {
+      "label": "ネタ系: ChatGPT Image 2026年5月1日 21_31_30",
+      "path": "assets/drive-visuals/ネタ系-chatgpt-image-2026年5月1日-21-31-30-png-4g3z0t.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月1日 21_31_30.png",
+      "source": "google-drive",
+      "driveId": "1VxsWB41SXTm1yAhj3wdzcV71Y4ykiCiy"
+    },
+    {
+      "label": "ネタ系: ChatGPT Image 2026年5月1日 21_33_50",
+      "path": "assets/drive-visuals/ネタ系-chatgpt-image-2026年5月1日-21-33-50-png-1yttev1.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月1日 21_33_50.png",
+      "source": "google-drive",
+      "driveId": "1e54OPYdWF_afkMFt0l6o9PHUomXQH66s"
+    },
+    {
+      "label": "ネタ系: ChatGPT Image 2026年5月1日 23_35_07",
+      "path": "assets/drive-visuals/ネタ系-chatgpt-image-2026年5月1日-23-35-07-png-137j4qt.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月1日 23_35_07.png",
+      "source": "google-drive",
+      "driveId": "1B4qVEZllnw4j-A6zPqrs48XyN2ifkIz-"
+    },
+    {
+      "label": "ネタ系: grok-image-1f8224f3-0466-4d4a-b0eb-d13c261e0357",
+      "path": "assets/drive-visuals/ネタ系-grok-image-1f8224f3-0466-4d4a-b0eb-d13c261e0357-png-171sq6i.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: grok-image-1f8224f3-0466-4d4a-b0eb-d13c261e0357.png",
+      "source": "google-drive",
+      "driveId": "1cbD21H9PAEjN80-534JvVPrJd1P7kaIa"
+    },
+    {
+      "label": "ネタ系: grok-image-feb37ac3-a615-4594-ac56-b72143e1704e",
+      "path": "assets/drive-visuals/ネタ系-grok-image-feb37ac3-a615-4594-ac56-b72143e1704e-png-17cxogx.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: grok-image-feb37ac3-a615-4594-ac56-b72143e1704e.png",
+      "source": "google-drive",
+      "driveId": "1Q2mPYB1d_wOAzPL61lh_b6SWY_jXI18p"
+    },
+    {
+      "label": "ネタ系: image (2)",
+      "path": "assets/drive-visuals/ネタ系-image-2-jpg-hmkl1q.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: image (2).jpg",
+      "source": "google-drive",
+      "driveId": "1uCLSaHCMmqyj4_PDEqY-wRyATcyy9nl_"
+    },
+    {
+      "label": "ネタ系: moz",
+      "path": "assets/drive-visuals/ネタ系-moz-png-1btbpjc.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: moz.png",
+      "source": "google-drive",
+      "driveId": "1wa88-AqsFirgZypgsCn_54xBm2lA565K"
+    },
+    {
+      "label": "ネタ系: 段落テキスト",
+      "path": "assets/drive-visuals/ネタ系-段落テキスト-png-lgnltu.webp",
+      "type": "meme",
+      "description": "Google Drive公式資料集「ネタ系」から取り込んだビジュアル資料。元ファイル名: 段落テキスト.png",
+      "source": "google-drive",
+      "driveId": "1idkmfv5PkuPgszA05eXiYWh1OnOyJUaC"
+    },
+    {
+      "label": "衣装・未分類: 8c62046b-74f2-4726-9fc9-bb14b720e69c",
+      "path": "assets/drive-visuals/衣装-未分類-8c62046b-74f2-4726-9fc9-bb14b720e69c-png-g3otrl.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: 8c62046b-74f2-4726-9fc9-bb14b720e69c.png",
+      "source": "google-drive",
+      "driveId": "11qFq7o1-7Zdr9aE48qvUqJwlbV76xjQi"
+    },
+    {
+      "label": "衣装・未分類: 3401 (1) - コピー",
+      "path": "assets/drive-visuals/衣装-未分類-3401-1-コヒ-ー-png-1nfjt12.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: 3401 (1) - コピー.png",
+      "source": "google-drive",
+      "driveId": "13Jz1lAi5MgnZDscV2zMf8oE0ML4EQJPI"
+    },
+    {
+      "label": "衣装・未分類: ChatGPT Image 2026年4月30日 01_12_21",
+      "path": "assets/drive-visuals/衣装-未分類-chatgpt-image-2026年4月30日-01-12-21-png-cjkq43.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 01_12_21.png",
+      "source": "google-drive",
+      "driveId": "1yIBW3YPbB_M-7tHKRF3BLexHH0EQuHTb"
+    },
+    {
+      "label": "衣装・未分類: ChatGPT Image 2026年4月30日 03_52_20",
+      "path": "assets/drive-visuals/衣装-未分類-chatgpt-image-2026年4月30日-03-52-20-png-11vo2m6.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 03_52_20.png",
+      "source": "google-drive",
+      "driveId": "1R9b1s3ZWnHkYL10qJk4i9nQe_fXA6Kjv"
+    },
+    {
+      "label": "衣装・未分類: ChatGPT Image 2026年4月30日 04_58_30",
+      "path": "assets/drive-visuals/衣装-未分類-chatgpt-image-2026年4月30日-04-58-30-png-zeatrs.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 04_58_30.png",
+      "source": "google-drive",
+      "driveId": "1xJ1SSuOuXTU5rHV9uDVWtgGE-UcqxQOw"
+    },
+    {
+      "label": "衣装・未分類: ChatGPT Image 2026年4月30日 07_56_18 (2)",
+      "path": "assets/drive-visuals/衣装-未分類-chatgpt-image-2026年4月30日-07-56-18-2-png-11ptdk4.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 07_56_18 (2).png",
+      "source": "google-drive",
+      "driveId": "1viy-btuImYd9yl1MCwUgUF888rJu3vm3"
+    },
+    {
+      "label": "衣装・未分類: Gemini_Generated_Image_k6aollk6aollk6ao (1) (1)",
+      "path": "assets/drive-visuals/衣装-未分類-gemini-generated-image-k6aollk6aollk6ao-1-1-png-yb0s19.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: Gemini_Generated_Image_k6aollk6aollk6ao (1) (1).png",
+      "source": "google-drive",
+      "driveId": "163LCFvesseuWGhOd6UwYG_LIb9YUG30j"
+    },
+    {
+      "label": "衣装・未分類: grok-image-36f8b98b-dd88-442e-98aa-c10fceae3e94",
+      "path": "assets/drive-visuals/衣装-未分類-grok-image-36f8b98b-dd88-442e-98aa-c10fceae3e94-png-1qcm6gv.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: grok-image-36f8b98b-dd88-442e-98aa-c10fceae3e94.png",
+      "source": "google-drive",
+      "driveId": "12rpM3mvIcOvlU0eHthMxQeApm1u51bQ9"
+    },
+    {
+      "label": "衣装・未分類: xxcxzcz",
+      "path": "assets/drive-visuals/衣装-未分類-xxcxzcz-jpg-1vs3kci.webp",
+      "type": "outfit",
+      "description": "Google Drive公式資料集「衣装・未分類」から取り込んだビジュアル資料。元ファイル名: xxcxzcz.jpg",
+      "source": "google-drive",
+      "driveId": "1B8IZpT6snSACJsg8v1fDbMKuy_-zxQpL"
+    },
+    {
+      "label": "表情系: 3401 (1)",
+      "path": "assets/drive-visuals/表情系-3401-1-png-1cj9zbl.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: 3401 (1).png",
+      "source": "google-drive",
+      "driveId": "1bLUor9PsdrCTOnc0PK_GvHa4msOrrorE"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月22日 20_27_18",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月22日-20-27-18-png-1ajia2.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月22日 20_27_18.png",
+      "source": "google-drive",
+      "driveId": "13vIDjApEaZuTMi9GegMwnoCncPJADQTn"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月22日 22_05_08",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月22日-22-05-08-png-srpled.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月22日 22_05_08.png",
+      "source": "google-drive",
+      "driveId": "1GK89r8LFSn1r-5llomGEOu2X7XHy9Wjs"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月22日 23_48_52",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月22日-23-48-52-png-146vkt8.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月22日 23_48_52.png",
+      "source": "google-drive",
+      "driveId": "1a7OWjeGzSiXjARDLDrKqMC69oW52ybi8"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月23日 19_47_47",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月23日-19-47-47-png-1k74kkf.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月23日 19_47_47.png",
+      "source": "google-drive",
+      "driveId": "1Gg_k3xYdhjvWsCIN6JN35waDZsQXz3FH"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月23日 19_50_04",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月23日-19-50-04-png-65i2ny.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月23日 19_50_04.png",
+      "source": "google-drive",
+      "driveId": "1Aw1CkmF7_RTY9_B6EPprX9pfbPbxw5Nx"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月25日 19_52_58",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月25日-19-52-58-png-1vtj78b.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月25日 19_52_58.png",
+      "source": "google-drive",
+      "driveId": "1DREnnWdNG5GBknjs13EF6JIjackcaG_F"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月26日 19_53_10",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月26日-19-53-10-png-kcin2b.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月26日 19_53_10.png",
+      "source": "google-drive",
+      "driveId": "1aUDH7WUXIDrdfSCoHnmE9tfIuB5s2628"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月27日 01_11_38",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月27日-01-11-38-png-xfifcd.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月27日 01_11_38.png",
+      "source": "google-drive",
+      "driveId": "1TJFmv76zFqdz49o2MYCClweVjSo70lU5"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月30日 05_07_38",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月30日-05-07-38-png-2fg3c0.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 05_07_38.png",
+      "source": "google-drive",
+      "driveId": "14QlXGzbgbpbUrKEZ0DL9Bq4Ug9QGIfok"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月30日 05_10_51",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月30日-05-10-51-png-icopwh.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 05_10_51.png",
+      "source": "google-drive",
+      "driveId": "1aVRGeArVf855OO8Ix-vQlz0oKBIGYkXk"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年4月30日 06_31_20",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年4月30日-06-31-20-png-ypes03.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年4月30日 06_31_20.png",
+      "source": "google-drive",
+      "driveId": "1I9wEB4ZDLhNd-KbcMkjYvVv9a3jjDVzl"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年5月6日 07_08_54",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年5月6日-07-08-54-png-1vxwvpd.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月6日 07_08_54.png",
+      "source": "google-drive",
+      "driveId": "14m3y0mKtojWy-qqdt8oJ9GjUMmYo0kDz"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年5月6日 07_12_44",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年5月6日-07-12-44-png-12pkaox.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月6日 07_12_44.png",
+      "source": "google-drive",
+      "driveId": "18A3gqC-H_Tna_sFSTQjlErl2q519WZZ4"
+    },
+    {
+      "label": "表情系: ChatGPT Image 2026年5月6日 07_14_41",
+      "path": "assets/drive-visuals/表情系-chatgpt-image-2026年5月6日-07-14-41-png-1q0bdhs.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: ChatGPT Image 2026年5月6日 07_14_41.png",
+      "source": "google-drive",
+      "driveId": "1CwjyOMBYvqj6ieF9cMYnf--nHZy38IBL"
+    },
+    {
+      "label": "表情系: grok-image-aab0c399-8e74-4c2f-b923-eb34748923be",
+      "path": "assets/drive-visuals/表情系-grok-image-aab0c399-8e74-4c2f-b923-eb34748923be-png-12k57o8.webp",
+      "type": "expression",
+      "description": "Google Drive公式資料集「表情系」から取り込んだビジュアル資料。元ファイル名: grok-image-aab0c399-8e74-4c2f-b923-eb34748923be.png",
+      "source": "google-drive",
+      "driveId": "1aoO7aXmCCtPsw7iHHlgblpvv0MeL-hmK"
     }
   ],
   "timeline": [

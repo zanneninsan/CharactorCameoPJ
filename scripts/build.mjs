@@ -8,6 +8,17 @@ const contentDir = path.join(rootDir, "content", "characters");
 const distDir = path.join(rootDir, "dist");
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
+const sectionLabels = {
+  links: { en: "Links", ja: "リンク" },
+  visual: { en: "Visual Reference", ja: "ビジュアル資料" },
+  fanworks: { en: "Fanworks", ja: "二次創作ガイドライン" },
+  prompts: { en: "AI Prompts", ja: "AI生成用プロンプト" },
+  profile: { en: "Profile", ja: "プロフィール" },
+  glossary: { en: "Glossary", ja: "用語集" },
+  settings: { en: "Settings", ja: "設定" },
+  sideFlavors: { en: "Side Flavors", ja: "サイドフレーバー" },
+  timeline: { en: "Timeline", ja: "年表" }
+};
 
 async function main() {
   await build();
@@ -334,7 +345,7 @@ function renderCharacter(character) {
           ${renderFanworkGuidelinesCard(character)}
           ${renderAiPrompts(character)}
           <section class="panel" id="profile">
-            <h2>Profile</h2>
+            ${renderSectionHeading("profile")}
             <dl class="profile-list">
               ${Object.entries(character.profile).map(([key, value]) => `
                 <div>
@@ -345,7 +356,7 @@ function renderCharacter(character) {
             </dl>
           </section>
           <section class="panel" id="glossary">
-            <h2>Glossary</h2>
+            ${renderSectionHeading("glossary")}
             <div class="stack">
               ${character.glossary.map((item) => `
                 <article>
@@ -356,7 +367,7 @@ function renderCharacter(character) {
             </div>
           </section>
           <section class="panel wide" id="settings">
-            <h2>Settings</h2>
+            ${renderSectionHeading("settings")}
             <div class="stack">
               ${character.settings.map((item) => `
                 <article>
@@ -369,7 +380,7 @@ function renderCharacter(character) {
           </section>
           ${renderSideFlavors(character)}
           <section class="panel wide" id="timeline">
-            <h2>Timeline</h2>
+            ${renderSectionHeading("timeline")}
             <ol class="timeline">
               ${character.timeline.map((item) => `
                 <li>
@@ -396,7 +407,7 @@ function renderFanworkGuidelinesCard(character) {
   return `
     <section class="panel wide guideline-card" id="fanworks">
       <p class="eyebrow">Fanworks</p>
-      <h2>二次創作ガイドライン</h2>
+      ${renderSectionHeading("fanworks")}
       <p>${escapeHtml(character.fanworkGuidelines.summary)}</p>
       <div class="links">
         <a href="./fanworks.html">ガイドラインを見る</a>
@@ -408,7 +419,7 @@ function renderFanworkGuidelinesCard(character) {
 function renderAiPrompts(character) {
   return `
     <section class="panel wide" id="prompts">
-      <h2>AI Prompts</h2>
+      ${renderSectionHeading("prompts")}
       <p class="section-note">「${escapeHtml(character.displayName)}」をAI生成で利用する際の推奨プロンプトです。キャラクター二次創作ガイドラインに記載の範囲内で、ご自由にご利用いただけます。</p>
       <div class="links">
         <a href="../prompts/${escapeHtml(character.id)}/agent.md">AI Agent</a>
@@ -496,15 +507,15 @@ function renderHeroFacts(character) {
 
 function renderPageMenu(character) {
   const items = [
-    ["links", "Links"],
+    ["links", sectionLabels.links.en],
     ["visual", "Visual"],
-    ["fanworks", "Fanworks"],
+    ["fanworks", sectionLabels.fanworks.en],
     ["prompts", "AI"],
-    ["profile", "Profile"],
-    ["glossary", "Glossary"],
-    ["settings", "Settings"],
+    ["profile", sectionLabels.profile.en],
+    ["glossary", sectionLabels.glossary.en],
+    ["settings", sectionLabels.settings.en],
     ["side-flavors", "Flavor"],
-    ["timeline", "Timeline"]
+    ["timeline", sectionLabels.timeline.en]
   ];
 
   const visibleItems = items.filter(([id]) => {
@@ -542,7 +553,7 @@ function renderSideFlavors(character) {
 
   return `
     <section class="panel wide" id="side-flavors">
-      <h2>Side Flavors</h2>
+      ${renderSectionHeading("sideFlavors")}
       <div class="stack">
         ${character.sideFlavors.map((item) => `
           <article>
@@ -561,25 +572,45 @@ function renderVisualReferences(character) {
     return "";
   }
 
+  const baseReferences = character.visualReferences.filter((item) => item.source !== "google-drive");
+  const driveReferences = character.visualReferences.filter((item) => item.source === "google-drive");
+
   return `
     <section class="panel wide visual-references" id="visual">
       <p class="eyebrow">🎀 Visual Reference</p>
-      <h2>ビジュアル資料</h2>
-      <div class="visual-grid">
-        ${character.visualReferences.map((item) => `
-          <figure class="visual-card">
-            <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
-              <img src="./${escapeHtml(visualReferenceThumbPath(item.path))}" alt="${escapeHtml(item.label)}" loading="lazy">
-              <span>タップで拡大</span>
-            </a>
-            <figcaption>
-              <strong>${escapeHtml(item.label)}</strong>
-              ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
-            </figcaption>
-          </figure>
-        `).join("")}
-      </div>
+      ${renderSectionHeading("visual")}
+      ${baseReferences.length > 0 ? `
+        <div class="visual-base">
+          ${baseReferences.map((item) => renderVisualReferenceCard(item)).join("")}
+        </div>
+      ` : ""}
+      ${driveReferences.length > 0 ? `
+        <details class="visual-archive">
+          <summary>
+            <span>Google Drive資料集</span>
+            <small>${driveReferences.length}件の追加資料を表示</small>
+          </summary>
+          <div class="visual-grid">
+            ${driveReferences.map((item) => renderVisualReferenceCard(item)).join("")}
+          </div>
+        </details>
+      ` : ""}
     </section>
+  `;
+}
+
+function renderVisualReferenceCard(item) {
+  return `
+    <figure class="visual-card">
+      <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
+        <img src="./${escapeHtml(visualReferenceThumbPath(item.path))}" alt="${escapeHtml(item.label)}" loading="lazy">
+        <span>タップで拡大</span>
+      </a>
+      <figcaption>
+        <strong>${escapeHtml(item.label)}</strong>
+        ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
+      </figcaption>
+    </figure>
   `;
 }
 
@@ -604,10 +635,24 @@ function renderOfficialLinks(character) {
   return `
     <section class="panel wide official-links" id="links">
       <p class="eyebrow">🔗 Official Links</p>
-      <h2>Links</h2>
+      ${renderSectionHeading("links")}
       ${renderLinkGroup("Contents", contentLinks)}
       ${renderLinkGroup("Social", socialLinks)}
     </section>
+  `;
+}
+
+function renderSectionHeading(key) {
+  const label = sectionLabels[key];
+  if (!label) {
+    return `<h2>${escapeHtml(key)}</h2>`;
+  }
+
+  return `
+    <h2 class="section-title">
+      <span>${escapeHtml(label.en)}</span>
+      <small>${escapeHtml(label.ja)}</small>
+    </h2>
   `;
 }
 
@@ -1093,6 +1138,25 @@ h2 {
   letter-spacing: 0;
 }
 
+.section-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+}
+
+.section-title small {
+  color: var(--theme-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 800;
+}
+
+.section-title small::before {
+  content: "/ ";
+  color: var(--theme-secondary);
+}
+
 h3 {
   margin: 0 0 8px;
   font-size: 1.05rem;
@@ -1398,20 +1462,70 @@ h3 {
 
 .visual-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
   gap: 16px;
+}
+
+.visual-base {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.visual-base .visual-link {
+  width: min(100%, 920px);
+  margin: 0 auto;
+}
+
+.visual-base .visual-link img {
+  height: auto;
+}
+
+.visual-archive {
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 32%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--theme-accent) 38%, #ffffff);
+  overflow: hidden;
+}
+
+.visual-archive summary {
+  display: flex;
+  min-height: 58px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--theme-primary);
+  font-weight: 900;
+}
+
+.visual-archive summary::marker {
+  color: var(--theme-secondary);
+}
+
+.visual-archive summary small {
+  color: var(--theme-muted);
+  font-weight: 800;
+}
+
+.visual-archive .visual-grid {
+  padding: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-secondary) 28%, var(--line));
+  background: #ffffff;
 }
 
 .visual-card {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin: 0;
 }
 
 .visual-link {
   position: relative;
   display: block;
-  width: min(100%, 920px);
-  margin: 0 auto;
+  width: 100%;
   color: #ffffff;
   text-decoration: none;
 }
@@ -1419,7 +1533,8 @@ h3 {
 .visual-link img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 260px;
+  object-fit: contain;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
@@ -1448,7 +1563,9 @@ h3 {
 .visual-card figcaption {
   display: grid;
   gap: 4px;
+  min-width: 0;
   color: var(--muted);
+  font-size: 0.9rem;
   line-height: 1.65;
 }
 
@@ -1783,15 +1900,43 @@ time {
     gap: 10px;
   }
 
+  .visual-base {
+    margin-bottom: 12px;
+  }
+
+  .visual-base .visual-card figcaption {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .visual-archive {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .visual-archive summary {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .visual-archive .visual-grid {
+    padding: 0 0 12px;
+  }
+
+  .visual-grid {
+    grid-template-columns: 1fr;
+  }
+
   .visual-link {
     width: 100%;
   }
 
   .visual-link img {
+    height: min(68vh, 380px);
     border-left: 0;
     border-right: 0;
     border-radius: 0;
-    max-height: 72vh;
     object-fit: contain;
   }
 
