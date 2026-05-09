@@ -63,6 +63,31 @@
         }
       }
     },
+    "sideFlavors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "body"],
+        "properties": {
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    "visualReferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "path"],
+        "properties": {
+          "label": { "type": "string" },
+          "path": { "type": "string" },
+          "type": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
     "timeline": {
       "type": "array",
       "items": {

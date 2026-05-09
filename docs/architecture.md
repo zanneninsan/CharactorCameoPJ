@@ -81,6 +81,8 @@ dist/
 - `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL
 - `glossary`: 用語集
 - `settings`: 世界観、能力、関係性、禁止事項などの設定
+- `sideFlavors`: サイドフレーバー。本筋とは別枠のサブ設定、ネタ、背景フック
+- `visualReferences`: 衣装三面図などの公式ビジュアル参照画像と説明
 - `timeline`: 年表、時系列
 - `promptGuidance`: AIに渡すときの振る舞い、文章生成、見た目、動画演出の補助情報
 - `sources`: 原典や出典

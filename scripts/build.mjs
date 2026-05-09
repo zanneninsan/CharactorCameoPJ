@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,6 +41,7 @@ async function build() {
       const promptDir = path.join(distDir, "prompts", character.id);
       await mkdir(characterDir, { recursive: true });
       await mkdir(promptDir, { recursive: true });
+      await copyCharacterAssets(character, characterDir);
       await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
       await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
       await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
@@ -50,6 +51,19 @@ async function build() {
   }
 
   console.log(`Loaded ${characters.length} character(s).`);
+}
+
+async function copyCharacterAssets(character, characterDir) {
+  const assetsDir = path.join(contentDir, character.id, "assets");
+
+  try {
+    const assetsStat = await stat(assetsDir);
+    if (!assetsStat.isDirectory()) return;
+  } catch {
+    return;
+  }
+
+  await cp(assetsDir, path.join(characterDir, "assets"), { recursive: true });
 }
 
 async function loadCharacters() {
@@ -135,6 +149,7 @@ function renderCharacter(character) {
         </section>
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
+          ${renderVisualReferences(character)}
           <section class="panel">
             <h2>Profile</h2>
             <dl class="profile-list">
@@ -169,6 +184,7 @@ function renderCharacter(character) {
               `).join("")}
             </div>
           </section>
+          ${renderSideFlavors(character)}
           <section class="panel wide">
             <h2>Timeline</h2>
             <ol class="timeline">
@@ -196,6 +212,51 @@ function renderCharacter(character) {
       </main>
     `
   });
+}
+
+function renderSideFlavors(character) {
+  if (!Array.isArray(character.sideFlavors) || character.sideFlavors.length === 0) {
+    return "";
+  }
+
+  return `
+    <section class="panel wide">
+      <h2>Side Flavors</h2>
+      <div class="stack">
+        ${character.sideFlavors.map((item) => `
+          <article>
+            <p class="status">${escapeHtml(item.status ?? "official")}</p>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.body)}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderVisualReferences(character) {
+  if (!Array.isArray(character.visualReferences) || character.visualReferences.length === 0) {
+    return "";
+  }
+
+  return `
+    <section class="panel wide visual-references">
+      <p class="eyebrow">Visual Reference</p>
+      <h2>ビジュアル資料</h2>
+      <div class="visual-grid">
+        ${character.visualReferences.map((item) => `
+          <figure class="visual-card">
+            <img src="./${escapeHtml(item.path)}" alt="${escapeHtml(item.label)}" loading="lazy">
+            <figcaption>
+              <strong>${escapeHtml(item.label)}</strong>
+              ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
+            </figcaption>
+          </figure>
+        `).join("")}
+      </div>
+    </section>
+  `;
 }
 
 function renderOfficialLinks(character) {
@@ -271,6 +332,10 @@ ${character.glossary.map((item) => `- ${item.term}: ${item.definition}`).join("\
 
 ${character.settings.map((item) => `- ${item.title}: ${item.body}`).join("\n")}
 
+${renderSideFlavorsMarkdown(character)}
+
+${renderVisualReferencesMarkdown(character)}
+
 ## Timeline
 
 ${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
@@ -315,6 +380,10 @@ ${character.glossary.map((item) => `- ${item.term}: ${item.definition}`).join("\
 
 ${character.settings.map((item) => `- ${item.title}: ${item.body}`).join("\n")}
 
+${renderSideFlavorsMarkdown(character)}
+
+${renderVisualReferencesMarkdown(character)}
+
 ## Timeline
 
 ${character.timeline.map((item) => `- ${item.date}: ${item.event}${item.detail ? `。${item.detail}` : ""}`).join("\n")}
@@ -353,6 +422,26 @@ function renderLinksMarkdownGroup(title, links) {
 ${links.map((link) => `- ${link.label}: ${link.url}`).join("\n")}`;
 }
 
+function renderSideFlavorsMarkdown(character) {
+  if (!Array.isArray(character.sideFlavors) || character.sideFlavors.length === 0) {
+    return "";
+  }
+
+  return `## Side Flavors
+
+${character.sideFlavors.map((item) => `- ${item.title}: ${item.body}`).join("\n")}`;
+}
+
+function renderVisualReferencesMarkdown(character) {
+  if (!Array.isArray(character.visualReferences) || character.visualReferences.length === 0) {
+    return "";
+  }
+
+  return `## Visual References
+
+${character.visualReferences.map((item) => `- ${item.label}: ${item.description ?? item.path}`).join("\n")}`;
+}
+
 function renderImagePrompt(character) {
   return `# ${character.displayName} Image Generation Prompt
 
@@ -367,6 +456,8 @@ ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).
 ## Visual Guidance
 
 ${character.promptGuidance.image.map((item) => `- ${item}`).join("\n")}
+
+${renderVisualReferencesMarkdown(character)}
 
 ## World / Setting
 
@@ -688,6 +779,37 @@ h3 {
 .link-card small {
   color: rgba(255, 255, 255, 0.72);
   overflow-wrap: anywhere;
+}
+
+.visual-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.visual-card {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.visual-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.visual-card figcaption {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.visual-card strong {
+  color: var(--ink);
 }
 
 .back-link {

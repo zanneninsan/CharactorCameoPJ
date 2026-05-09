@@ -84,6 +84,8 @@ Critical rule: missing character information must remain undefined.
 - `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL
 - `glossary`: 用語集
 - `settings`: 世界観、関係性、能力、話し方、禁止事項など
+- `sideFlavors`: 本筋の公式設定とは別枠のサブ設定、ネタ、背景フック
+- `visualReferences`: 衣装三面図など、公式ビジュアル参照画像と説明
 - `timeline`: 年表、作中時系列、公開時系列
 - `promptGuidance.agent`: 会話AI/カスタムエージェント向けの振る舞い
 - `promptGuidance.t2t`: Text-to-Text向けの文章生成ルール
