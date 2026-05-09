@@ -90,14 +90,14 @@ async function handleRequest(req, res) {
 
 function resolveDistPath(urlPath) {
   const decoded = decodeURIComponent(urlPath);
-  const normalized = path.normalize(decoded).replace(/^(\.\.[/\\])+/, "");
-  let filePath = path.join(distDir, normalized);
+  const normalized = path.normalize(decoded.replace(/^[/\\]+/, "")).replace(/^(\.\.[/\\])+/, "");
+  let filePath = path.resolve(distDir, normalized);
 
-  if (!filePath.startsWith(distDir)) {
+  if (filePath !== distDir && !filePath.startsWith(`${distDir}${path.sep}`)) {
     return null;
   }
 
-  if (decoded.endsWith("/")) {
+  if (decoded.endsWith("/") || filePath === distDir) {
     filePath = path.join(filePath, "index.html");
   }
 
