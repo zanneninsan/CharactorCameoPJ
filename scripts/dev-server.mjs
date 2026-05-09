@@ -12,7 +12,9 @@ const watchDirs = [
   path.join(rootDir, "schemas"),
   path.join(rootDir, "scripts")
 ];
-const requestedPort = Number(process.env.PORT ?? 4173);
+const defaultPortBase = 4173;
+const defaultPortRange = 100;
+const requestedPort = resolveRequestedPort();
 const buildDebounceMs = Number(process.env.BUILD_DEBOUNCE_MS ?? 2500);
 const clients = new Set();
 let buildTimer;
@@ -27,8 +29,33 @@ const { port } = server.address();
 console.log(`Character Cameo dev server`);
 console.log(`Local: http://127.0.0.1:${port}/`);
 console.log(`Zannenin: http://127.0.0.1:${port}/zannenin/`);
+console.log(`Port source: ${process.env.PORT ? "PORT env" : "worktree default"}`);
 console.log(`Watching content/, schemas/, scripts/`);
 console.log(`Build debounce: ${buildDebounceMs}ms`);
+
+function resolveRequestedPort() {
+  if (process.env.PORT) {
+    return parsePort(process.env.PORT, "PORT");
+  }
+
+  return defaultPortBase + (stableHash(rootDir) % defaultPortRange);
+}
+
+function parsePort(value, name) {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`${name} must be an integer port from 1 to 65535.`);
+  }
+  return port;
+}
+
+function stableHash(value) {
+  let hash = 0;
+  for (const char of value) {
+    hash = ((hash << 5) - hash + char.codePointAt(0)) | 0;
+  }
+  return Math.abs(hash);
+}
 
 async function listenWithFallback(startPort) {
   for (let port = startPort; port < startPort + 20; port += 1) {
