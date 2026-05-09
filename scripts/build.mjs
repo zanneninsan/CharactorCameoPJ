@@ -273,8 +273,8 @@ async function generateOpenGraphImage(character, characterDir) {
     <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
       <rect width="1200" height="630" fill="${escapeXml(character.theme?.primary ?? "#151217")}"/>
       <rect x="32" y="32" width="1136" height="566" fill="none" stroke="${escapeXml(character.theme?.secondary ?? "#d4a72c")}" stroke-width="4"/>
-      <text x="80" y="285" font-family="serif" font-size="92" font-weight="700" fill="#ffffff">${escapeXml(character.displayName)}</text>
-      <text x="84" y="370" font-family="sans-serif" font-size="32" font-weight="700" fill="${escapeXml(character.theme?.accent ?? "#fff3c4")}">Official Character Canon</text>
+      <text x="80" y="285" font-family="'Yu Gothic', Meiryo, 'Noto Sans CJK JP', sans-serif" font-size="92" font-weight="700" fill="#ffffff">${escapeXml(character.displayName)}</text>
+      <text x="84" y="370" font-family="'Yu Gothic', Meiryo, 'Noto Sans CJK JP', sans-serif" font-size="32" font-weight="700" fill="${escapeXml(character.theme?.accent ?? "#fff3c4")}">Official Character Canon</text>
     </svg>
   `))
     .png({ compressionLevel: 8 })
