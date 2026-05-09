@@ -87,6 +87,18 @@
         }
       }
     },
+    "rights": {
+      "type": "object",
+      "properties": {
+        "holderName": { "type": "string" },
+        "holderUrl": { "type": "string" },
+        "managedBy": { "type": "string" },
+        "managedByUrl": { "type": "string" },
+        "contact": { "type": "string" },
+        "contactUrl": { "type": "string" },
+        "notice": { "type": "string" }
+      }
+    },
     "fanworkGuidelines": {
       "type": "object",
       "required": ["title", "summary", "status", "sections"],
@@ -95,6 +107,17 @@
         "summary": { "type": "string" },
         "status": { "type": "string" },
         "contact": { "type": "string" },
+        "revisionHistory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "summary"],
+            "properties": {
+              "date": { "type": "string" },
+              "summary": { "type": "string" }
+            }
+          }
+        },
         "sections": {
           "type": "array",
           "items": {

@@ -96,6 +96,12 @@
           "公式企画、公式素材、公式発表と誤認されやすい利用や、禁止事項に近い表現を含む可能性がある場合は、公開前に確認してください。"
         ]
       }
+    ],
+    "revisionHistory": [
+      {
+        "date": "2026-05-10",
+        "summary": "初版作成"
+      }
     ]
   },
   "glossary": [],
@@ -230,5 +236,14 @@
       "label": "ヒーローバナー 24eef291-9f91-4489-a318-ad5ebd435e43.png",
       "note": "ユズのヒーローバナー画像として提供された。"
     }
-  ]
+  ],
+  "rights": {
+    "holderName": "X: @YuzuFox_AI",
+    "holderUrl": "https://x.com/YuzuFox_AI",
+    "managedBy": "X: @YuzuFox_AI",
+    "managedByUrl": "https://x.com/YuzuFox_AI",
+    "contact": "https://x.com/YuzuFox_AI",
+    "contactUrl": "https://x.com/YuzuFox_AI",
+    "notice": "権利者・管理者・問い合わせ先は公式Xアカウントを参照してください。"
+  }
 }

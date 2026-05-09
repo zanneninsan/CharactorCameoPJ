@@ -103,6 +103,7 @@ Critical rule: missing character information must remain undefined.
 - `likes`: 好きなものの簡易リスト
 - `links`: SNSアカウントなど、Webサイトに表示するソーシャルリンク
 - `contentLinks`: 公式ゲーム、Discord、配布ページなど、SNS以外の任意コンテンツURL
+- `rights`: 権利者情報。権利者名、管理者、問い合わせ先、補足を入れる。リンク先がある場合は `holderUrl`, `managedByUrl`, `contactUrl` も入れる。未確認の情報は推測せず `未定義` にする
 - `glossary`: 用語集
 - `settings`: 世界観、関係性、能力、話し方、禁止事項など
 - `sideFlavors`: 本筋の公式設定とは別枠のサブ設定、ネタ、背景フック
@@ -113,6 +114,8 @@ Critical rule: missing character information must remain undefined.
 - `promptGuidance.image`: 画像生成AI向けの外見・構図・制約
 - `promptGuidance.video`: 動画生成AI向けの動き・演出・制約
 - `sources`: 出典や根拠
+
+二次創作ガイドラインを公開する場合は、末尾に `revisionHistory` を入れ、改訂日と変更概要を残してください。ガイドラインページではPDF出力導線も確認してください。
 
 AI出力に強く影響する要素、特に口調、外見、服装、色、持ち物、世界観の禁止事項は優先して整理してください。
 

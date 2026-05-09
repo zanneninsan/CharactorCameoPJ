@@ -558,6 +558,7 @@ function renderCharacter(character) {
             ${renderSectionHeading("timeline")}
             ${renderTimelineGroups(character.timeline)}
           </section>
+          ${renderRightsSection(character)}
           ${renderSourceCallout({
             eyebrow: "Source",
             title: "このサイトのソース",
@@ -589,6 +590,46 @@ function renderFanworkGuidelinesCard(character) {
       </div>
     </section>
   `;
+}
+
+function renderRightsSection(character, { id = "rights" } = {}) {
+  const rights = character.rights ?? {};
+  const rows = [
+    ["権利者", rights.holderName ?? "未定義", rights.holderUrl],
+    ["管理者", rights.managedBy ?? "未定義", rights.managedByUrl],
+    ["問い合わせ先", rights.contact ?? "未定義", rights.contactUrl]
+  ];
+  const notice = rights.notice ?? "権利者情報は確認中です。確定後に更新します。";
+
+  return `
+    <section class="panel wide rights-panel" id="${escapeHtml(id)}">
+      <p class="eyebrow">Rights</p>
+      <h2>権利者情報</h2>
+      <dl class="rights-list">
+        ${rows.map(([key, value, href]) => `
+          <div>
+            <dt>${escapeHtml(key)}</dt>
+            <dd>${renderRightsValue(value, href)}</dd>
+          </div>
+        `).join("")}
+      </dl>
+      <p>${escapeHtml(notice)}</p>
+    </section>
+  `;
+}
+
+function renderRightsValue(value, href) {
+  const label = value ?? "未定義";
+  const url = href ?? (isHttpUrl(label) ? label : "");
+  if (!url) {
+    return escapeHtml(label);
+  }
+
+  return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+}
+
+function isHttpUrl(value) {
+  return typeof value === "string" && /^https?:\/\//i.test(value);
 }
 
 function renderAiPrompts(character) {
@@ -729,6 +770,9 @@ function renderFanworkGuidelines(character) {
               <span><strong>Status</strong>${escapeHtml(guidelines.status)}</span>
               <span><strong>Use</strong>ガイドライン参照</span>
             </div>
+            <div class="guideline-actions">
+              <button class="print-button" type="button" data-print-page>PDF出力</button>
+            </div>
           </div>
         </section>
         <div class="shell content-layout guideline-layout">
@@ -745,10 +789,34 @@ function renderFanworkGuidelines(character) {
               </ul>
             </section>
           `).join("")}
+          ${renderRightsSection(character, { id: "guideline-rights" })}
+          ${renderRevisionHistory(guidelines)}
         </div>
       </main>
     `
   });
+}
+
+function renderRevisionHistory(guidelines) {
+  const history = Array.isArray(guidelines.revisionHistory) ? guidelines.revisionHistory : [];
+  if (history.length === 0) {
+    return "";
+  }
+
+  return `
+    <section class="panel wide guideline-section revision-history" id="revision-history">
+      <p class="eyebrow">Revision History</p>
+      <h2>改訂履歴</h2>
+      <ol class="revision-list">
+        ${history.map((entry) => `
+          <li>
+            <time datetime="${escapeHtml(entry.date)}">${escapeHtml(entry.date)}</time>
+            <span>${escapeHtml(entry.summary)}</span>
+          </li>
+        `).join("")}
+      </ol>
+    </section>
+  `;
 }
 
 function renderBrandBanner(character) {
@@ -793,7 +861,8 @@ function renderPageMenu(character) {
     ["glossary", sectionLabels.glossary.en],
     ["settings", sectionLabels.settings.en],
     ["side-flavors", "Flavor"],
-    ["timeline", sectionLabels.timeline.en]
+    ["timeline", sectionLabels.timeline.en],
+    ["rights", "Rights"]
   ];
 
   const visibleItems = items.filter(([id]) => {
@@ -1637,6 +1706,12 @@ function renderClientScript() {
     });
 
     update();
+  }
+
+  for (const button of document.querySelectorAll("[data-print-page]")) {
+    button.addEventListener("click", () => {
+      window.print();
+    });
   }
 })();
 </script>`;
@@ -2569,6 +2644,69 @@ h3 {
   color: var(--theme-secondary);
 }
 
+.guideline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.print-button {
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 54%, var(--line));
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: var(--theme-secondary);
+  color: var(--theme-primary);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.print-button:hover,
+.print-button:focus-visible {
+  filter: brightness(1.04);
+}
+
+.rights-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.rights-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.rights-list div {
+  display: grid;
+  grid-template-columns: minmax(112px, 0.28fr) 1fr;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.revision-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.revision-list li::marker {
+  color: var(--theme-secondary);
+}
+
+.revision-list time {
+  display: inline-block;
+  min-width: 104px;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
 .section-note {
   max-width: 760px;
   margin: 0 0 16px;
@@ -2744,7 +2882,8 @@ time {
   }
 
   .content-layout:not(.guideline-layout) #links,
-  .content-layout:not(.guideline-layout) #timeline {
+  .content-layout:not(.guideline-layout) #timeline,
+  .content-layout:not(.guideline-layout) #rights {
     grid-column: 1 / -1;
   }
 
@@ -2774,6 +2913,60 @@ time {
 
   .content-layout:not(.guideline-layout) .detail-stack #settings {
     grid-column: 1 / -1;
+  }
+}
+
+@media print {
+  :root {
+    color: #111;
+    background: #fff;
+  }
+
+  body {
+    background: #fff;
+    color: #111;
+  }
+
+  .back-link,
+  .brand-banner-shell,
+  .guideline-actions,
+  .page-menu,
+  .source-callout {
+    display: none !important;
+  }
+
+  .character-hero {
+    border: 0;
+    padding: 0 0 18px;
+    background: #fff;
+  }
+
+  .shell,
+  .guideline-layout {
+    width: 100%;
+    max-width: none;
+  }
+
+  .content-layout,
+  .guideline-layout {
+    display: block;
+    padding: 0;
+  }
+
+  .panel {
+    break-inside: avoid;
+    box-shadow: none;
+    border-color: #d8d8d8;
+    margin: 0 0 14px;
+  }
+
+  .panel::before {
+    background: #d8d8d8;
+  }
+
+  .hero-facts span,
+  .links a {
+    background: #fff;
   }
 }
 
