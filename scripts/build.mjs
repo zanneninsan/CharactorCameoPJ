@@ -642,10 +642,15 @@ function renderVisualReferences(character) {
 }
 
 function renderVisualReferenceCard(item, { hidden = false } = {}) {
+  const thumbPath = `./${escapeHtml(visualReferenceThumbPath(item.path))}`;
+  const imageAttributes = hidden
+    ? `src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-src="${thumbPath}"`
+    : `src="${thumbPath}"`;
+
   return `
     <figure class="visual-card"${hidden ? " hidden" : ""}>
       <a class="visual-link" href="./${escapeHtml(visualReferenceLargePath(item.path))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}を拡大表示">
-        <img src="./${escapeHtml(visualReferenceThumbPath(item.path))}" alt="${escapeHtml(item.label)}" loading="lazy">
+        <img ${imageAttributes} alt="${escapeHtml(item.label)}" loading="lazy">
         <span>タップで拡大</span>
       </a>
       <figcaption>
@@ -1071,9 +1076,19 @@ function renderClientScript() {
     const count = gallery.querySelector("[data-gallery-count]");
     if (!button) continue;
 
+    const loadCardImages = (targetCards) => {
+      for (const card of targetCards) {
+        for (const image of card.querySelectorAll("img[data-src]")) {
+          image.src = image.dataset.src;
+          image.removeAttribute("data-src");
+        }
+      }
+    };
+
     cards.forEach((card, index) => {
       card.hidden = index >= initial;
     });
+    loadCardImages(cards.filter((card) => !card.hidden));
 
     const update = () => {
       const visible = cards.filter((card) => !card.hidden).length;
@@ -1086,6 +1101,7 @@ function renderClientScript() {
       for (const card of hiddenCards) {
         card.hidden = false;
       }
+      loadCardImages(hiddenCards);
       update();
     });
 
@@ -1168,6 +1184,10 @@ function renderCss() {
 }
 
 * { box-sizing: border-box; }
+
+[hidden] {
+  display: none !important;
+}
 
 body {
   margin: 0;
@@ -1883,16 +1903,16 @@ time {
   }
 
   .content-layout:not(.guideline-layout) #visual {
-    grid-column: 1 / span 7;
-    grid-row: span 2;
+    grid-column: 1 / -1;
+    grid-row: auto;
   }
 
   .content-layout:not(.guideline-layout) #fanworks {
-    grid-column: 8 / -1;
+    grid-column: 1 / span 6;
   }
 
   .content-layout:not(.guideline-layout) #prompts {
-    grid-column: 8 / -1;
+    grid-column: 7 / -1;
   }
 
   .content-layout:not(.guideline-layout) #profile,
