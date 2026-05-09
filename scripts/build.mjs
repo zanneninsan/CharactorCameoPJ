@@ -521,7 +521,7 @@ function renderCharacter(character) {
                   ${Object.entries(character.profile).map(([key, value]) => `
                     <div>
                       <dt>${escapeHtml(key)}</dt>
-                      <dd>${escapeHtml(value)}</dd>
+                      <dd>${renderProfileValue(value)}</dd>
                     </div>
                   `).join("")}
                 </dl>
@@ -974,6 +974,26 @@ function renderVisualReferenceCard(item, { hidden = false } = {}) {
       </figcaption>
     </figure>
   `;
+}
+
+function renderProfileValue(value) {
+  const text = String(value);
+  const colorPattern = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
+  const matches = Array.from(text.matchAll(colorPattern));
+  if (matches.length === 0) {
+    return escapeHtml(text);
+  }
+
+  let html = "";
+  let lastIndex = 0;
+  for (const match of matches) {
+    const color = match[0];
+    html += escapeHtml(text.slice(lastIndex, match.index));
+    html += `<span class="profile-color-token"><span>${escapeHtml(color)}</span><span class="color-swatch" style="--swatch-color: ${escapeHtml(color)}" aria-label="${escapeHtml(color)}"></span></span>`;
+    lastIndex = match.index + color.length;
+  }
+  html += escapeHtml(text.slice(lastIndex));
+  return html;
 }
 
 function visualReferenceThumbPath(assetPath) {
@@ -2612,6 +2632,25 @@ dt {
 dd {
   margin: 0;
   font-weight: 800;
+}
+
+.profile-color-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38em;
+  margin-right: 0.22em;
+  white-space: nowrap;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 1.12em;
+  height: 1.12em;
+  border: 1px solid rgba(31, 26, 18, 0.22);
+  border-radius: 4px;
+  background: var(--swatch-color);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  vertical-align: -0.16em;
 }
 
 .stack {
