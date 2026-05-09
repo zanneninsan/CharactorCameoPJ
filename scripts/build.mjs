@@ -7,6 +7,8 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const contentDir = path.join(rootDir, "content", "characters");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
+const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
+const sitemapLastmod = process.env.SITEMAP_LASTMOD ?? new Date().toISOString().slice(0, 10);
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
 const sectionLabels = {
@@ -59,6 +61,7 @@ async function build() {
         await copyCharacterAssets(character, characterDir);
         await generateBrandAssets(character, characterDir);
         await generateVisualReferenceAssets(character, characterDir);
+        await generateOpenGraphImage(character, characterDir);
         await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
         if (character.fanworkGuidelines) {
           await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
@@ -70,6 +73,10 @@ async function build() {
         await writeFile(path.join(promptDir, "image-outfit-change.md"), renderImagePrompt(character, { outfitMode: "outfit-change" }), "utf8");
         await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
       }
+
+      await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
+      await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
+      await writeFile(path.join(distDir, ".nojekyll"), "", "utf8");
     } finally {
       await releaseBuildLock();
     }
@@ -106,6 +113,10 @@ async function acquireBuildLock() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeSiteUrl(value) {
+  return `${String(value).trim().replace(/\/+$/, "")}/`;
 }
 
 async function copyCharacterAssets(character, characterDir) {
@@ -202,6 +213,80 @@ async function generateBrandAssets(character, characterDir) {
       .composite(composites)
       .webp({ quality: 80 })
       .toFile(path.join(outputDir, "banner-logo.webp"));
+  }
+}
+
+async function generateOpenGraphImage(character, characterDir) {
+  const outputDir = path.join(characterDir, "assets", "generated");
+  await mkdir(outputDir, { recursive: true });
+  const outputPath = path.join(outputDir, "ogp.png");
+  const generatedBanner = path.join(characterDir, "assets", "generated", "brand", "banner-logo.webp");
+  const sourceBanner = character.brandAssets?.banner?.source
+    ? path.join(contentDir, character.id, character.brandAssets.banner.source)
+    : null;
+
+  let bannerPath = null;
+  if (await fileExists(generatedBanner)) {
+    bannerPath = generatedBanner;
+  } else if (sourceBanner && await fileExists(sourceBanner)) {
+    bannerPath = sourceBanner;
+  }
+
+  if (bannerPath) {
+    const background = await sharp(bannerPath)
+      .resize(1200, 630, { fit: "cover", position: "center" })
+      .blur(14)
+      .modulate({ brightness: 0.52 })
+      .png()
+      .toBuffer();
+    const foreground = await sharp(bannerPath)
+      .resize(1200, 630, { fit: "contain", background: { r: 5, g: 5, b: 7, alpha: 0 } })
+      .png()
+      .toBuffer();
+
+    await sharp(background)
+      .composite([
+        {
+          input: foreground
+        },
+        {
+          input: Buffer.from(`
+            <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="shade" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0" stop-color="#050507" stop-opacity="0.34"/>
+                  <stop offset="0.42" stop-color="#050507" stop-opacity="0.04"/>
+                  <stop offset="1" stop-color="#050507" stop-opacity="0.2"/>
+                </linearGradient>
+              </defs>
+              <rect width="1200" height="630" fill="url(#shade)"/>
+            </svg>
+          `)
+        }
+      ])
+      .png({ compressionLevel: 8 })
+      .toFile(outputPath);
+    return;
+  }
+
+  await sharp(Buffer.from(`
+    <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="630" fill="${escapeXml(character.theme?.primary ?? "#151217")}"/>
+      <rect x="32" y="32" width="1136" height="566" fill="none" stroke="${escapeXml(character.theme?.secondary ?? "#d4a72c")}" stroke-width="4"/>
+      <text x="80" y="285" font-family="serif" font-size="92" font-weight="700" fill="#ffffff">${escapeXml(character.displayName)}</text>
+      <text x="84" y="370" font-family="sans-serif" font-size="32" font-weight="700" fill="${escapeXml(character.theme?.accent ?? "#fff3c4")}">Official Character Canon</text>
+    </svg>
+  `))
+    .png({ compressionLevel: 8 })
+    .toFile(outputPath);
+}
+
+async function fileExists(filePath) {
+  try {
+    await stat(filePath);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -323,8 +408,21 @@ function validateCharacter(character, filePath) {
 }
 
 function renderIndex(characters) {
+  const primaryCharacter = characters.find((character) => character.id === "zannenin") ?? characters[0];
   return htmlPage({
     title: "Character Canon",
+    description: "Character Canon is an official character setting archive that publishes profiles, timelines, links, visual references, and AI prompt materials.",
+    urlPath: "",
+    imagePath: primaryCharacter ? `${primaryCharacter.id}/assets/generated/ogp.png` : null,
+    type: "website",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Character Canon",
+      url: absoluteUrl(""),
+      inLanguage: "ja",
+      about: characters.map((character) => character.displayName)
+    },
     body: `
       <main class="shell">
         <section class="hero">
@@ -360,6 +458,11 @@ function renderIndex(characters) {
 function renderCharacter(character) {
   return htmlPage({
     title: character.displayName,
+    description: character.summary,
+    urlPath: `${character.id}/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "profile",
+    structuredData: characterStructuredData(character, `${character.id}/`),
     theme: character.theme,
     body: `
       <main>
@@ -473,6 +576,28 @@ function renderFanworkGuidelines(character) {
   const guidelines = character.fanworkGuidelines;
   return htmlPage({
     title: `${character.displayName} 二次創作ガイドライン`,
+    description: guidelines.summary,
+    urlPath: `${character.id}/fanworks.html`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "article",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: guidelines.title,
+      description: guidelines.summary,
+      url: absoluteUrl(`${character.id}/fanworks.html`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      },
+      about: {
+        "@type": "Thing",
+        name: character.displayName,
+        url: absoluteUrl(`${character.id}/`)
+      }
+    },
     theme: character.theme,
     body: `
       <main>
@@ -985,23 +1110,128 @@ function outfitChangeGuidance(character) {
 - 年齢は自称17歳（成人済）として扱い、キャラクター性に反する性的な衣装・演出へ寄せない。${reference}`;
 }
 
-function htmlPage({ title, body, theme }) {
+function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData }) {
+  const canonicalUrl = absoluteUrl(urlPath);
+  const seoDescription = normalizeDescription(description ?? title);
+  const absoluteImageUrl = imagePath ? absoluteUrl(imagePath) : null;
+  const titleSuffix = title === "Character Canon" ? "" : " | Character Canon";
+  const themeColor = theme?.primary && isCssColor(theme.primary) ? theme.primary : "#151217";
+  const imageAlt = `${title} OGP card`;
+
   return `<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${escapeHtml(title)}</title>
+    <title>${escapeHtml(`${title}${titleSuffix}`)}</title>
+    <meta name="description" content="${escapeHtml(seoDescription)}">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="theme-color" content="${escapeHtml(themeColor)}">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
+    <meta property="og:site_name" content="Character Canon">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:type" content="${escapeHtml(type)}">
+    <meta property="og:title" content="${escapeHtml(title)}">
+    <meta property="og:description" content="${escapeHtml(seoDescription)}">
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}">
+    ${absoluteImageUrl ? `
+    <meta property="og:image" content="${escapeHtml(absoluteImageUrl)}">
+    <meta property="og:image:secure_url" content="${escapeHtml(absoluteImageUrl)}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="${escapeHtml(imageAlt)}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="${escapeHtml(absoluteImageUrl)}">` : `
+    <meta name="twitter:card" content="summary">`}
+    <meta name="twitter:title" content="${escapeHtml(title)}">
+    <meta name="twitter:description" content="${escapeHtml(seoDescription)}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
     <link rel="stylesheet" href="${title === "Character Canon" ? "./styles.css" : "../styles.css"}">
+    ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
   <body${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
     ${renderClientScript()}
   </body>
 </html>`;
+}
+
+function normalizeDescription(value) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
+}
+
+function absoluteUrl(urlPath) {
+  return new URL(String(urlPath ?? "").replace(/^\/+/, ""), siteUrl).toString();
+}
+
+function escapeScriptJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
+function characterStructuredData(character, urlPath) {
+  const sameAs = [...(character.links ?? []), ...(character.contentLinks ?? [])]
+    .map((link) => link.url)
+    .filter(Boolean);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    name: character.displayName,
+    description: character.summary,
+    url: absoluteUrl(urlPath),
+    inLanguage: "ja",
+    image: absoluteUrl(`${character.id}/assets/generated/ogp.png`),
+    about: {
+      "@type": "Thing",
+      name: character.displayName,
+      description: character.summary,
+      image: absoluteUrl(`${character.id}/assets/generated/ogp.png`),
+      sameAs
+    },
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Character Canon",
+      url: absoluteUrl("")
+    }
+  };
+}
+
+function renderRobotsTxt() {
+  return `User-agent: *
+Allow: /
+
+Sitemap: ${absoluteUrl("sitemap.xml")}
+`;
+}
+
+function renderSitemap(characters) {
+  const urls = [
+    { loc: absoluteUrl(""), priority: "0.8" },
+    ...characters.flatMap((character) => [
+      { loc: absoluteUrl(`${character.id}/`), priority: "1.0" },
+      ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
+    ])
+  ];
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((item) => `  <url>
+    <loc>${escapeXml(item.loc)}</loc>
+    <lastmod>${sitemapLastmod}</lastmod>
+    <priority>${item.priority}</priority>
+  </url>`).join("\n")}
+</urlset>
+`;
 }
 
 function renderClientScript() {
@@ -2174,6 +2404,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeXml(value) {
+  return escapeHtml(value);
 }
 
 function formatUrl(link) {
