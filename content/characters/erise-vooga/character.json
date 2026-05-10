@@ -42,7 +42,14 @@
     "甘いもの",
     "みんな"
   ],
-  "links": [],
+  "links": [
+    {
+      "label": "X",
+      "url": "https://x.com/Gabrietta_Seri",
+      "type": "social",
+      "displayUrl": "@Gabrietta_Seri"
+    }
+  ],
   "contentLinks": [],
   "rights": {
     "holderName": "未定義",
@@ -186,6 +193,11 @@
     {
       "label": "エリセ・ヴーガ設定資料画像",
       "note": "C:/Users/JSLabo000020/Downloads/erise_settei.png から抽出。"
+    },
+    {
+      "label": "XアカウントURL",
+      "url": "https://x.com/Gabrietta_Seri",
+      "note": "ユーザー提供のSNSリンク。"
     }
   ]
 }
