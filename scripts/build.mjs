@@ -555,19 +555,19 @@ function renderCharacter(character) {
               </section>
               ${renderSideFlavors(character)}
             </div>
-            <section class="panel detail-settings" id="settings">
-              ${renderSectionHeading("settings")}
-              <div class="stack">
-                ${character.settings.map((item) => `
-                  <article>
-                    <p class="status">${escapeHtml(item.status ?? "official")}</p>
-                    <h3>${escapeHtml(item.title)}</h3>
-                    <p>${escapeHtml(item.body)}</p>
-                  </article>
-                `).join("")}
-              </div>
-            </section>
           </div>
+          <section class="panel wide detail-settings" id="settings">
+            ${renderSectionHeading("settings")}
+            <div class="stack">
+              ${character.settings.map((item) => `
+                <article>
+                  <p class="status">${escapeHtml(item.status ?? "official")}</p>
+                  <h3>${escapeHtml(item.title)}</h3>
+                  <p>${escapeHtml(item.body)}</p>
+                </article>
+              `).join("")}
+            </div>
+          </section>
           <section class="panel wide" id="timeline">
             ${renderSectionHeading("timeline")}
             ${renderTimelineGroups(character.timeline)}
@@ -3521,6 +3521,7 @@ time {
 
   .content-layout:not(.guideline-layout) #links,
   .content-layout:not(.guideline-layout) #videos,
+  .content-layout:not(.guideline-layout) #settings,
   .content-layout:not(.guideline-layout) #timeline,
   .content-layout:not(.guideline-layout) #rights {
     grid-column: 1 / -1;
