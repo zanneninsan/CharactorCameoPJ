@@ -238,6 +238,12 @@
       "path": "assets/character-sheet-02.png",
       "type": "reference",
       "description": "装備・ギア、Neo Sakura City、自室、バックストーリー、データメモ、お気に入りの場所、ムード/性格をまとめた公式ビジュアル資料。"
+    },
+    {
+      "label": "Sora2-chan ポートレート",
+      "path": "assets/portrait-purple-logo.jpg",
+      "type": "portrait",
+      "description": "紫背景でSora2-chanのポーズ、衣装、猫耳デバイス、ロゴを確認できる縦長ポートレート資料。"
     }
   ],
   "timeline": [],
@@ -301,6 +307,10 @@
     {
       "label": "ユーザー提供画像",
       "note": "2026-05-10にSora2-chanのキャラクターシート01/02が提供された。"
+    },
+    {
+      "label": "ユーザー提供画像",
+      "note": "2026-05-10にSora2-chanの縦長ポートレート画像が提供された。"
     }
   ]
 }

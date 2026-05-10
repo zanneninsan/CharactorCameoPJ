@@ -21,6 +21,7 @@
 - キャラクターシート01/02
 - 装備・ギア: 猫耳センサー、コアチョーカー、サーキットパーカー、データテール、フォンリンク、ホロUI
 - 自室: 好きなものに囲まれた居心地のよいハイテクルーム
+- 縦長ポートレート画像
 
 ## 未定義のままにした項目
 
@@ -54,3 +55,4 @@
 - 2026-05-10: ユーザー提供画像をヒーローバナーとして `content/characters/sora2-chan-model-msgk/assets/brand/banner-source.png` に追加。
 - 2026-05-10: 普段の口調、語尾・よく使う言葉、NGな話し方、二次創作ガイドライン、SNSリンクを公式設定として反映。
 - 2026-05-10: ユーザー提供画像をキャラクターシート資料として `content/characters/sora2-chan-model-msgk/assets/character-sheet-01.png` と `content/characters/sora2-chan-model-msgk/assets/character-sheet-02.png` に追加。
+- 2026-05-10: ユーザー提供画像をポートレート資料として `content/characters/sora2-chan-model-msgk/assets/portrait-purple-logo.jpg` に追加。
