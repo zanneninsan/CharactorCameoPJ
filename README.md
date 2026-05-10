@@ -7,6 +7,7 @@
 ```powershell
 npm.cmd run build
 npm.cmd run check
+npm.cmd run check:encoding
 npm.cmd run dev
 npm.cmd run import:drive-visuals -- zannenin
 ```
@@ -22,7 +23,9 @@ npm.cmd run import:drive-visuals -- zannenin
 - `dist/prompts/{characterId}/image-outfit-change.md`: 画像生成AI向けプロンプト（衣装変更用）
 - `dist/prompts/{characterId}/video-outfit-change.md`: 動画生成AI向けプロンプト（衣装変更用）
 
-`npm.cmd run check` はキャラクターJSONを軽く検証します。
+`npm.cmd run check` は文字化け検査を行ったうえで、キャラクターJSONを軽く検証します。
+
+`npm.cmd run check:encoding` は正本側のテキストファイルに典型的な文字化け断片やUnicode置換文字が混入していないか検査します。詳しくは `docs/encoding-safety.md` を参照してください。
 
 `npm.cmd run dev` はローカル確認用サーバーを起動します。`PORT` 未指定時はワークツリーごとの既定ポートを使うため、起動ログに表示された `Local: http://127.0.0.1:{port}/` を開いてください。
 

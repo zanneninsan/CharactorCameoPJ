@@ -12,6 +12,12 @@
     "text": "#1f1a12",
     "muted": "#756b5e"
   },
+  "brandAssets": {
+    "banner": {
+      "source": "assets/brand/banner-source.png",
+      "alt": "真神 錸丸 タイトルバナー"
+    }
+  },
   "profile": {
     "呼称": "真神 錸丸",
     "読み": "まかみ れにまる",
@@ -207,6 +213,10 @@
     ]
   },
   "sources": [
+    {
+      "label": "提供画像 E258DC7A-833D-4E6D-A8BA-3A624D1B4D36.png",
+      "note": "真神 錸丸のタイトルバナー画像として提供された。"
+    },
     {
       "label": "ユーザー依頼 2026-05-10",
       "note": "新規キャラクターIDとして rhenimaru が提供された。"
