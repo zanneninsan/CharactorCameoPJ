@@ -496,6 +496,8 @@ function renderCharacterCardMedia(character) {
 }
 
 function renderCharacter(character) {
+  const hasRandomVideos = randomDriveVideos(character.randomVideoPlayer).length > 0;
+
   return htmlPage({
     title: character.displayName,
     description: character.summary,
@@ -522,6 +524,7 @@ function renderCharacter(character) {
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
+          ${renderOfficialRandomDriveVideoPlayer(character.randomVideoPlayer)}
           ${renderFanworkGuidelinesCard(character)}
           ${renderAiPrompts(character)}
           <div class="detail-layout wide">
@@ -582,6 +585,7 @@ function renderCharacter(character) {
             panel: true
           })}
         </div>
+        ${hasRandomVideos ? renderRandomDriveVideoScript() : ""}
       </main>
     `
   });
@@ -715,6 +719,48 @@ function randomDriveVideos(player) {
       label: item.label ?? item.name ?? item.driveId,
       embedUrl: item.embedUrl ?? `https://drive.google.com/file/d/${item.driveId}/preview`
     }));
+}
+
+function renderOfficialRandomDriveVideoPlayer(player) {
+  const videos = randomDriveVideos(player);
+  if (videos.length === 0) {
+    return "";
+  }
+
+  const title = player.title ?? "Random Videos";
+  const description = player.description ?? "";
+  const firstVideo = videos[0];
+
+  return `
+    <section class="panel wide video-panel" id="videos" data-random-drive-video-player>
+      <h2 class="section-title">
+        <span>${escapeHtml(title)}</span>
+        <small>動画</small>
+      </h2>
+      ${description ? `<p class="section-note">${escapeHtml(description)}</p>` : ""}
+      <div class="official-video-layout">
+        <div class="official-video-frame">
+          <iframe
+            title="${escapeHtml(firstVideo.label)}"
+            src="${escapeHtml(firstVideo.embedUrl)}"
+            allow="autoplay; fullscreen"
+            allowfullscreen
+            loading="lazy"
+            data-random-drive-video-frame
+          ></iframe>
+        </div>
+        <div class="official-video-meta">
+          <p class="eyebrow">Google Drive</p>
+          <p class="official-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
+          <div class="links official-video-actions">
+            <button type="button" data-random-drive-video-next>ランダム再生</button>
+            ${player.folderUrl ? `<a href="${escapeHtml(player.folderUrl)}" target="_blank" rel="noopener noreferrer">動画フォルダを開く</a>` : ""}
+          </div>
+        </div>
+      </div>
+      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videos)}</script>
+    </section>
+  `;
 }
 
 function renderRandomDriveVideoPlayer(player) {
@@ -1083,6 +1129,7 @@ function renderPageMenu(character) {
   const items = [
     ["links", sectionLabels.links.en],
     ["visual", "Visual"],
+    ["videos", "Videos"],
     ["fanworks", sectionLabels.fanworks.en],
     ["prompts", "AI"],
     ["profile", sectionLabels.profile.en],
@@ -1102,6 +1149,9 @@ function renderPageMenu(character) {
     }
     if (id === "fanworks") {
       return Boolean(character.fanworkGuidelines);
+    }
+    if (id === "videos") {
+      return randomDriveVideos(character.randomVideoPlayer).length > 0;
     }
     if (id === "side-flavors") {
       return hasItems(character.sideFlavors);
@@ -2398,6 +2448,71 @@ h3 {
   white-space: nowrap;
 }
 
+.official-video-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.official-video-frame {
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #000000;
+  box-shadow: 0 18px 42px rgba(21, 18, 23, 0.12);
+}
+
+.official-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.official-video-meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--theme-paper) 68%, #ffffff);
+}
+
+.official-video-title {
+  overflow-wrap: anywhere;
+  color: var(--theme-text);
+  font-weight: 800;
+}
+
+.official-video-actions {
+  margin-top: 0;
+}
+
+.official-video-actions button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid #e8d29b;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--theme-primary);
+  color: #ffffff;
+  font: 900 0.9rem/1.2 "Zen Kaku Gothic New", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(21, 18, 23, 0.08);
+}
+
+.official-video-actions button:hover,
+.official-video-actions button:focus-visible {
+  background: var(--theme-secondary);
+  color: #ffffff;
+}
+
 .source-callout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3405,6 +3520,7 @@ time {
   }
 
   .content-layout:not(.guideline-layout) #links,
+  .content-layout:not(.guideline-layout) #videos,
   .content-layout:not(.guideline-layout) #timeline,
   .content-layout:not(.guideline-layout) #rights {
     grid-column: 1 / -1;
@@ -3623,6 +3739,20 @@ time {
 
   .official-links h2 {
     margin-bottom: 12px;
+  }
+
+  .official-video-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .official-video-meta {
+    padding: 14px;
+  }
+
+  .official-video-actions button {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
   }
 
   .link-group + .link-group {

@@ -10,7 +10,7 @@ const defaultFolderId = "11gm-Sd1oVcIlhSTCvDPiga1g-CiL2TDn";
 
 const characterId = process.argv[2] ?? "zannenin";
 const rootFolderId = process.argv[3] ?? defaultFolderId;
-const hiddenPageSlug = process.argv[4] ?? "secret";
+const target = process.argv[4] ?? "main";
 
 async function main() {
   const characterPath = path.join(contentDir, characterId, "character.json");
@@ -21,10 +21,10 @@ async function main() {
     throw new Error(`No supported video files found in Google Drive folder ${rootFolderId}.`);
   }
 
-  const targetPage = findHiddenPage(character, hiddenPageSlug);
-  targetPage.randomVideoPlayer = {
-    title: targetPage.randomVideoPlayer?.title ?? "ランダム動画再生",
-    description: targetPage.randomVideoPlayer?.description ?? "Google Driveフォルダに置いた動画から、アクセスごとにランダムで1本を表示します。",
+  const targetObject = target === "main" ? character : findHiddenPage(character, target);
+  targetObject.randomVideoPlayer = {
+    title: targetObject.randomVideoPlayer?.title ?? "ランダム動画再生",
+    description: targetObject.randomVideoPlayer?.description ?? "Google Driveフォルダに置いた動画から、アクセスごとにランダムで1本を表示します。",
     folderUrl: `https://drive.google.com/drive/folders/${rootFolderId}`,
     videos: videos.map((file) => ({
       label: buildLabel(file),
@@ -35,7 +35,7 @@ async function main() {
   };
 
   await writeFile(characterPath, `${JSON.stringify(character, null, 2)}\n`, "utf8");
-  console.log(`Imported ${videos.length} Drive video(s) for ${characterId}/${hiddenPageSlug}.`);
+  console.log(`Imported ${videos.length} Drive video(s) for ${characterId}/${target}.`);
 }
 
 function findHiddenPage(character, slug) {
