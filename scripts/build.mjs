@@ -551,19 +551,19 @@ function renderCharacter(character) {
                 </div>
               </section>
               ${renderSideFlavors(character)}
-              <section class="panel wide" id="settings">
-                ${renderSectionHeading("settings")}
-                <div class="stack">
-                  ${character.settings.map((item) => `
-                    <article>
-                      <p class="status">${escapeHtml(item.status ?? "official")}</p>
-                      <h3>${escapeHtml(item.title)}</h3>
-                      <p>${escapeHtml(item.body)}</p>
-                    </article>
-                  `).join("")}
-                </div>
-              </section>
             </div>
+            <section class="panel detail-settings" id="settings">
+              ${renderSectionHeading("settings")}
+              <div class="stack">
+                ${character.settings.map((item) => `
+                  <article>
+                    <p class="status">${escapeHtml(item.status ?? "official")}</p>
+                    <h3>${escapeHtml(item.title)}</h3>
+                    <p>${escapeHtml(item.body)}</p>
+                  </article>
+                `).join("")}
+              </div>
+            </section>
           </div>
           <section class="panel wide" id="timeline">
             ${renderSectionHeading("timeline")}
@@ -2924,6 +2924,10 @@ h3 {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.detail-settings {
+  grid-column: 1 / -1;
+}
+
 .panel {
   scroll-margin-top: 76px;
 }
@@ -3304,7 +3308,7 @@ time {
     gap: 22px;
   }
 
-  .content-layout:not(.guideline-layout) .detail-stack #settings {
+  .content-layout:not(.guideline-layout) .detail-settings {
     grid-column: 1 / -1;
   }
 }
