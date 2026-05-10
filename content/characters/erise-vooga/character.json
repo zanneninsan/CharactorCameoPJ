@@ -12,6 +12,12 @@
     "text": "#1f2630",
     "muted": "#66727f"
   },
+  "brandAssets": {
+    "banner": {
+      "source": "assets/brand/banner-source.png",
+      "alt": "エリセ・ヴーガのバナーイラスト"
+    }
+  },
   "profile": {
     "呼称": "エリセ・ヴーガ",
     "英字表記": "Erise Vooga",
