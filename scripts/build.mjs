@@ -715,8 +715,9 @@ function randomDriveVideos(player) {
 
   return player.videos
     .filter((item) => item?.driveId)
-    .map((item) => ({
-      label: item.label ?? item.name ?? item.driveId,
+    .map((item, index) => ({
+      label: item.displayLabel ?? item.title ?? `縦動画 ${String(index + 1).padStart(2, "0")}`,
+      sourceLabel: item.label ?? item.name ?? item.driveId,
       width: item.width,
       height: item.height,
       orientation: item.orientation,
@@ -747,6 +748,8 @@ function renderOfficialRandomDriveVideoPlayer(player) {
           <video
             title="${escapeHtml(firstVideo.label)}"
             src="${escapeHtml(firstVideo.playbackUrl)}"
+            autoplay
+            muted
             controls
             playsinline
             preload="metadata"
@@ -758,6 +761,7 @@ function renderOfficialRandomDriveVideoPlayer(player) {
           <p class="official-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
           <div class="links official-video-actions">
             <button type="button" data-random-drive-video-next>ランダム再生</button>
+            <button type="button" data-random-drive-video-unmute>音声ON</button>
             ${player.folderUrl ? `<a href="${escapeHtml(player.folderUrl)}" target="_blank" rel="noopener noreferrer">動画フォルダを開く</a>` : ""}
           </div>
         </div>
@@ -785,6 +789,8 @@ function renderRandomDriveVideoPlayer(player) {
         <video
           title="${escapeHtml(firstVideo.label)}"
           src="${escapeHtml(firstVideo.playbackUrl)}"
+          autoplay
+          muted
           controls
           playsinline
           preload="metadata"
@@ -794,6 +800,7 @@ function renderRandomDriveVideoPlayer(player) {
       <p class="retro-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
       <div class="retro-video-actions">
         <button type="button" data-random-drive-video-next>ランダム再生</button>
+        <button type="button" data-random-drive-video-unmute>音声ON</button>
         ${player.folderUrl ? `<a href="${escapeHtml(player.folderUrl)}" target="_blank" rel="noopener noreferrer">動画フォルダ</a>` : ""}
       </div>
       <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videos)}</script>
@@ -810,6 +817,7 @@ function renderRandomDriveVideoScript() {
           const frame = root.querySelector("[data-random-drive-video-frame]");
           const title = root.querySelector("[data-random-drive-video-title]");
           const next = root.querySelector("[data-random-drive-video-next]");
+          const unmute = root.querySelector("[data-random-drive-video-unmute]");
           if (!data || !frame || !next) continue;
 
           let videos = [];
@@ -821,6 +829,21 @@ function renderRandomDriveVideoScript() {
           if (videos.length === 0) continue;
 
           let currentIndex = -1;
+          const updateMuteButton = () => {
+            if (!unmute) return;
+            unmute.textContent = frame.muted ? "音声ON" : "音声OFF";
+          };
+
+          const playCurrent = async () => {
+            try {
+              await frame.play?.();
+            } catch {
+              frame.muted = true;
+              updateMuteButton();
+              await frame.play?.().catch(() => {});
+            }
+          };
+
           const showVideo = () => {
             let index = Math.floor(Math.random() * videos.length);
             if (videos.length > 1 && index === currentIndex) {
@@ -832,11 +855,18 @@ function renderRandomDriveVideoScript() {
             frame.title = video.label;
             if (title) title.textContent = video.label;
             frame.load?.();
-            frame.play?.().catch(() => {});
+            playCurrent();
           };
 
           next.addEventListener("click", showVideo);
+          unmute?.addEventListener("click", async () => {
+            frame.muted = !frame.muted;
+            updateMuteButton();
+            await playCurrent();
+          });
+          frame.addEventListener?.("volumechange", updateMuteButton);
           frame.addEventListener?.("ended", showVideo);
+          updateMuteButton();
           showVideo();
         }
       })();
