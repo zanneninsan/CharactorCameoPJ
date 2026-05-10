@@ -852,289 +852,472 @@
   },
   "randomVideoPlayer": {
     "title": "ランダム動画再生",
-    "description": "Google Driveフォルダに置いた縦動画だけを、ミュートで自動連続再生します。音声ONボタンを押すと音ありで視聴できます。",
+    "description": "Google Driveフォルダに置いた縦動画・横動画から、向きを切り替えてランダム連続再生します。",
     "folderUrl": "https://drive.google.com/drive/folders/11gm-Sd1oVcIlhSTCvDPiga1g-CiL2TDn",
-    "orientationFilter": "portrait",
-    "videos": [
-      {
-        "label": "2026-04-10_118_zannenin_chill-ko_s_69d8b05f96f481919813d081f76f5c71-attachment-0",
-        "driveId": "1SfkeTiMjrkBtXEPBk-ooUel3KUhe8fZv",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
+    "orientationFilter": "both",
+    "videoSets": {
+      "portrait": {
+        "label": "縦動画",
+        "orientation": "portrait",
+        "videos": [
+          {
+            "label": "2026-04-10_118_zannenin_chill-ko_s_69d8b05f96f481919813d081f76f5c71-attachment-0",
+            "driveId": "1SfkeTiMjrkBtXEPBk-ooUel3KUhe8fZv",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_30k_s_69d8f42e34f08191a193b3b67a3ff624-attachment-0",
+            "driveId": "1BfpSzCvAgpCr7RmPawir1EVQc9Ev3wtN",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d86fde06fc8191a8b9e305cae22a11-attachment-0",
+            "driveId": "14nR6Q07jeLN2k7d2uHTgFUGRwqUvOTMQ",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d87d4ff31881919ba6d489f9467d7d-attachment-0",
+            "driveId": "1dqw4Oarq8bzAVG_IRoVuukFcS1oBQQ2O",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d883a6246c8191979f2df83cedd53d-attachment-0",
+            "driveId": "1R_qGhoGlfpKB56RTBpzIwFA-Gye2XA1m",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8876bf75881918eaf24055311fb5a-attachment-0",
+            "driveId": "1e56JvzYyZxtPov_ABeaU5Y7FYa9nWBjh",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d88d4cb9e081919e5680720855a76f-attachment-0",
+            "driveId": "1y5I-gpf19DTBRCtbl4MJQKH6UuK1K3HT",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d890e854ec81918b8b725cff354193-attachment-0",
+            "driveId": "1-0dtvxTvONZ90Kr9oBIDotkh0Y_8fLV3",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8a227cfe081919858420064e9af28-attachment-0",
+            "driveId": "1S8ZlZxpL9viefs-01notQEj_nHRahtGx",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8a6fbf25881918aa444c0a2289570-attachment-0",
+            "driveId": "16TvJKw_n4ugxukf0a59xs8tLxovf70XH",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8b19d82448191b9ac77997e7b3ab4-attachment-0",
+            "driveId": "1XiRMFINi8rqefhokioRLm2uQflsdZKeS",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8b8c79f98819195d1742dd267031f-attachment-0",
+            "driveId": "1UhoO-OdDKXjVCU8PdQoSEvHHj8ZRl0T8",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8c69172e88191939bfd48b678cc58-attachment-0",
+            "driveId": "1oKGG142XmZ4nSuhsx_v5JewsHI_T0_LV",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8c699a4cc8191a39628900379779e-attachment-0",
+            "driveId": "1DMuWzM87dZzFEX4hKFpQOtSwDEGEskyF",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8c727f43081918c2199469c255dca-attachment-0",
+            "driveId": "13UHsT0OKJIky-SMsFy3tRVCC36-sakE0",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8d938d3dc8191a77f8e02b27afb5a-attachment-0",
+            "driveId": "1TgWtACHIcR0FOFMnrRI9WKMnLON3_g4N",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8de91928c8191873a715afcbf628c-attachment-0",
+            "driveId": "1W2ICvX3npFb7-miom5oEx8wArDSKL-Hw",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8ea80ea40819189a30bfb45a5cca2-attachment-0",
+            "driveId": "1ZBJOKwL2NIW0KXpFQ6dYTsbgh2AqU1LY",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d8f2e2c57081919a92979ccb1417be-attachment-0",
+            "driveId": "1zR5GH28q4Z98HbkFCSuFkCjxH726S3DP",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d90ec525448191bf19801490b42423-attachment-0",
+            "driveId": "1_NIjE0XelRGO3LiXr4lfVKoMoH2mMrWH",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d9216e50f88191be7db9a6f71ce800-attachment-0",
+            "driveId": "1lBC6gcLbHp6CWYL_3RvgZwqSsRtr8_Rp",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d93541602c81918e3a04a91f0184c0-attachment-0",
+            "driveId": "1ghFVahpGpbObnwo83xj8oCC31E5qGbjg",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d97740404881919365205cefc9649f-attachment-0",
+            "driveId": "1xhddLDd-Nx3vKMQ1G8JEc5xg9hAeojki",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_s_69d9784755588191ba78127ac8b51a2a-attachment-0",
+            "driveId": "10cyYkoVbuzKIE6IO73U9Y1_d6xDtN4TU",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_Sora_s_69d93bb69d9081919e0468c65eabdfc2-attachment-0",
+            "driveId": "1wA6-y9a1HhlrXX7Sqix5F1OkxP-TP3Fg",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_UNLUCK_s_69d878ddc1108191af8702eb9ad6945d-attachment-0",
+            "driveId": "1aV_WCeTxnhHkgp3vcjEeg5toiLt9_Apv",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_zannenin_chill-ko_BGM_s_69d8b05a98648191a4cbfd60f49fc40e-attachment-0",
+            "driveId": "1oNekU18iT_H8-k1zcA9U8UIaOfh813K9",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-10_zannenin_chill-ko_s_69d9334cd26c81919a4f5abc08a701b2-attachment-0",
+            "driveId": "1fqL2QDJrhvpsimNgtJJJQ4P6Hbd4ZNyz",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-11_1_s_69da1cbcbe70819189998f569b63ae2d-attachment-0",
+            "driveId": "1WfXZMHtVcGUt6IWbNZRWSjpjpOuePncQ",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da477da6848191a3bf839bed50bdd3-attachment-0",
+            "driveId": "1-v8alJfw9VqkQGah40Ul2wsqzG9JuDCz",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da478346948191a3ca539af31c5c45-attachment-0",
+            "driveId": "15Dm4osH0-tntfyPAmK2bzeUBEPqNwhcT",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 704,
+            "height": 1280,
+            "orientation": "portrait"
+          }
+        ]
       },
-      {
-        "label": "2026-04-10_30k_s_69d8f42e34f08191a193b3b67a3ff624-attachment-0",
-        "driveId": "1BfpSzCvAgpCr7RmPawir1EVQc9Ev3wtN",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d86fde06fc8191a8b9e305cae22a11-attachment-0",
-        "driveId": "14nR6Q07jeLN2k7d2uHTgFUGRwqUvOTMQ",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d87d4ff31881919ba6d489f9467d7d-attachment-0",
-        "driveId": "1dqw4Oarq8bzAVG_IRoVuukFcS1oBQQ2O",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d883a6246c8191979f2df83cedd53d-attachment-0",
-        "driveId": "1R_qGhoGlfpKB56RTBpzIwFA-Gye2XA1m",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8876bf75881918eaf24055311fb5a-attachment-0",
-        "driveId": "1e56JvzYyZxtPov_ABeaU5Y7FYa9nWBjh",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d88d4cb9e081919e5680720855a76f-attachment-0",
-        "driveId": "1y5I-gpf19DTBRCtbl4MJQKH6UuK1K3HT",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d890e854ec81918b8b725cff354193-attachment-0",
-        "driveId": "1-0dtvxTvONZ90Kr9oBIDotkh0Y_8fLV3",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8a227cfe081919858420064e9af28-attachment-0",
-        "driveId": "1S8ZlZxpL9viefs-01notQEj_nHRahtGx",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8a6fbf25881918aa444c0a2289570-attachment-0",
-        "driveId": "16TvJKw_n4ugxukf0a59xs8tLxovf70XH",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8b19d82448191b9ac77997e7b3ab4-attachment-0",
-        "driveId": "1XiRMFINi8rqefhokioRLm2uQflsdZKeS",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8b8c79f98819195d1742dd267031f-attachment-0",
-        "driveId": "1UhoO-OdDKXjVCU8PdQoSEvHHj8ZRl0T8",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8c69172e88191939bfd48b678cc58-attachment-0",
-        "driveId": "1oKGG142XmZ4nSuhsx_v5JewsHI_T0_LV",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8c699a4cc8191a39628900379779e-attachment-0",
-        "driveId": "1DMuWzM87dZzFEX4hKFpQOtSwDEGEskyF",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8c727f43081918c2199469c255dca-attachment-0",
-        "driveId": "13UHsT0OKJIky-SMsFy3tRVCC36-sakE0",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8d938d3dc8191a77f8e02b27afb5a-attachment-0",
-        "driveId": "1TgWtACHIcR0FOFMnrRI9WKMnLON3_g4N",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8de91928c8191873a715afcbf628c-attachment-0",
-        "driveId": "1W2ICvX3npFb7-miom5oEx8wArDSKL-Hw",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8ea80ea40819189a30bfb45a5cca2-attachment-0",
-        "driveId": "1ZBJOKwL2NIW0KXpFQ6dYTsbgh2AqU1LY",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d8f2e2c57081919a92979ccb1417be-attachment-0",
-        "driveId": "1zR5GH28q4Z98HbkFCSuFkCjxH726S3DP",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d90ec525448191bf19801490b42423-attachment-0",
-        "driveId": "1_NIjE0XelRGO3LiXr4lfVKoMoH2mMrWH",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d9216e50f88191be7db9a6f71ce800-attachment-0",
-        "driveId": "1lBC6gcLbHp6CWYL_3RvgZwqSsRtr8_Rp",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d93541602c81918e3a04a91f0184c0-attachment-0",
-        "driveId": "1ghFVahpGpbObnwo83xj8oCC31E5qGbjg",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d97740404881919365205cefc9649f-attachment-0",
-        "driveId": "1xhddLDd-Nx3vKMQ1G8JEc5xg9hAeojki",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_s_69d9784755588191ba78127ac8b51a2a-attachment-0",
-        "driveId": "10cyYkoVbuzKIE6IO73U9Y1_d6xDtN4TU",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_Sora_s_69d93bb69d9081919e0468c65eabdfc2-attachment-0",
-        "driveId": "1wA6-y9a1HhlrXX7Sqix5F1OkxP-TP3Fg",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_UNLUCK_s_69d878ddc1108191af8702eb9ad6945d-attachment-0",
-        "driveId": "1aV_WCeTxnhHkgp3vcjEeg5toiLt9_Apv",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_zannenin_chill-ko_BGM_s_69d8b05a98648191a4cbfd60f49fc40e-attachment-0",
-        "driveId": "1oNekU18iT_H8-k1zcA9U8UIaOfh813K9",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-10_zannenin_chill-ko_s_69d9334cd26c81919a4f5abc08a701b2-attachment-0",
-        "driveId": "1fqL2QDJrhvpsimNgtJJJQ4P6Hbd4ZNyz",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-11_1_s_69da1cbcbe70819189998f569b63ae2d-attachment-0",
-        "driveId": "1WfXZMHtVcGUt6IWbNZRWSjpjpOuePncQ",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da477da6848191a3bf839bed50bdd3-attachment-0",
-        "driveId": "1-v8alJfw9VqkQGah40Ul2wsqzG9JuDCz",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
-      },
-      {
-        "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da478346948191a3ca539af31c5c45-attachment-0",
-        "driveId": "15Dm4osH0-tntfyPAmK2bzeUBEPqNwhcT",
-        "mime": "video/mp4",
-        "source": "google-drive",
-        "width": 704,
-        "height": 1280,
-        "orientation": "portrait"
+      "landscape": {
+        "label": "横動画",
+        "orientation": "landscape",
+        "videos": [
+          {
+            "label": "2026-04-10_2_R8_04_10_s_69d8eff226788191a43f66ff7f29f9a7-attachment-0",
+            "driveId": "16Mc1KdLRfhP_3kGEPwlGPFo06rhesj7A",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_CHILCO-PASS_s_69d8e26b2684819185b7ccfb5cfefb0b-attachment-0",
+            "driveId": "1ij4-2j5sMiAIHIqiQ95khfykV_e13fSy",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_Holy_war_s_69d858d5a12c8191b89ddf006776db01-attachment-0",
+            "driveId": "1iNJIIuG5T9U3bIbmV2Ae_AKSX2jSMjtd",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_NIL_s_69d8b5940d808191b533e44197d7b1b4-attachment-0",
+            "driveId": "1trircOSmBjPAP6myp7LzLiza9vYL8rRc",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_s_69d873e3f7e88191b9ce0af7fa6ddaab-attachment-0",
+            "driveId": "1dmTltZsCwRQi6DhJa2CPDKZiAezH28E9",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_s_69d8b4d6ce9c8191bcc149af215946b9-attachment-0",
+            "driveId": "15xQAIlumCjxf0CDjpukn4axCORyNVIaE",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_s_69d8c3dca2c0819193d63898c24e840b-attachment-0",
+            "driveId": "1jOvROZ-akocRwVVAUWdTI7f4fZ4EZTzj",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_s_69d8f164fc30819184135555a90d49b2-attachment-0",
+            "driveId": "18K7FUHYFVNQJlh5POQ6KxeXVEK48DJg-",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-10_You_s_69d8d8f0cd3c819186faf47d1a07639d-attachment-0",
+            "driveId": "1Za50Kftn5OSteuivr3lcgeyv0aFgC1vF",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_2_s_69da023a80d881918e83db0e2ef5593f-attachment-0",
+            "driveId": "1BwPAYhB_cXQn4A1OzG_0n5xIQKI0DbB9",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_5_s_69da7e563fe48191ba9c81656eb2d751-attachment-0",
+            "driveId": "1oKI7wFTRItNZEfs1RGGuW7Mq2QHEGbJ2",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_60_s_69da5486a41881919b2e6de4a0562c4f-attachment-0",
+            "driveId": "1hORXpAS3tmvhcbBankgFNomFbCxlsueT",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da0240cdc4819193c2fc7216e2b95a-attachment-0",
+            "driveId": "1U5upna0FPiMpe4L-qz6TXZ98w5m0tRtv",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da478d38b08191be61b8fe9b9c5811-attachment-0",
+            "driveId": "1Yc3bK_Sy12IV3qfVBTUwppIxfb1mvTzc",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da47944a588191b66108131cac5988-attachment-0",
+            "driveId": "1PI9gMI79tpIqx6QolojSThw4xESERqNu",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da479b455881919dd1f77dad52250f-attachment-0",
+            "driveId": "14trRYfWUrNdgC8eohqK2-ZywP7_hUp_I",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da47a11b7c8191b379dbad1963d567-attachment-0",
+            "driveId": "1pDmwMNCTj3KhfU8p_nfGC_js9SOXnX10",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da47acc5448191b0586a390ab82ad5-attachment-0",
+            "driveId": "1t5ZDcYApB3NWepak92CwhgUsAUKu8qHa",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          },
+          {
+            "label": "2026-04-11_anime_2D_illustration_star_sera_snowbunnil_10cm_3cm_zannenin_chill-ko_s_69da47b4157881919d2324b68737df82-attachment-0",
+            "driveId": "1pB_3tJC3d862vaAEiIL1q8xPiiad9h5F",
+            "mime": "video/mp4",
+            "source": "google-drive",
+            "width": 1280,
+            "height": 704,
+            "orientation": "landscape"
+          }
+        ]
       }
-    ]
+    }
   }
 }
