@@ -11,38 +11,50 @@ const defaultFolderId = "11gm-Sd1oVcIlhSTCvDPiga1g-CiL2TDn";
 const characterId = process.argv[2] ?? "zannenin";
 const rootFolderId = process.argv[3] ?? defaultFolderId;
 const target = process.argv[4] ?? "main";
-const orientationFilter = process.argv[5] ?? "portrait";
+const orientationFilter = process.argv[5] ?? "both";
 
 async function main() {
   const characterPath = path.join(contentDir, characterId, "character.json");
   const character = JSON.parse(await readFile(characterPath, "utf8"));
   const videos = await collectDriveVideos(rootFolderId);
   const probedVideos = await probeVideoDimensions(videos);
-  const filteredVideos = filterByOrientation(probedVideos, orientationFilter);
+  const requestedOrientations = requestedVideoOrientations(orientationFilter);
+  const videoSets = Object.fromEntries(
+    requestedOrientations.map((orientation) => [orientation, buildVideoSet(probedVideos, orientation)])
+  );
+  const importedCount = Object.values(videoSets).reduce((sum, set) => sum + set.videos.length, 0);
 
-  if (filteredVideos.length === 0) {
+  if (importedCount === 0) {
     throw new Error(`No ${orientationFilter} video files found in Google Drive folder ${rootFolderId}.`);
   }
 
   const targetObject = target === "main" ? character : findHiddenPage(character, target);
+  const existingPlayer = targetObject.randomVideoPlayer ?? {};
+  const nextVideoSets = orientationFilter === "both"
+    ? videoSets
+    : { ...(existingPlayer.videoSets ?? {}), ...videoSets };
   targetObject.randomVideoPlayer = {
-    title: targetObject.randomVideoPlayer?.title ?? "ランダム動画再生",
-    description: targetObject.randomVideoPlayer?.description ?? buildDescription(orientationFilter),
+    title: existingPlayer.title ?? "ランダム動画再生",
+    description: shouldKeepVideoDescription(existingPlayer, orientationFilter)
+      ? existingPlayer.description
+      : buildDescription(orientationFilter),
     folderUrl: `https://drive.google.com/drive/folders/${rootFolderId}`,
     orientationFilter,
-    videos: filteredVideos.map((file) => ({
-      label: buildLabel(file),
-      driveId: file.id,
-      mime: file.mime,
-      source: "google-drive",
-      width: file.width,
-      height: file.height,
-      orientation: file.orientation
-    }))
+    videoSets: nextVideoSets
   };
 
   await writeFile(characterPath, `${JSON.stringify(character, null, 2)}\n`, "utf8");
-  console.log(`Imported ${filteredVideos.length} ${orientationFilter} Drive video(s) for ${characterId}/${target}.`);
+  console.log(`Imported ${importedCount} ${orientationFilter} Drive video(s) for ${characterId}/${target}.`);
+}
+
+function shouldKeepVideoDescription(player, orientation) {
+  if (!player.description || player.orientationFilter !== orientation) {
+    return false;
+  }
+  if (orientation === "both" && (player.description.includes("縦動画だけ") || player.description.includes("横動画だけ"))) {
+    return false;
+  }
+  return true;
 }
 
 function findHiddenPage(character, slug) {
@@ -61,7 +73,7 @@ function buildDescription(orientation) {
   if (orientation === "landscape") {
     return "Google Driveフォルダに置いた横動画から、再生終了ごとに次の1本をランダムで連続再生します。";
   }
-  return "Google Driveフォルダに置いた動画から、再生終了ごとに次の1本をランダムで連続再生します。";
+  return "Google Driveフォルダに置いた縦動画・横動画から、向きを切り替えてランダム連続再生します。";
 }
 
 async function collectDriveVideos(rootId) {
@@ -134,6 +146,33 @@ function filterByOrientation(videos, orientation) {
     return videos;
   }
   return videos.filter((video) => video.orientation === orientation);
+}
+
+function requestedVideoOrientations(value) {
+  if (value === "both" || value === "all") {
+    return ["portrait", "landscape"];
+  }
+  if (value === "portrait" || value === "landscape") {
+    return [value];
+  }
+  throw new Error(`Unknown video orientation "${value}". Use portrait, landscape, both, or all.`);
+}
+
+function buildVideoSet(videos, orientation) {
+  const filteredVideos = filterByOrientation(videos, orientation);
+  return {
+    label: orientation === "landscape" ? "横動画" : "縦動画",
+    orientation,
+    videos: filteredVideos.map((file) => ({
+      label: buildLabel(file),
+      driveId: file.id,
+      mime: file.mime,
+      source: "google-drive",
+      width: file.width,
+      height: file.height,
+      orientation: file.orientation
+    }))
+  };
 }
 
 async function downloadDriveFile(fileId) {

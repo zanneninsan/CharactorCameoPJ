@@ -394,8 +394,8 @@ async function generateVisualReferenceAssets(character, characterDir) {
 }
 
 async function downloadRandomVideoAssets(character, characterDir) {
-  const videos = character.randomVideoPlayer?.videos;
-  if (!Array.isArray(videos) || videos.length === 0) {
+  const videos = randomDriveVideoSourceItems(character.randomVideoPlayer);
+  if (videos.length === 0) {
     return;
   }
 
@@ -564,7 +564,7 @@ function renderCharacterCardMedia(character) {
 }
 
 function renderCharacter(character) {
-  const hasRandomVideos = randomDriveVideos(character.randomVideoPlayer).length > 0;
+  const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
 
   return htmlPage({
     title: character.displayName,
@@ -690,7 +690,7 @@ function renderHiddenPage(character, page) {
   const body = page.body ?? "作成中";
   const pageTitle = title.includes(character.displayName) ? title : `${character.displayName} ${title}`;
   const randomVideoPlayer = page.randomVideoPlayer ?? character.randomVideoPlayer;
-  const hasRandomVideos = randomDriveVideos(randomVideoPlayer).length > 0;
+  const hasRandomVideos = randomDriveVideoSets(randomVideoPlayer).length > 0;
 
   return htmlPage({
     title: pageTitle,
@@ -776,15 +776,59 @@ function renderRetroTitle(title) {
   return escapeHtml(title);
 }
 
-function randomDriveVideos(player) {
-  if (!player || !Array.isArray(player.videos)) {
+function randomDriveVideoSourceItems(player) {
+  if (!player) {
     return [];
   }
 
-  return player.videos
+  if (player.videoSets && typeof player.videoSets === "object") {
+    return Object.values(player.videoSets).flatMap((set) => Array.isArray(set?.videos) ? set.videos : []);
+  }
+
+  return Array.isArray(player.videos) ? player.videos : [];
+}
+
+function randomDriveVideoSets(player) {
+  if (!player) {
+    return [];
+  }
+
+  if (player.videoSets && typeof player.videoSets === "object") {
+    return Object.entries(player.videoSets)
+      .map(([key, set]) => randomDriveVideoSet(key, set))
+      .filter((set) => set.videos.length > 0);
+  }
+
+  const videos = randomDriveVideos(player.videos, player.orientationFilter);
+  return videos.length > 0
+    ? [{
+        key: player.orientationFilter ?? "videos",
+        label: orientationLabel(player.orientationFilter ?? videos[0]?.orientation),
+        orientation: player.orientationFilter ?? videos[0]?.orientation,
+        videos
+      }]
+    : [];
+}
+
+function randomDriveVideoSet(key, set) {
+  const videos = randomDriveVideos(set?.videos, set?.orientation ?? key);
+  return {
+    key,
+    label: set?.label ?? orientationLabel(set?.orientation ?? key),
+    orientation: set?.orientation ?? key,
+    videos
+  };
+}
+
+function randomDriveVideos(videos, orientation) {
+  if (!Array.isArray(videos)) {
+    return [];
+  }
+
+  return videos
     .filter((item) => item?.driveId)
     .map((item, index) => ({
-      label: item.displayLabel ?? item.title ?? `縦動画 ${String(index + 1).padStart(2, "0")}`,
+      label: item.displayLabel ?? item.title ?? `${orientationLabel(item.orientation ?? orientation)} ${String(index + 1).padStart(2, "0")}`,
       sourceLabel: item.label ?? item.name ?? item.driveId,
       width: item.width,
       height: item.height,
@@ -795,15 +839,27 @@ function randomDriveVideos(player) {
     .filter((item) => item.playbackUrl);
 }
 
+function orientationLabel(value) {
+  if (value === "landscape") {
+    return "横動画";
+  }
+  if (value === "portrait") {
+    return "縦動画";
+  }
+  return "動画";
+}
+
 function renderOfficialRandomDriveVideoPlayer(player) {
-  const videos = randomDriveVideos(player);
-  if (videos.length === 0) {
+  const videoSets = randomDriveVideoSets(player);
+  if (videoSets.length === 0) {
     return "";
   }
 
   const title = player.title ?? "Random Videos";
   const description = player.description ?? "";
+  const videos = videoSets[0].videos;
   const firstVideo = videos[0];
+  const firstOrientation = videoSets[0].orientation ?? firstVideo.orientation ?? "portrait";
 
   return `
     <section class="panel wide video-panel" id="videos" data-random-drive-video-player>
@@ -813,7 +869,7 @@ function renderOfficialRandomDriveVideoPlayer(player) {
       </h2>
       ${description ? `<p class="section-note">${escapeHtml(description)}</p>` : ""}
       <div class="official-video-layout">
-        <div class="official-video-frame">
+        <div class="official-video-frame" data-random-drive-video-shell data-video-orientation="${escapeHtml(firstOrientation)}">
           <video
             title="${escapeHtml(firstVideo.label)}"
             src="${escapeHtml(firstVideo.playbackUrl)}"
@@ -828,6 +884,7 @@ function renderOfficialRandomDriveVideoPlayer(player) {
         <div class="official-video-meta">
           <p class="eyebrow">Google Drive</p>
           <p class="official-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
+          ${renderRandomDriveVideoToggle(videoSets, "official-video-toggle")}
           <div class="links official-video-actions">
             <button type="button" data-random-drive-video-next>ランダム再生</button>
             <button type="button" data-random-drive-video-unmute>音声ON</button>
@@ -835,26 +892,29 @@ function renderOfficialRandomDriveVideoPlayer(player) {
           </div>
         </div>
       </div>
-      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videos)}</script>
+      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videoSets)}</script>
     </section>
   `;
 }
 
 function renderRandomDriveVideoPlayer(player) {
-  const videos = randomDriveVideos(player);
-  if (videos.length === 0) {
+  const videoSets = randomDriveVideoSets(player);
+  if (videoSets.length === 0) {
     return "";
   }
 
   const title = player.title ?? "Random Videos";
   const description = player.description ?? "";
+  const videos = videoSets[0].videos;
   const firstVideo = videos[0];
+  const firstOrientation = videoSets[0].orientation ?? firstVideo.orientation ?? "portrait";
 
   return `
     <section class="retro-box retro-video-box" id="videos" data-random-drive-video-player>
       <h2>★ ${escapeHtml(title)} ★</h2>
       ${description ? `<p>${escapeHtml(description)}</p>` : ""}
-      <div class="retro-video-frame">
+      ${renderRandomDriveVideoToggle(videoSets, "retro-video-toggle")}
+      <div class="retro-video-frame" data-random-drive-video-shell data-video-orientation="${escapeHtml(firstOrientation)}">
         <video
           title="${escapeHtml(firstVideo.label)}"
           src="${escapeHtml(firstVideo.playbackUrl)}"
@@ -872,8 +932,25 @@ function renderRandomDriveVideoPlayer(player) {
         <button type="button" data-random-drive-video-unmute>音声ON</button>
         ${player.folderUrl ? `<a href="${escapeHtml(player.folderUrl)}" target="_blank" rel="noopener noreferrer">動画フォルダ</a>` : ""}
       </div>
-      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videos)}</script>
+      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videoSets)}</script>
     </section>
+  `;
+}
+
+function renderRandomDriveVideoToggle(videoSets, className) {
+  if (videoSets.length < 2) {
+    return "";
+  }
+
+  return `
+    <div class="${className}" role="group" aria-label="動画の向き">
+      ${videoSets.map((set, index) => `
+        <button type="button" data-random-drive-video-set="${escapeHtml(set.key)}" aria-pressed="${index === 0 ? "true" : "false"}">
+          ${escapeHtml(set.label)}
+          <span>${set.videos.length}</span>
+        </button>
+      `).join("")}
+    </div>
   `;
 }
 
@@ -884,23 +961,37 @@ function renderRandomDriveVideoScript() {
         for (const root of document.querySelectorAll("[data-random-drive-video-player]")) {
           const data = root.querySelector("[data-random-drive-video-data]");
           const frame = root.querySelector("[data-random-drive-video-frame]");
+          const shell = root.querySelector("[data-random-drive-video-shell]");
           const title = root.querySelector("[data-random-drive-video-title]");
           const next = root.querySelector("[data-random-drive-video-next]");
           const unmute = root.querySelector("[data-random-drive-video-unmute]");
+          const setButtons = Array.from(root.querySelectorAll("[data-random-drive-video-set]"));
           if (!data || !frame || !next) continue;
 
-          let videos = [];
+          let parsed = [];
           try {
-            videos = JSON.parse(data.textContent || "[]");
+            parsed = JSON.parse(data.textContent || "[]");
           } catch {
-            videos = [];
+            parsed = [];
           }
-          if (videos.length === 0) continue;
 
+          const sets = Array.isArray(parsed) && parsed.some((item) => Array.isArray(item?.videos))
+            ? parsed
+            : [{ key: "videos", label: "動画", orientation: parsed[0]?.orientation, videos: parsed }];
+          if (sets.length === 0 || !Array.isArray(sets[0].videos) || sets[0].videos.length === 0) continue;
+
+          let activeSet = sets[0];
+          let videos = activeSet.videos;
           let currentIndex = -1;
           const updateMuteButton = () => {
             if (!unmute) return;
             unmute.textContent = frame.muted ? "音声ON" : "音声OFF";
+          };
+
+          const updateSetButtons = () => {
+            for (const button of setButtons) {
+              button.setAttribute("aria-pressed", button.dataset.randomDriveVideoSet === activeSet.key ? "true" : "false");
+            }
           };
 
           const playCurrent = async () => {
@@ -923,9 +1014,22 @@ function renderRandomDriveVideoScript() {
             frame.src = video.playbackUrl || video.embedUrl;
             frame.title = video.label;
             if (title) title.textContent = video.label;
+            if (shell) shell.dataset.videoOrientation = activeSet.orientation || video.orientation || "";
             frame.load?.();
             playCurrent();
           };
+
+          for (const button of setButtons) {
+            button.addEventListener("click", () => {
+              const nextSet = sets.find((set) => set.key === button.dataset.randomDriveVideoSet);
+              if (!nextSet || nextSet === activeSet || !Array.isArray(nextSet.videos) || nextSet.videos.length === 0) return;
+              activeSet = nextSet;
+              videos = activeSet.videos;
+              currentIndex = -1;
+              updateSetButtons();
+              showVideo();
+            });
+          }
 
           next.addEventListener("click", showVideo);
           unmute?.addEventListener("click", async () => {
@@ -936,6 +1040,7 @@ function renderRandomDriveVideoScript() {
           frame.addEventListener?.("volumechange", updateMuteButton);
           frame.addEventListener?.("ended", showVideo);
           updateMuteButton();
+          updateSetButtons();
           showVideo();
         }
       })();
@@ -1257,7 +1362,7 @@ function renderPageMenu(character) {
       return Boolean(character.fanworkGuidelines);
     }
     if (id === "videos") {
-      return randomDriveVideos(character.randomVideoPlayer).length > 0;
+      return randomDriveVideoSets(character.randomVideoPlayer).length > 0;
     }
     if (id === "side-flavors") {
       return hasItems(character.sideFlavors);
@@ -2572,6 +2677,11 @@ h3 {
   box-shadow: 0 18px 42px rgba(21, 18, 23, 0.12);
 }
 
+.official-video-frame[data-video-orientation="landscape"] {
+  width: min(100%, 680px);
+  aspect-ratio: 16 / 9;
+}
+
 .official-video-frame video,
 .official-video-frame iframe {
   display: block;
@@ -2597,6 +2707,43 @@ h3 {
   overflow-wrap: anywhere;
   color: var(--theme-text);
   font-weight: 800;
+}
+
+.official-video-toggle {
+  display: inline-flex;
+  width: fit-content;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff7df;
+}
+
+.official-video-toggle button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--theme-muted);
+  font: 900 0.86rem/1.2 "Zen Kaku Gothic New", sans-serif;
+  cursor: pointer;
+}
+
+.official-video-toggle button[aria-pressed="true"] {
+  background: var(--theme-primary);
+  color: #ffffff;
+}
+
+.official-video-toggle span {
+  min-width: 1.6em;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .official-video-actions {
@@ -3565,6 +3712,11 @@ time {
   background: #000000;
 }
 
+.retro-video-frame[data-video-orientation="landscape"] {
+  width: min(100%, 560px);
+  aspect-ratio: 16 / 9;
+}
+
 .retro-video-frame video,
 .retro-video-frame iframe {
   display: block;
@@ -3576,6 +3728,30 @@ time {
 
 .retro-video-title {
   word-break: break-word;
+}
+
+.retro-video-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.retro-video-toggle button {
+  padding: 4px 10px;
+  border: 3px outset #c0c0c0;
+  border-radius: 0;
+  background: #ccffcc;
+  color: #000080;
+  font: 700 0.92rem/1.3 "MS PGothic", sans-serif;
+  cursor: pointer;
+}
+
+.retro-video-toggle button[aria-pressed="true"] {
+  border-style: inset;
+  background: #ffff99;
+  color: #cc0000;
 }
 
 .retro-video-actions {
