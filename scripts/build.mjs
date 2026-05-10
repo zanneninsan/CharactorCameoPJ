@@ -717,6 +717,10 @@ function randomDriveVideos(player) {
     .filter((item) => item?.driveId)
     .map((item) => ({
       label: item.label ?? item.name ?? item.driveId,
+      width: item.width,
+      height: item.height,
+      orientation: item.orientation,
+      playbackUrl: item.playbackUrl ?? item.fileUrl ?? `https://drive.google.com/uc?export=download&id=${item.driveId}`,
       embedUrl: item.embedUrl ?? `https://drive.google.com/file/d/${item.driveId}/preview`
     }));
 }
@@ -740,14 +744,14 @@ function renderOfficialRandomDriveVideoPlayer(player) {
       ${description ? `<p class="section-note">${escapeHtml(description)}</p>` : ""}
       <div class="official-video-layout">
         <div class="official-video-frame">
-          <iframe
+          <video
             title="${escapeHtml(firstVideo.label)}"
-            src="${escapeHtml(firstVideo.embedUrl)}"
-            allow="autoplay; fullscreen"
-            allowfullscreen
-            loading="lazy"
+            src="${escapeHtml(firstVideo.playbackUrl)}"
+            controls
+            playsinline
+            preload="metadata"
             data-random-drive-video-frame
-          ></iframe>
+          ></video>
         </div>
         <div class="official-video-meta">
           <p class="eyebrow">Google Drive</p>
@@ -778,14 +782,14 @@ function renderRandomDriveVideoPlayer(player) {
       <h2>★ ${escapeHtml(title)} ★</h2>
       ${description ? `<p>${escapeHtml(description)}</p>` : ""}
       <div class="retro-video-frame">
-        <iframe
+        <video
           title="${escapeHtml(firstVideo.label)}"
-          src="${escapeHtml(firstVideo.embedUrl)}"
-          allow="autoplay; fullscreen"
-          allowfullscreen
-          loading="lazy"
+          src="${escapeHtml(firstVideo.playbackUrl)}"
+          controls
+          playsinline
+          preload="metadata"
           data-random-drive-video-frame
-        ></iframe>
+        ></video>
       </div>
       <p class="retro-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
       <div class="retro-video-actions">
@@ -824,12 +828,15 @@ function renderRandomDriveVideoScript() {
             }
             currentIndex = index;
             const video = videos[index];
-            frame.src = video.embedUrl;
+            frame.src = video.playbackUrl || video.embedUrl;
             frame.title = video.label;
             if (title) title.textContent = video.label;
+            frame.load?.();
+            frame.play?.().catch(() => {});
           };
 
           next.addEventListener("click", showVideo);
+          frame.addEventListener?.("ended", showVideo);
           showVideo();
         }
       })();
@@ -2456,19 +2463,23 @@ h3 {
 }
 
 .official-video-frame {
+  justify-self: center;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  width: min(100%, 420px);
+  aspect-ratio: 9 / 16;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #000000;
   box-shadow: 0 18px 42px rgba(21, 18, 23, 0.12);
 }
 
+.official-video-frame video,
 .official-video-frame iframe {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
+  object-fit: contain;
 }
 
 .official-video-meta {
@@ -3447,17 +3458,21 @@ time {
 }
 
 .retro-video-frame {
+  width: min(100%, 360px);
+  margin: 0 auto;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 9 / 16;
   border: 4px ridge #99ccff;
   background: #000000;
 }
 
+.retro-video-frame video,
 .retro-video-frame iframe {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
+  object-fit: contain;
 }
 
 .retro-video-title {

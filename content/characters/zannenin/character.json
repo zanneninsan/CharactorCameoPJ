@@ -851,213 +851,208 @@
     "notice": "権利者・管理者・問い合わせ先は公式Xアカウントを参照してください。"
   },
   "randomVideoPlayer": {
-    "title": "ランダム動画再生",
-    "description": "Google Driveフォルダに置いた動画から、アクセスごとにランダムで1本を表示します。",
+    "title": "????????",
+    "description": "Google Drive???????????????????????1???????????????",
     "folderUrl": "https://drive.google.com/drive/folders/11gm-Sd1oVcIlhSTCvDPiga1g-CiL2TDn",
+    "orientationFilter": "portrait",
     "videos": [
       {
         "label": "2026-04-10_118_zannenin_chill-ko_s_69d8b05f96f481919813d081f76f5c71-attachment-0",
         "driveId": "1SfkeTiMjrkBtXEPBk-ooUel3KUhe8fZv",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_2_R8_04_10_s_69d8eff226788191a43f66ff7f29f9a7-attachment-0",
-        "driveId": "16Mc1KdLRfhP_3kGEPwlGPFo06rhesj7A",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_30k_s_69d8f42e34f08191a193b3b67a3ff624-attachment-0",
         "driveId": "1BfpSzCvAgpCr7RmPawir1EVQc9Ev3wtN",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_CHILCO-PASS_s_69d8e26b2684819185b7ccfb5cfefb0b-attachment-0",
-        "driveId": "1ij4-2j5sMiAIHIqiQ95khfykV_e13fSy",
-        "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_Holy_war_s_69d858d5a12c8191b89ddf006776db01-attachment-0",
-        "driveId": "1iNJIIuG5T9U3bIbmV2Ae_AKSX2jSMjtd",
-        "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_in_s_69d8c9ad64788191a5b69c0aeb0c3320-attachment-0",
-        "driveId": "1vA7-7YYWiQhWCn3smsk7BuJKM3xjPmAd",
-        "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_NIL_s_69d8b5940d808191b533e44197d7b1b4-attachment-0",
-        "driveId": "1trircOSmBjPAP6myp7LzLiza9vYL8rRc",
-        "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_Remix_s_69d86686b8bc8191b9bf6806058641d9-attachment-0",
-        "driveId": "11x3woRONEzsMn7Gy4-G9A7Cana0-YhrY",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_Replace_her_with_silvernyra_s_69d8f8aefe14819198165230262c6fb7-attachment-0",
         "driveId": "1QFJgTYP02K2bzaBim6ykkdLpev85-WER",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_rowenamagi_s_69d84b31df0081918535d188e67cf943-attachment-0",
         "driveId": "1ipNYnsoBb0NNBpyavhhDDdzaFIFhi6-r",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d868ac6ae48191bc5dc217cfebcd66-attachment-0",
-        "driveId": "1akFWEXRaG86ZQcJzoIMtovZIAUfN8Qtn",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d86fde06fc8191a8b9e305cae22a11-attachment-0",
         "driveId": "14nR6Q07jeLN2k7d2uHTgFUGRwqUvOTMQ",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d87cfd530c8191a3778e5c2e719ff5-attachment-0",
         "driveId": "18McntKGHSNSpu_mO0iuze4iAW1nmvYy9",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d87d4ff31881919ba6d489f9467d7d-attachment-0",
         "driveId": "1dqw4Oarq8bzAVG_IRoVuukFcS1oBQQ2O",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d87e99dea08191a19bcd3b1a6ebf61-attachment-0",
-        "driveId": "16ZzWGjikBlbVEwJ4jT2wSCztkVTPzPBd",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d88d4cb9e081919e5680720855a76f-attachment-0",
         "driveId": "1y5I-gpf19DTBRCtbl4MJQKH6UuK1K3HT",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8a227cfe081919858420064e9af28-attachment-0",
         "driveId": "1S8ZlZxpL9viefs-01notQEj_nHRahtGx",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d8a33be3b4819184e45987869baa69-attachment-0",
-        "driveId": "1wf4ieLnqOLezjfQzE7gHQBGeJdZmoalL",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8a358de448191b28744c54f9cb64d-attachment-0",
         "driveId": "108p6s14UQBRn3MT87Nzl6PZThTHz3ksx",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8a6fbf25881918aa444c0a2289570-attachment-0",
         "driveId": "16TvJKw_n4ugxukf0a59xs8tLxovf70XH",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8b19d82448191b9ac77997e7b3ab4-attachment-0",
         "driveId": "1XiRMFINi8rqefhokioRLm2uQflsdZKeS",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d8b4d6ce9c8191bcc149af215946b9-attachment-0",
-        "driveId": "15xQAIlumCjxf0CDjpukn4axCORyNVIaE",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8b8c79f98819195d1742dd267031f-attachment-0",
         "driveId": "1UhoO-OdDKXjVCU8PdQoSEvHHj8ZRl0T8",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d8c3dca2c0819193d63898c24e840b-attachment-0",
-        "driveId": "1jOvROZ-akocRwVVAUWdTI7f4fZ4EZTzj",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8c69172e88191939bfd48b678cc58-attachment-0",
         "driveId": "1oKGG142XmZ4nSuhsx_v5JewsHI_T0_LV",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8c699a4cc8191a39628900379779e-attachment-0",
         "driveId": "1DMuWzM87dZzFEX4hKFpQOtSwDEGEskyF",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8c727f43081918c2199469c255dca-attachment-0",
         "driveId": "13UHsT0OKJIky-SMsFy3tRVCC36-sakE0",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8d938d3dc8191a77f8e02b27afb5a-attachment-0",
         "driveId": "1TgWtACHIcR0FOFMnrRI9WKMnLON3_g4N",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8de91928c8191873a715afcbf628c-attachment-0",
         "driveId": "1W2ICvX3npFb7-miom5oEx8wArDSKL-Hw",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8e27aae788191bf8150c65954d6ee-attachment-0",
         "driveId": "1x1jCmo3VDvGgevGVc9aJc4-9YTrx1RqM",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8ea80ea40819189a30bfb45a5cca2-attachment-0",
         "driveId": "1ZBJOKwL2NIW0KXpFQ6dYTsbgh2AqU1LY",
         "mime": "video/mp4",
-        "source": "google-drive"
-      },
-      {
-        "label": "2026-04-10_s_69d8f164fc30819184135555a90d49b2-attachment-0",
-        "driveId": "18K7FUHYFVNQJlh5POQ6KxeXVEK48DJg-",
-        "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d8f2e2c57081919a92979ccb1417be-attachment-0",
         "driveId": "1zR5GH28q4Z98HbkFCSuFkCjxH726S3DP",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       },
       {
         "label": "2026-04-10_s_69d90ec525448191bf19801490b42423-attachment-0",
         "driveId": "1_NIjE0XelRGO3LiXr4lfVKoMoH2mMrWH",
         "mime": "video/mp4",
-        "source": "google-drive"
+        "source": "google-drive",
+        "width": 704,
+        "height": 1280,
+        "orientation": "portrait"
       }
     ]
   }
