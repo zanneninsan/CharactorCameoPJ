@@ -391,7 +391,15 @@ async function loadCharacters() {
     characters.push(character);
   }
 
-  return characters.sort((a, b) => a.displayName.localeCompare(b.displayName, "ja"));
+  return characters.sort((a, b) => {
+    if (a.id === "demo-character" && b.id !== "demo-character") {
+      return 1;
+    }
+    if (b.id === "demo-character" && a.id !== "demo-character") {
+      return -1;
+    }
+    return a.displayName.localeCompare(b.displayName, "ja");
+  });
 }
 
 function validateCharacter(character, filePath) {
