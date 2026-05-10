@@ -87,6 +87,12 @@
       "path": "assets/erise-settei.png",
       "type": "reference",
       "description": "プロフィール、三面図、キービジュアル、衣装ディテールを含む設定資料。"
+    },
+    {
+      "label": "プレーン三面図",
+      "path": "assets/plain-three-view.png",
+      "type": "outfit",
+      "description": "背景や注釈のない全身三面図。正面、背面、側面から髪型、ヘッドホン、衣装、ソックス、靴の形状を確認できる。"
     }
   ],
   "timeline": [],
