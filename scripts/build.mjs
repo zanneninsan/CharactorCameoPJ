@@ -611,17 +611,24 @@ function renderHiddenEntrances(character) {
 }
 
 function renderHiddenPage(character, page) {
+  const title = page.title ?? page.entryLabel;
+  const description = page.description ?? `${character.displayName} の隠しページです。`;
+  const counter = page.counter ?? "0000001";
+  const kiriban = page.kiriban ?? "キリ番を踏んだ方は掲示板で教えてください。";
+  const body = page.body ?? "作成中";
+  const pageTitle = title.includes(character.displayName) ? title : `${character.displayName} ${title}`;
+
   return htmlPage({
-    title: `${character.displayName} ${page.title ?? page.entryLabel}`,
-    description: page.description ?? `${character.displayName} の隠しページです。`,
+    title: pageTitle,
+    description,
     urlPath: `${character.id}/${page.slug}.html`,
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "article",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: `${character.displayName} ${page.title ?? page.entryLabel}`,
-      description: page.description ?? `${character.displayName} の隠しページです。`,
+      name: pageTitle,
+      description,
       url: absoluteUrl(`${character.id}/${page.slug}.html`),
       inLanguage: "ja",
       isPartOf: {
@@ -637,11 +644,60 @@ function renderHiddenPage(character, page) {
     },
     theme: character.theme,
     body: `
-      <main class="plain-hidden-page">
-        <pre>${escapeHtml(page.body ?? "作成中")}</pre>
+      <main class="retro-homepage">
+        <div class="retro-shell">
+          <div class="retro-marquee" aria-hidden="true">
+            <span>★ ようこそ ★ ${escapeHtml(character.displayName)} の隠しホームページへ ★ ゆっくりしていってね ★</span>
+          </div>
+          <header class="retro-header">
+            <p class="retro-subtitle">Since 1999 / Last update 2026.05.10</p>
+            <h1>${renderRetroTitle(title)}</h1>
+            <div class="retro-counter" aria-label="アクセスカウンター">
+              <span class="retro-counter-label">あなたは</span>
+              <span class="retro-counter-digits">${escapeHtml(counter)}</span>
+              <span class="retro-counter-label">人目のお客様です</span>
+            </div>
+            <p class="retro-kiriban">${escapeHtml(kiriban)}</p>
+          </header>
+          <nav class="retro-nav" aria-label="隠しページメニュー">
+            <a href="./">公式ページへ戻る</a>
+            <a href="#about">このページについて</a>
+            <a href="#diary">日記</a>
+            <a href="#bbs">掲示板</a>
+          </nav>
+          <section class="retro-box" id="about">
+            <h2>★ このページについて ★</h2>
+            <p>ここは ${escapeHtml(character.displayName)} の隠しページです。</p>
+            <p>白背景に小さい文字、点線、カウンター、工事中。そういう時代の空気を置いています。</p>
+          </section>
+          <section class="retro-box" id="diary">
+            <h2>★ 日記 ★</h2>
+            <p>${escapeHtml(body)}</p>
+          </section>
+          <section class="retro-box" id="bbs">
+            <h2>★ 掲示板 ★</h2>
+            <p>キリ番を踏んだ人は心の掲示板に書き込んでください。</p>
+          </section>
+          <footer class="retro-footer">
+            <p>無断転載禁止 / リンクフリー / バナーは作成中</p>
+            <p><a href="./">戻る</a></p>
+          </footer>
+        </div>
       </main>
     `
   });
+}
+
+function renderRetroTitle(title) {
+  const marker = "のホームページ";
+  if (title.endsWith(marker) && title.length > marker.length) {
+    return `
+      <span>${escapeHtml(title.slice(0, -marker.length + 1))}</span>
+      <span>${escapeHtml("ホームページ")}</span>
+    `;
+  }
+
+  return escapeHtml(title);
 }
 
 function renderFanworkGuidelinesCard(character) {
@@ -3012,17 +3068,171 @@ time {
   outline-offset: 3px;
 }
 
-.plain-hidden-page {
-  padding: 24px;
-  color: #111111;
+.retro-homepage {
+  min-height: 100vh;
+  padding: 18px 10px;
+  color: #000080;
+  background:
+    repeating-linear-gradient(45deg, #fff7c2 0 8px, #fffbdf 8px 16px),
+    #fff8c8;
+  font-family: "MS PGothic", "Osaka", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+.retro-homepage a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.retro-homepage a:visited {
+  color: #551a8b;
+}
+
+.retro-shell {
+  width: min(760px, calc(100% - 12px));
+  margin: 0 auto;
+  padding: 8px;
+  border: 4px ridge #ff66cc;
+  background: #ffffff;
+  box-shadow: 8px 8px 0 #99ccff;
+}
+
+.retro-marquee {
+  overflow: hidden;
+  border: 2px inset #cccccc;
+  background: #000000;
+  color: #00ff00;
+  font: 700 0.92rem/1.8 "MS PGothic", monospace;
+  white-space: nowrap;
+}
+
+.retro-marquee span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: retro-marquee 18s linear infinite;
+}
+
+@keyframes retro-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.retro-header {
+  margin: 10px 0;
+  padding: 12px 8px;
+  border: 3px double #000080;
+  background:
+    linear-gradient(90deg, rgba(255, 153, 204, 0.34), rgba(153, 204, 255, 0.34)),
+    #ffffff;
+  text-align: center;
+}
+
+.retro-subtitle {
+  margin: 0 0 6px;
+  color: #cc0000;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.retro-header h1 {
+  max-width: none;
+  margin: 0 0 10px;
+  color: #ff1493;
+  font-family: "MS Mincho", "Hiragino Mincho ProN", serif;
+  font-size: clamp(2rem, 8vw, 3.7rem);
+  line-height: 1.1;
+  text-shadow: 2px 2px 0 #ffff00, 4px 4px 0 #00ccff;
+  word-break: keep-all;
+}
+
+.retro-header h1 span {
+  display: block;
+}
+
+.retro-counter {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0;
+  color: #000000;
+  font-size: 0.95rem;
+}
+
+.retro-counter-digits {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 3px inset #c0c0c0;
+  background: #000000;
+  color: #ffcc00;
+  font: 700 1.1rem/1 "Courier New", monospace;
+  letter-spacing: 0.12em;
+}
+
+.retro-kiriban {
+  margin: 6px 0 0;
+  color: #cc0000;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.retro-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 8px;
+  border-top: 2px dashed #ff66cc;
+  border-bottom: 2px dashed #66ccff;
+  background: #ffffee;
+  font-size: 0.92rem;
+}
+
+.retro-nav a::before {
+  content: "[ ";
+  color: #ff1493;
+}
+
+.retro-nav a::after {
+  content: " ]";
+  color: #ff1493;
+}
+
+.retro-box {
+  margin: 12px 0;
+  padding: 10px;
+  border: 2px dotted #000080;
   background: #ffffff;
 }
 
-.plain-hidden-page pre {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  font: 16px/1.7 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+.retro-box h2 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  background: #000080;
+  font-family: "MS PGothic", sans-serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.retro-box p {
+  margin: 8px 0;
+  color: #222222;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
+.retro-footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #999999;
+  color: #666666;
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 @media (min-width: 1440px) {
