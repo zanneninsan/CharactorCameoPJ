@@ -1912,7 +1912,7 @@ h1,
 h2,
 h3,
 p {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 h1 {
@@ -1925,6 +1925,15 @@ h1 {
   letter-spacing: 0;
   color: var(--theme-primary);
   text-shadow: 0 3px 0 color-mix(in srgb, var(--theme-secondary) 28%, transparent);
+}
+
+.guideline-hero h1 {
+  max-width: 1120px;
+  font-size: clamp(2.15rem, 4.7vw, 4.2rem);
+  line-height: 1.08;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  text-wrap: balance;
 }
 
 h2 {
@@ -3053,6 +3062,11 @@ time {
   h1 {
     font-size: clamp(2.2rem, 13vw, 3.6rem);
     line-height: 1.06;
+  }
+
+  .guideline-hero h1 {
+    font-size: clamp(1.8rem, 8vw, 2.2rem);
+    line-height: 1.14;
   }
 
   h2 {
