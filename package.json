@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:with-videos": "node scripts/build.mjs --download-drive-videos",
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/check-encoding.mjs && node scripts/build.mjs --check",
     "check:encoding": "node scripts/check-encoding.mjs",

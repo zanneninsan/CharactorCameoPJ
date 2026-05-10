@@ -6,11 +6,16 @@
 
 ```powershell
 npm.cmd run build
+npm.cmd run build:with-videos
 npm.cmd run check
 npm.cmd run check:encoding
 npm.cmd run dev
 npm.cmd run import:drive-visuals -- zannenin
 ```
+
+`npm.cmd run build` does not download Google Drive videos during normal local builds.
+Use `npm.cmd run build:with-videos` when you intentionally want generated local MP4 files in `dist/`.
+GitHub Actions also downloads those videos automatically for the GitHub Pages artifact.
 
 生成物は `dist/` に出ます。
 
