@@ -721,7 +721,7 @@ function randomDriveVideos(player) {
       width: item.width,
       height: item.height,
       orientation: item.orientation,
-      playbackUrl: item.playbackUrl ?? item.fileUrl ?? `https://drive.google.com/uc?export=download&id=${item.driveId}`,
+      playbackUrl: item.playbackUrl ?? item.fileUrl ?? `https://drive.usercontent.google.com/download?id=${item.driveId}&export=download`,
       embedUrl: item.embedUrl ?? `https://drive.google.com/file/d/${item.driveId}/preview`
     }));
 }
