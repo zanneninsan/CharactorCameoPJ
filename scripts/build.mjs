@@ -617,6 +617,8 @@ function renderHiddenPage(character, page) {
   const kiriban = page.kiriban ?? "キリ番を踏んだ方は掲示板で教えてください。";
   const body = page.body ?? "作成中";
   const pageTitle = title.includes(character.displayName) ? title : `${character.displayName} ${title}`;
+  const randomVideoPlayer = page.randomVideoPlayer ?? character.randomVideoPlayer;
+  const hasRandomVideos = randomDriveVideos(randomVideoPlayer).length > 0;
 
   return htmlPage({
     title: pageTitle,
@@ -674,6 +676,7 @@ function renderHiddenPage(character, page) {
             <h2>★ 日記 ★</h2>
             <p>${escapeHtml(body)}</p>
           </section>
+          ${renderRandomDriveVideoPlayer(randomVideoPlayer)}
           <section class="retro-box" id="bbs">
             <h2>★ 掲示板 ★</h2>
             <p>キリ番を踏んだ人は心の掲示板に書き込んでください。</p>
@@ -683,6 +686,7 @@ function renderHiddenPage(character, page) {
             <p><a href="./">戻る</a></p>
           </footer>
         </div>
+        ${hasRandomVideos ? renderRandomDriveVideoScript() : ""}
       </main>
     `
   });
@@ -698,6 +702,93 @@ function renderRetroTitle(title) {
   }
 
   return escapeHtml(title);
+}
+
+function randomDriveVideos(player) {
+  if (!player || !Array.isArray(player.videos)) {
+    return [];
+  }
+
+  return player.videos
+    .filter((item) => item?.driveId)
+    .map((item) => ({
+      label: item.label ?? item.name ?? item.driveId,
+      embedUrl: item.embedUrl ?? `https://drive.google.com/file/d/${item.driveId}/preview`
+    }));
+}
+
+function renderRandomDriveVideoPlayer(player) {
+  const videos = randomDriveVideos(player);
+  if (videos.length === 0) {
+    return "";
+  }
+
+  const title = player.title ?? "Random Videos";
+  const description = player.description ?? "";
+  const firstVideo = videos[0];
+
+  return `
+    <section class="retro-box retro-video-box" id="videos" data-random-drive-video-player>
+      <h2>★ ${escapeHtml(title)} ★</h2>
+      ${description ? `<p>${escapeHtml(description)}</p>` : ""}
+      <div class="retro-video-frame">
+        <iframe
+          title="${escapeHtml(firstVideo.label)}"
+          src="${escapeHtml(firstVideo.embedUrl)}"
+          allow="autoplay; fullscreen"
+          allowfullscreen
+          loading="lazy"
+          data-random-drive-video-frame
+        ></iframe>
+      </div>
+      <p class="retro-video-title" data-random-drive-video-title>${escapeHtml(firstVideo.label)}</p>
+      <div class="retro-video-actions">
+        <button type="button" data-random-drive-video-next>ランダム再生</button>
+        ${player.folderUrl ? `<a href="${escapeHtml(player.folderUrl)}" target="_blank" rel="noopener noreferrer">動画フォルダ</a>` : ""}
+      </div>
+      <script type="application/json" data-random-drive-video-data>${escapeScriptJson(videos)}</script>
+    </section>
+  `;
+}
+
+function renderRandomDriveVideoScript() {
+  return `
+    <script>
+      (() => {
+        for (const root of document.querySelectorAll("[data-random-drive-video-player]")) {
+          const data = root.querySelector("[data-random-drive-video-data]");
+          const frame = root.querySelector("[data-random-drive-video-frame]");
+          const title = root.querySelector("[data-random-drive-video-title]");
+          const next = root.querySelector("[data-random-drive-video-next]");
+          if (!data || !frame || !next) continue;
+
+          let videos = [];
+          try {
+            videos = JSON.parse(data.textContent || "[]");
+          } catch {
+            videos = [];
+          }
+          if (videos.length === 0) continue;
+
+          let currentIndex = -1;
+          const showVideo = () => {
+            let index = Math.floor(Math.random() * videos.length);
+            if (videos.length > 1 && index === currentIndex) {
+              index = (index + 1) % videos.length;
+            }
+            currentIndex = index;
+            const video = videos[index];
+            frame.src = video.embedUrl;
+            frame.title = video.label;
+            if (title) title.textContent = video.label;
+          };
+
+          next.addEventListener("click", showVideo);
+          showVideo();
+        }
+      })();
+    </script>
+  `;
 }
 
 function renderFanworkGuidelinesCard(character) {
@@ -3238,6 +3329,45 @@ time {
   color: #222222;
   font-size: 0.96rem;
   line-height: 1.7;
+}
+
+.retro-video-frame {
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 4px ridge #99ccff;
+  background: #000000;
+}
+
+.retro-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.retro-video-title {
+  word-break: break-word;
+}
+
+.retro-video-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.retro-video-actions button {
+  padding: 4px 10px;
+  border: 3px outset #c0c0c0;
+  border-radius: 0;
+  background: #ffffcc;
+  color: #000080;
+  font: 700 0.92rem/1.3 "MS PGothic", sans-serif;
+  cursor: pointer;
+}
+
+.retro-video-actions button:active {
+  border-style: inset;
 }
 
 .retro-footer {
