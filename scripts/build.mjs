@@ -2052,6 +2052,16 @@ h1 {
   text-shadow: 0 3px 0 color-mix(in srgb, var(--theme-secondary) 28%, transparent);
 }
 
+.hero h1 {
+  max-width: 1040px;
+  font-size: clamp(2.6rem, 5.1vw, 4rem);
+  line-height: 1.08;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  line-break: strict;
+  text-wrap: balance;
+}
+
 .guideline-hero h1 {
   max-width: 1120px;
   font-size: clamp(2.15rem, 4.7vw, 4.2rem);
@@ -3381,6 +3391,11 @@ time {
   h1 {
     font-size: clamp(2.2rem, 13vw, 3.6rem);
     line-height: 1.06;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+    line-height: 1.12;
   }
 
   .guideline-hero h1 {
