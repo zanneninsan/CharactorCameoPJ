@@ -8,7 +8,8 @@
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/check-encoding.mjs && node scripts/build.mjs --check",
     "check:encoding": "node scripts/check-encoding.mjs",
-    "import:drive-visuals": "node scripts/import-drive-visuals.mjs"
+    "import:drive-visuals": "node scripts/import-drive-visuals.mjs",
+    "import:drive-videos": "node scripts/import-drive-videos.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5"
