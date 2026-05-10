@@ -67,6 +67,9 @@ async function build() {
         if (character.fanworkGuidelines) {
           await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
         }
+        for (const page of hiddenPages(character)) {
+          await writeFile(path.join(characterDir, `${page.slug}.html`), renderHiddenPage(character, page), "utf8");
+        }
         await writeFile(path.join(promptDir, "agent.md"), renderAgentPrompt(character), "utf8");
         await writeFile(path.join(promptDir, "t2t.md"), renderTextToTextPrompt(character), "utf8");
         await writeFile(path.join(promptDir, "image-default.md"), renderImagePrompt(character, { outfitMode: "default" }), "utf8");
@@ -567,6 +570,7 @@ function renderCharacter(character) {
             ${renderTimelineGroups(character.timeline)}
           </section>
           ${renderRightsSection(character)}
+          ${renderHiddenEntrances(character)}
           ${renderSourceCallout({
             eyebrow: "Source",
             title: "このサイトのソース",
@@ -578,6 +582,63 @@ function renderCharacter(character) {
             panel: true
           })}
         </div>
+      </main>
+    `
+  });
+}
+
+function hiddenPages(character) {
+  if (!Array.isArray(character.hiddenPages)) {
+    return [];
+  }
+
+  return character.hiddenPages.filter((page) => page?.slug && page?.entryLabel);
+}
+
+function renderHiddenEntrances(character) {
+  const pages = hiddenPages(character);
+  if (pages.length === 0) {
+    return "";
+  }
+
+  return `
+    <div class="hidden-entrances" aria-label="隠しページ">
+      ${pages.map((page) => `
+        <a class="hidden-entrance" href="./${escapeHtml(page.slug)}.html">${escapeHtml(page.entryLabel)}</a>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderHiddenPage(character, page) {
+  return htmlPage({
+    title: `${character.displayName} ${page.title ?? page.entryLabel}`,
+    description: page.description ?? `${character.displayName} の隠しページです。`,
+    urlPath: `${character.id}/${page.slug}.html`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "article",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `${character.displayName} ${page.title ?? page.entryLabel}`,
+      description: page.description ?? `${character.displayName} の隠しページです。`,
+      url: absoluteUrl(`${character.id}/${page.slug}.html`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      },
+      about: {
+        "@type": "Thing",
+        name: character.displayName,
+        url: absoluteUrl(`${character.id}/`)
+      }
+    },
+    theme: character.theme,
+    body: `
+      <main class="plain-hidden-page">
+        <pre>${escapeHtml(page.body ?? "作成中")}</pre>
       </main>
     `
   });
@@ -2922,6 +2983,46 @@ time {
 .date-range-separator {
   color: var(--theme-secondary);
   font-size: 0.82rem;
+}
+
+.hidden-entrances {
+  grid-column: 1 / -1;
+  min-height: 1.2rem;
+  padding: 2px 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  user-select: text;
+}
+
+.hidden-entrance {
+  color: transparent;
+  text-decoration: none;
+  text-shadow: none;
+  user-select: text;
+}
+
+.hidden-entrance::selection {
+  color: var(--theme-text);
+  background: color-mix(in srgb, var(--theme-accent) 75%, #ffffff);
+}
+
+.hidden-entrance:focus-visible {
+  color: var(--theme-text);
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 3px;
+}
+
+.plain-hidden-page {
+  padding: 24px;
+  color: #111111;
+  background: #ffffff;
+}
+
+.plain-hidden-page pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font: 16px/1.7 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
 }
 
 @media (min-width: 1440px) {
