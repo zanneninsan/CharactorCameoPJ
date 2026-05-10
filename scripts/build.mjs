@@ -12,6 +12,11 @@ const sourceRepoUrl = normalizeRepoUrl(process.env.SOURCE_REPO_URL ?? "https://g
 const sitemapLastmod = process.env.SITEMAP_LASTMOD ?? new Date().toISOString().slice(0, 10);
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
+const shouldDownloadDriveVideos =
+  !isCheck &&
+  (process.argv.includes("--download-drive-videos") ||
+    truthyEnv(process.env.DOWNLOAD_DRIVE_VIDEOS) ||
+    process.env.GITHUB_ACTIONS === "true");
 const sectionLabels = {
   links: { en: "Links", ja: "リンク" },
   visual: { en: "Visual Reference", ja: "ビジュアル資料" },
@@ -62,6 +67,9 @@ async function build() {
         await copyCharacterAssets(character, characterDir);
         await generateBrandAssets(character, characterDir);
         await generateVisualReferenceAssets(character, characterDir);
+        if (shouldDownloadDriveVideos) {
+          await downloadRandomVideoAssets(character, characterDir);
+        }
         await generateOpenGraphImage(character, characterDir);
         await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
         if (character.fanworkGuidelines) {
@@ -117,6 +125,10 @@ async function acquireBuildLock() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function truthyEnv(value) {
+  return ["1", "true", "yes", "on"].includes(String(value ?? "").trim().toLowerCase());
 }
 
 function normalizeSiteUrl(value) {
@@ -379,6 +391,62 @@ async function generateVisualReferenceAssets(character, characterDir) {
       throw new Error(`Failed to generate visual reference assets for ${character.id}/${item.path}: ${error.message}`);
     }
   }
+}
+
+async function downloadRandomVideoAssets(character, characterDir) {
+  const videos = character.randomVideoPlayer?.videos;
+  if (!Array.isArray(videos) || videos.length === 0) {
+    return;
+  }
+
+  const outputDir = path.join(characterDir, "assets", "generated", "videos");
+  await mkdir(outputDir, { recursive: true });
+
+  for (const [index, video] of videos.entries()) {
+    if (!video.driveId) {
+      continue;
+    }
+
+    const baseName = slugifyVideoFileName(video.displayLabel ?? video.label ?? `video-${index + 1}`);
+    const fileName = `${baseName}-${hashText(video.driveId)}.mp4`;
+    const relativePath = path.posix.join("assets", "generated", "videos", fileName);
+    const outputPath = path.join(outputDir, fileName);
+    const buffer = await downloadDriveVideoFile(video.driveId);
+
+    await writeFile(outputPath, buffer);
+    video.playbackPath = relativePath;
+  }
+}
+
+async function downloadDriveVideoFile(fileId) {
+  const response = await fetch(`https://drive.usercontent.google.com/download?id=${fileId}&export=download`);
+  if (!response.ok) {
+    throw new Error(`Failed to download Google Drive video ${fileId}: ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.startsWith("video/")) {
+    throw new Error(`Google Drive video ${fileId} returned ${contentType || "unknown content type"}.`);
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+function slugifyVideoFileName(value) {
+  return String(value)
+    .normalize("NFKD")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase() || "video";
+}
+
+function hashText(value) {
+  let hash = 2166136261;
+  for (const char of String(value)) {
+    hash ^= char.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
 }
 
 async function loadCharacters() {
@@ -721,9 +789,10 @@ function randomDriveVideos(player) {
       width: item.width,
       height: item.height,
       orientation: item.orientation,
-      playbackUrl: item.playbackUrl ?? item.fileUrl ?? `https://drive.usercontent.google.com/download?id=${item.driveId}&export=download`,
+      playbackUrl: item.playbackPath ?? item.playbackUrl ?? item.fileUrl,
       embedUrl: item.embedUrl ?? `https://drive.google.com/file/d/${item.driveId}/preview`
-    }));
+    }))
+    .filter((item) => item.playbackUrl);
 }
 
 function renderOfficialRandomDriveVideoPlayer(player) {
