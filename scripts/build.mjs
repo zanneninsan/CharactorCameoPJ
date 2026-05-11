@@ -1661,7 +1661,7 @@ ${character.settings.map((item) => `- ${item.title}: ${item.body}`).join("\n")}
 
 ${renderSideFlavorsMarkdown(character)}
 
-${renderVisualReferencesMarkdown(character)}
+${renderPromptVisualReferenceNote(character, { forVisualGeneration: false })}
 
 ## Timeline
 
@@ -1709,7 +1709,7 @@ ${character.settings.map((item) => `- ${item.title}: ${item.body}`).join("\n")}
 
 ${renderSideFlavorsMarkdown(character)}
 
-${renderVisualReferencesMarkdown(character)}
+${renderPromptVisualReferenceNote(character, { forVisualGeneration: false })}
 
 ## Timeline
 
@@ -1791,6 +1791,81 @@ function renderVisualReferencesMarkdown(character) {
 ${character.visualReferences.map((item) => `- ${item.label}: ${item.description ?? item.path}`).join("\n")}`;
 }
 
+function renderPromptVisualReferenceNote(character, { forVisualGeneration = false } = {}) {
+  if (!Array.isArray(character.visualReferences) || character.visualReferences.length === 0) {
+    return "";
+  }
+
+  const baseCount = character.visualReferences.filter((item) => item.source !== "google-drive").length;
+  const driveCount = character.visualReferences.filter((item) => item.source === "google-drive").length;
+  const referencesLabel = forVisualGeneration ? "image-default.md / video-default.md" : "image-default.md";
+  const visualPageUrl = absoluteUrl(`${character.id}/#visual`);
+  const driveUrl = findOfficialDriveUrl(character);
+  const lines = [
+    "## Visual Reference Note",
+    "",
+    `- ビジュアル資料の全件列挙はここでは省略する。`,
+    `- 基本資料: ${baseCount}件、Google Drive由来の追加資料: ${driveCount}件。`,
+    `- 詳細な参照画像とURLは \`${referencesLabel}\` と公式サイトの Visual セクションを参照: ${visualPageUrl}`
+  ];
+
+  if (driveUrl) {
+    lines.push(`- 元の追加資料フォルダ: ${driveUrl}`);
+  }
+
+  return lines.join("\n");
+}
+
+function renderPromptVisualReferencesMarkdown(character, { maxDriveItems = 8 } = {}) {
+  if (!Array.isArray(character.visualReferences) || character.visualReferences.length === 0) {
+    return "";
+  }
+
+  const baseReferences = character.visualReferences.filter((item) => item.source !== "google-drive");
+  const driveReferences = character.visualReferences.filter((item) => item.source === "google-drive");
+  const selected = [...baseReferences, ...driveReferences.slice(0, maxDriveItems)];
+  const lines = selected.map((item) => {
+    const detail = item.description ? `: ${item.description}` : "";
+    const urls = [];
+    const previewUrl = visualReferencePreviewUrl(character, item);
+    if (previewUrl) {
+      urls.push(`preview=${previewUrl}`);
+    }
+    if (item.path) {
+      urls.push(`sourcePath=${item.path}`);
+    }
+    return `- ${item.label}${detail}${urls.length ? ` (${urls.join(", ")})` : ""}`;
+  });
+
+  if (driveReferences.length > maxDriveItems) {
+    lines.push(`- 追加のGoogle Drive資料は ${driveReferences.length - maxDriveItems}件省略。詳細は公式サイトの Visual セクションを参照: ${absoluteUrl(`${character.id}/#visual`)}`);
+  }
+
+  const driveUrl = findOfficialDriveUrl(character);
+  if (driveUrl) {
+    lines.push(`- Drive folder: ${driveUrl}`);
+  }
+
+  return `## Visual References
+
+${lines.join("\n")}`;
+}
+
+function visualReferencePreviewUrl(character, item) {
+  if (!item?.path) {
+    return null;
+  }
+
+  const baseName = path.parse(item.path).name;
+  return absoluteUrl(`${character.id}/assets/generated/${baseName}-large.webp`);
+}
+
+function findOfficialDriveUrl(character) {
+  const links = [...(character.contentLinks ?? []), ...(character.links ?? [])];
+  const driveLink = links.find((link) => /drive\.google\.com/i.test(link?.url ?? ""));
+  return driveLink?.url ?? null;
+}
+
 function renderImagePrompt(character, { outfitMode }) {
   const isOutfitChange = outfitMode === "outfit-change";
   const titleSuffix = isOutfitChange ? "Image Generation Prompt - Outfit Change" : "Image Generation Prompt - Default Outfit";
@@ -1820,7 +1895,7 @@ ${visualGuidance.map((item) => `- ${item}`).join("\n")}
 
 ${isOutfitChange ? outfitChangeGuidance(character) : defaultOutfitGuidance(character)}
 
-${renderVisualReferencesMarkdown(character)}
+${renderPromptVisualReferencesMarkdown(character)}
 
 ## World / Setting
 
@@ -1853,6 +1928,8 @@ ${isOutfitChange ? outfitChangeGuidance(character) : defaultOutfitGuidance(chara
 ## Profile
 
 ${Object.entries(character.profile).map(([key, value]) => `- ${key}: ${value}`).join("\n")}
+
+${renderPromptVisualReferencesMarkdown(character)}
 
 ## Timeline Awareness
 
@@ -3403,7 +3480,7 @@ h3 {
 
 .profile-list div {
   display: grid;
-  grid-template-columns: minmax(96px, 0.36fr) 1fr;
+  grid-template-columns: minmax(132px, 0.4fr) 1fr;
   gap: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
@@ -3412,6 +3489,8 @@ h3 {
 dt {
   color: var(--accent-dark);
   font-weight: 700;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 dd {
@@ -3904,9 +3983,17 @@ time {
   }
 }
 
+@media (max-width: 980px) {
+  .profile-list div,
+  .timeline li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 @media (max-width: 760px) {
   .shell {
-    width: min(100% - 20px, 520px);
+    width: min(calc(100% - 20px), 520px);
   }
 
   .hero,
@@ -3920,7 +4007,7 @@ time {
   }
 
   .brand-banner-shell {
-    width: min(100% - 18px, 1120px);
+    width: min(calc(100% - 18px), 1120px);
     margin-bottom: 12px;
   }
 
@@ -3937,6 +4024,10 @@ time {
   .hero h1 {
     font-size: clamp(2rem, 9vw, 2.8rem);
     line-height: 1.12;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-break: auto;
+    text-wrap: pretty;
   }
 
   .guideline-hero h1 {
@@ -4048,12 +4139,6 @@ time {
 
   .link-group + .link-group {
     margin-top: 16px;
-  }
-
-  .profile-list div,
-  .timeline li {
-    grid-template-columns: 1fr;
-    gap: 6px;
   }
 
   .links a {
