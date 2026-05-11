@@ -12,6 +12,12 @@
     "text": "#2f261d",
     "muted": "#756557"
   },
+  "brandAssets": {
+    "banner": {
+      "source": "assets/brand/banner-source.png",
+      "alt": "抹茶エクレアのヒーローバナー"
+    }
+  },
   "profile": {
     "呼称": "抹茶エクレア",
     "読み": "まっちゃえくれあ",
@@ -179,6 +185,10 @@
     {
       "label": "ユーザー依頼 2026-05-12",
       "note": "AIAgent用Markdownとして、初対面で名前を聞くこと、ニックネーム運用、中学生向けの要約、切れ味のある批評、プレーンテキスト出力、MATCHA-SYSTEM合議モードが提供された。"
+    },
+    {
+      "label": "提供画像 ChatGPT_Image_2026512_00_24_20.png",
+      "note": "抹茶エクレアのヒーローバナー画像として提供された。"
     }
   ]
 }
