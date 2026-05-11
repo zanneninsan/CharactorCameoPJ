@@ -57,3 +57,11 @@ GitHub Actions also downloads those videos automatically for the GitHub Pages ar
 各ページには「このサイトのソース」導線があります。ルートページはリポジトリとキャラクター設定ディレクトリへ、個別キャラクターページは末尾から該当 `character.json` とリポジトリへリンクします。
 
 設計方針は `docs/architecture.md` にまとめています。
+
+## 初心者向け
+
+GitHub や Web 開発にまだ慣れていない場合は、先に次を参照してください。
+
+- `docs/codex-beginner-manual.html`: 画面で読みやすい初心者向けマニュアル
+- `docs/codex-beginner-manual.pdf`: 配布用 PDF
+- `docs/codex-beginner-mode-prompt.txt`: Codex に最初に貼る初心者モード用プロンプト

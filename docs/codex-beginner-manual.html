@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Codex初心者向けマニュアル</title>
+    <style>
+      :root {
+        --ink: #1f2747;
+        --muted: #5f6889;
+        --line: #d8def0;
+        --paper: #f7f9ff;
+        --panel: #ffffff;
+        --accent: #3c7ff6;
+        --accent-soft: #e8f0ff;
+        --accent-2: #f56cb8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, rgba(60, 127, 246, 0.12), transparent 26%),
+          linear-gradient(180deg, #eef4ff 0%, #f9fbff 18%, #ffffff 100%);
+        line-height: 1.75;
+      }
+
+      main {
+        width: min(980px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .hero,
+      section,
+      .callout {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 16px 38px rgba(38, 56, 110, 0.08);
+      }
+
+      .hero {
+        padding: 28px 30px 24px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+      }
+
+      h2 {
+        font-size: 1.45rem;
+        margin-bottom: 14px;
+      }
+
+      h3 {
+        font-size: 1.02rem;
+        margin-bottom: 8px;
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      section {
+        padding: 22px 24px;
+        margin-top: 16px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card {
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+      }
+
+      .callout {
+        padding: 16px 18px;
+        margin-top: 16px;
+        background: linear-gradient(135deg, var(--accent-soft), #ffffff 72%);
+      }
+
+      ul,
+      ol {
+        margin: 0;
+        padding-left: 1.25em;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      code,
+      pre {
+        font-family: "Cascadia Code", Consolas, monospace;
+      }
+
+      code {
+        padding: 0.14em 0.35em;
+        border-radius: 0.42em;
+        background: #edf2ff;
+        color: #2641a8;
+      }
+
+      pre {
+        margin: 12px 0 0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        background: #18213d;
+        color: #f7f8ff;
+        line-height: 1.65;
+      }
+
+      .steps {
+        counter-reset: item;
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .steps li {
+        position: relative;
+        padding-left: 3rem;
+        min-height: 2rem;
+      }
+
+      .steps li::before {
+        counter-increment: item;
+        content: counter(item);
+        position: absolute;
+        left: 0;
+        top: 0.05rem;
+        width: 2rem;
+        height: 2rem;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        font-weight: 800;
+      }
+
+      .label {
+        display: inline-block;
+        min-width: 6.8em;
+        margin-right: 0.5em;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .footer {
+        margin-top: 18px;
+        text-align: right;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          width: min(100%, calc(100% - 20px));
+          padding-top: 14px;
+        }
+
+        .hero,
+        section,
+        .callout {
+          border-radius: 14px;
+        }
+
+        .hero,
+        section {
+          padding: 18px 16px;
+        }
+
+        .grid.two {
+          grid-template-columns: 1fr;
+        }
+
+        .steps li {
+          padding-left: 2.7rem;
+        }
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        main {
+          width: 100%;
+          padding: 0;
+        }
+
+        .hero,
+        section,
+        .callout,
+        .card {
+          box-shadow: none;
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article class="hero">
+        <p class="eyebrow">Character Cameo PJ</p>
+        <h1>Codex初心者向け 開発マニュアル</h1>
+        <p>
+          GitHub と Web 開発にまだ慣れていない人向けの手引きです。
+          このプロジェクトで「新しいキャラを追加する」と「既存ページを直す」を、Codex と一緒に安全に進めるための最短ルートをまとめています。
+        </p>
+        <p class="small">
+          対象: GitHub初心者 / Pull Request初心者 / Web制作初心者 / Codexをこれから日常的に使いたい人
+        </p>
+      </article>
+
+      <section>
+        <h2>まだ何も持っていない状態から始める</h2>
+        <p>
+          いちばんやさしい始め方は、
+          <strong>GitHub Desktop でこのプロジェクトを自分のPCに持ってくる</strong>方法です。
+          まずは下の通りにやれば大丈夫です。
+        </p>
+        <ol class="steps">
+          <li>GitHub Desktop を入れる</li>
+          <li>GitHub にログインする</li>
+          <li>このプロジェクトの GitHub ページを開く</li>
+          <li><code>&lt;&gt; Code</code> → <code>Open with GitHub Desktop</code> を押す</li>
+          <li>保存場所を聞かれたら、分かりやすい場所を選んで <code>Clone</code> を押す</li>
+          <li>PCにできた <code>CharactorCameoPJ</code> フォルダを Codex で開く</li>
+        </ol>
+        <div class="callout">
+          <strong>用語をひとことで言うと:</strong>
+          GitHub は「置き場所」、
+          GitHub Desktop は「持ってくるアプリ」、
+          Clone は「自分のPCにコピーして作業できるようにすること」です。
+        </div>
+      </section>
+
+      <section>
+        <h2>押す場所が分からない人向け</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>1. GitHub Desktop を入れる</h3>
+            <p><code>https://desktop.github.com/</code> を開いてインストールします。難しい設定は後回しで大丈夫です。</p>
+          </div>
+          <div class="card">
+            <h3>2. GitHub に入る</h3>
+            <p>GitHub Desktop を開くとログイン画面が出ます。普段使う GitHub アカウントで入ってください。</p>
+          </div>
+          <div class="card">
+            <h3>3. プロジェクトを開く</h3>
+            <p>ブラウザでこのリポジトリを開き、緑や黒の <code>Code</code> ボタンを押します。</p>
+          </div>
+          <div class="card">
+            <h3>4. 自分のPCへ持ってくる</h3>
+            <p><code>Open with GitHub Desktop</code> が出たらそれを押し、保存先を選んで <code>Clone</code> します。</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Clone できたあとの最初の一言</h2>
+        <p>ここまで終わったら、Codex には次のように頼めば始めやすいです。</p>
+        <pre>このフォルダを初心者モードで見てください。
+いまから何をするかを毎回短く説明しながら進めてください。
+まずはこのプロジェクトがちゃんと開けているか確認して、
+必要なら新しいブランチを作って作業を始めてください。</pre>
+        <p class="small">
+          「ブランチ」は本番を壊さないための作業用コピーです。今は「安全のために毎回作るもの」くらいで十分です。
+        </p>
+      </section>
+
+      <section>
+        <h2>まず知っておく4語</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>ブランチ</h3>
+            <p>本番の <code>main</code> を壊さずに作業するための「作業用コピー」です。基本は毎回新しく作ります。</p>
+          </div>
+          <div class="card">
+            <h3>コミット</h3>
+            <p>「この変更をひと区切りで保存する」という記録です。セーブポイントだと思えば十分です。</p>
+          </div>
+          <div class="card">
+            <h3>Push</h3>
+            <p>自分の作業ブランチを GitHub に送る操作です。まだ本番公開ではありません。</p>
+          </div>
+          <div class="card">
+            <h3>Pull Request</h3>
+            <p>「この変更を <code>main</code> に入れてよいですか」と確認する提出箱です。通常は Draft で作れば安全です。</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>一番安全な流れ</h2>
+        <ol class="steps">
+          <li>Codex にやりたいことを日本語で頼む</li>
+          <li>Codex が新しいブランチを切る</li>
+          <li>Codex がファイル編集と <code>npm.cmd run build</code> / <code>npm.cmd run check</code> を行う</li>
+          <li>内容を確認して、問題なければ「PR」と頼む</li>
+          <li>GitHub 上で Draft PR を確認する</li>
+          <li>レビュー後に merge する</li>
+        </ol>
+        <div class="callout">
+          <strong>初心者向けの結論:</strong>
+          自分で最初から Git コマンドを覚えなくても大丈夫です。
+          まずは「何を変えたいか」を Codex に伝え、最後に PR を作ってもらう運用で十分進められます。
+        </div>
+      </section>
+
+      <section>
+        <h2>作業前の準備</h2>
+        <ul>
+          <li><span class="label">作業フォルダ:</span><code>CharactorCameoPJ</code> を開いておく</li>
+          <li><span class="label">確認コマンド:</span><code>npm.cmd run build</code> と <code>npm.cmd run check</code></li>
+          <li><span class="label">ローカル確認:</span><code>npm.cmd run dev</code> を使い、表示された <code>http://127.0.0.1:{port}/</code> を開く</li>
+          <li><span class="label">原則:</span><code>dist/</code> は直接編集しない。正本は <code>content/</code> と <code>docs/</code></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>パターン1: 新しいキャラを追加する</h2>
+        <p>まず Codex に「素材一式がある」ことを伝えます。画像や JSON があるなら、そのフォルダパスごと渡すと進めやすいです。</p>
+        <pre>このフォルダのデータを取り込んで、新しいID `my-character` でページを作って。
+足りない情報は推測せず、未定義のままにして。
+build と check まで回して。</pre>
+        <h3>Codex がやること</h3>
+        <ul>
+          <li><code>content/characters/{characterId}/character.json</code> を作る</li>
+          <li>画像があれば <code>assets/</code> に配置する</li>
+          <li>迷う情報を <code>content/inbox/{characterId}/README.md</code> に残す</li>
+          <li><code>npm.cmd run build</code> と <code>npm.cmd run check</code> を回す</li>
+        </ul>
+        <h3>作業後に見る場所</h3>
+        <ul>
+          <li><code>dist/{characterId}/index.html</code></li>
+          <li><code>dist/{characterId}/assets/generated/ogp.png</code></li>
+          <li><code>dist/prompts/{characterId}/</code></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>パターン2: 既存ページを編集する</h2>
+        <p>変えたい見た目や文言を、そのまま自然文で頼んで大丈夫です。スクリーンショットがあるとさらに伝わりやすいです。</p>
+        <pre>スマホでルートページを見ると見出しが右に切れる。
+横スクロールも出るので直して。
+新しいブランチで始めて、build と check までやって。</pre>
+        <pre>`shizumi-oto` のページにバナーが出ていない。
+logo-source.png を暫定バナーとして使って。PR までお願い。</pre>
+        <h3>Codex に頼む時のコツ</h3>
+        <ul>
+          <li>「どこで」「何が」「どう困るか」を書く</li>
+          <li>スクリーンショットや URL を添える</li>
+          <li>最後に <code>build と check まで</code> と入れる</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>初心者モード</h2>
+        <p>
+          このプロジェクトでは、アプリの機能としての専用モードより、
+          <strong>最初に Codex へ貼るスタータープロンプト</strong>として運用するのが一番実用的です。
+          下の文をそのまま使えます。
+        </p>
+        <pre>このスレッドでは初心者モードで進めてください。
+
+- GitHubやWeb開発の用語は、毎回ひとこと補足してください。
+- 専門用語を使う時は、小学生向けくらいの言い換えも一緒に入れてください。
+- いま何をするかを、作業前に1〜2文で説明してください。
+- 私がまだ何も分かっていない前提で、押す場所や見る場所もできるだけ具体的に言ってください。
+- 危ない操作や後戻りしにくい操作の前では、必ず一度止まって確認してください。
+- 変更後は、何を直したか・どこを見ればいいかを短く教えてください。
+- 私が「PR」と言うまでは、commit / push / PR作成は勝手に進めないでください。
+- なるべく専門用語を減らして、手順を小さく区切って進めてください。</pre>
+        <p>この文は別ファイルにもしてあります: <code>docs/codex-beginner-mode-prompt.txt</code></p>
+      </section>
+
+      <section>
+        <h2>困った時の見方</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>PR に push したはずなのに反映されない</h3>
+            <p>その PR がすでに <code>merged</code> / <code>closed</code> の可能性があります。新しいブランチと新しい PR が必要です。</p>
+          </div>
+          <div class="card">
+            <h3>ページを直したのに公開サイトが変わらない</h3>
+            <p>まだ PR が merge されていないか、GitHub Pages の反映待ちのことがあります。まず PR 状態を見ます。</p>
+          </div>
+          <div class="card">
+            <h3>日本語が文字化けして見える</h3>
+            <p>PowerShell の表示だけ崩れている場合があります。判断は <code>npm.cmd run check</code> とブラウザ表示を優先します。</p>
+          </div>
+          <div class="card">
+            <h3>何を頼めばいいか分からない</h3>
+            <p>「このファイルのここを直したい」「この URL の見た目が変」「この素材からページを作って」で十分です。</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>おすすめしない操作</h2>
+        <ul>
+          <li><code>main</code> に直接 push する</li>
+          <li><code>dist/</code> を直接手で編集する</li>
+          <li>PR が merge 済みなのに同じブランチへ追記して「同じ PR に入るはず」と考える</li>
+          <li>未定義の設定を想像で埋める</li>
+          <li>文字化けして見えた文字列を、そのまま JSON に貼り戻す</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>最初の一言テンプレート</h2>
+        <pre>このプロジェクトを初心者モードで手伝ってください。
+まず新しいブランチを作ってから始めて、
+作業前に「今から何をするか」を短く説明してください。
+最後は build / check の結果まで教えてください。</pre>
+      </section>
+
+      <p class="footer">更新日: 2026-05-12 / Character Cameo PJ 用</p>
+    </main>
+  </body>
+</html>
