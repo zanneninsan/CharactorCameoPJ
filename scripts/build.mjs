@@ -5,6 +5,7 @@ import sharp from "sharp";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = path.join(rootDir, "content", "characters");
+const docsDir = path.join(rootDir, "docs");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
 const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
@@ -86,6 +87,7 @@ async function build() {
         await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
       }
 
+      await copyPublishedDocs();
       await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
       await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
       await writeFile(path.join(distDir, ".nojekyll"), "", "utf8");
@@ -152,6 +154,20 @@ async function copyCharacterAssets(character, characterDir) {
   await cp(assetsDir, path.join(characterDir, "assets"), { recursive: true });
 }
 
+async function copyPublishedDocs() {
+  const publishedDocs = [
+    "codex-beginner-manual.html",
+    "codex-beginner-manual.pdf",
+    "codex-beginner-mode-prompt.txt"
+  ];
+  const outputDir = path.join(distDir, "docs");
+  await mkdir(outputDir, { recursive: true });
+
+  for (const filename of publishedDocs) {
+    await cp(path.join(docsDir, filename), path.join(outputDir, filename));
+  }
+}
+
 async function generateBrandAssets(character, characterDir) {
   const logo = character.brandAssets?.logo;
   const banner = character.brandAssets?.banner;
@@ -188,9 +204,10 @@ async function generateBrandAssets(character, characterDir) {
     const placement = banner.logoPlacement ?? {};
     const logoWidth = Math.round((placement.width ?? 650) * scale);
     const logoLeft = Math.round((placement.left ?? 140) * scale);
+    const includeLogoOverlay = banner.includeLogoOverlay !== false;
 
     const composites = [];
-    if (bannerLogoBuffer) {
+    if (bannerLogoBuffer && includeLogoOverlay) {
       const resizedBannerLogo = await sharp(bannerLogoBuffer)
         .resize({ width: logoWidth, withoutEnlargement: true })
         .png()
@@ -520,7 +537,8 @@ function renderIndex(characters) {
           description: "キャラクター設定、サイト生成ロジック、AIプロンプト生成ルールは GitHub で管理しています。編集協力や改善提案も歓迎です。",
           links: [
             { label: "GitHubでソースを見る", href: sourceRepoUrl },
-            { label: "キャラクター設定を見る", href: sourceFileUrl("content/characters") }
+            { label: "キャラクター設定を見る", href: sourceFileUrl("content/characters") },
+            { label: "Codex初心者向けマニュアル", href: "./docs/codex-beginner-manual.html" }
           ]
         })}
         <section class="section">
@@ -2098,6 +2116,7 @@ Sitemap: ${absoluteUrl("sitemap.xml")}
 function renderSitemap(characters) {
   const urls = [
     { loc: absoluteUrl(""), priority: "0.8" },
+    { loc: absoluteUrl("docs/codex-beginner-manual.html"), priority: "0.5" },
     ...characters.flatMap((character) => [
       { loc: absoluteUrl(`${character.id}/`), priority: "1.0" },
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])

@@ -15,6 +15,7 @@
   "brandAssets": {
     "banner": {
       "source": "assets/brand/logo-source.png",
+      "includeLogoOverlay": false,
       "alt": "静見おとの暫定ヒーローバナー"
     },
     "logo": {
