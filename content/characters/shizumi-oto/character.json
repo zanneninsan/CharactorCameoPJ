@@ -13,6 +13,10 @@
     "muted": "#6F6B8A"
   },
   "brandAssets": {
+    "banner": {
+      "source": "assets/brand/logo-source.png",
+      "alt": "静見おとの暫定ヒーローバナー"
+    },
     "logo": {
       "source": "assets/brand/logo-source.png",
       "alt": "静見おとのロゴ"
