@@ -21,6 +21,7 @@ const shouldDownloadDriveVideos =
 const sectionLabels = {
   links: { en: "Links", ja: "リンク" },
   visual: { en: "Visual Reference", ja: "ビジュアル資料" },
+  videos: { en: "Videos", ja: "動画" },
   fanworks: { en: "Fanworks", ja: "二次創作ガイドライン" },
   prompts: { en: "AI Prompts", ja: "AI生成用プロンプト" },
   profile: { en: "Profile", ja: "プロフィール" },
@@ -583,6 +584,7 @@ function renderCharacterCardMedia(character) {
 
 function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
+  const hasMusicVideos = Boolean(character.musicVideoPlayer);
 
   return htmlPage({
     title: character.displayName,
@@ -610,6 +612,7 @@ function renderCharacter(character) {
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
           ${renderVisualReferences(character)}
+          ${renderMusicVideoPlayer(character.musicVideoPlayer)}
           ${renderOfficialRandomDriveVideoPlayer(character.randomVideoPlayer)}
           ${renderFanworkGuidelinesCard(character)}
           ${renderAiPrompts(character)}
@@ -671,7 +674,7 @@ function renderCharacter(character) {
             panel: true
           })}
         </div>
-        ${hasRandomVideos ? renderRandomDriveVideoScript() : ""}
+        ${hasRandomVideos || hasMusicVideos ? renderRandomDriveVideoScript() : ""}
       </main>
     `
   });
@@ -915,6 +918,87 @@ function renderOfficialRandomDriveVideoPlayer(player) {
   `;
 }
 
+function renderMusicVideoPlayer(player) {
+  if (!player?.embedUrl) {
+    return "";
+  }
+
+  const title = player.title ?? "Music Videos";
+  const description = player.description ?? "";
+  const trackTitle = player.trackTitle ?? title;
+  const trackSubtitle = player.trackSubtitle ?? "";
+  const orientationOptions = Array.isArray(player.orientationOptions) && player.orientationOptions.length > 0
+    ? player.orientationOptions
+    : [
+        { key: "portrait", label: "縦動画", aspectRatio: "9 / 16" },
+        { key: "landscape", label: "横動画", aspectRatio: "16 / 9" }
+      ];
+  const firstOrientation = orientationOptions[0]?.key ?? "portrait";
+  const firstAspectRatio = orientationOptions[0]?.aspectRatio ?? "9 / 16";
+
+  return `
+    <section class="panel wide video-panel music-video-panel" id="videos" data-music-video-player>
+      <h2 class="section-title">
+        <span>${escapeHtml(title)}</span>
+        <small>動画</small>
+      </h2>
+      ${description ? `<p class="section-note">${escapeHtml(description)}</p>` : ""}
+      <div class="official-video-layout">
+        <div
+          class="official-video-frame music-video-frame"
+          data-music-video-frame
+          data-video-orientation="${escapeHtml(firstOrientation)}"
+          style="--video-aspect-ratio: ${escapeHtml(firstAspectRatio)};"
+        >
+          <iframe
+            title="${escapeHtml(trackTitle)}"
+            src="${escapeHtml(player.embedUrl)}"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="official-video-meta music-video-meta">
+          <p class="eyebrow">YouTube Playlist</p>
+          <div class="music-track-card">
+            ${player.icon ? `<img src="./${escapeHtml(player.icon)}" alt="" loading="lazy">` : ""}
+            <div>
+              <p class="official-video-title">${escapeHtml(trackTitle)}</p>
+              ${trackSubtitle ? `<p>${escapeHtml(trackSubtitle)}</p>` : ""}
+            </div>
+          </div>
+          ${renderMusicVideoToggle(orientationOptions)}
+          <div class="links official-video-actions">
+            ${player.playlistUrl ? `<a href="${escapeHtml(player.playlistUrl)}" target="_blank" rel="noopener noreferrer">YouTubeで開く</a>` : ""}
+          </div>
+        </div>
+      </div>
+      <script type="application/json" data-music-video-options>${escapeScriptJson(orientationOptions)}</script>
+    </section>
+  `;
+}
+
+function renderMusicVideoToggle(options) {
+  if (options.length < 2) {
+    return "";
+  }
+
+  return `
+    <div class="official-video-toggle" role="group" aria-label="動画の表示サイズ">
+      ${options.map((option, index) => `
+        <button
+          type="button"
+          data-music-video-orientation="${escapeHtml(option.key ?? "")}"
+          aria-pressed="${index === 0 ? "true" : "false"}"
+        >
+          ${escapeHtml(option.label ?? orientationLabel(option.key))}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderRandomDriveVideoPlayer(player) {
   const videoSets = randomDriveVideoSets(player);
   if (videoSets.length === 0) {
@@ -976,6 +1060,32 @@ function renderRandomDriveVideoScript() {
   return `
     <script>
       (() => {
+        for (const root of document.querySelectorAll("[data-music-video-player]")) {
+          const frame = root.querySelector("[data-music-video-frame]");
+          const data = root.querySelector("[data-music-video-options]");
+          const buttons = Array.from(root.querySelectorAll("[data-music-video-orientation]"));
+          if (!frame || buttons.length === 0) continue;
+
+          let options = [];
+          try {
+            options = JSON.parse(data?.textContent || "[]");
+          } catch {
+            options = [];
+          }
+
+          for (const button of buttons) {
+            button.addEventListener("click", () => {
+              const option = options.find((item) => item.key === button.dataset.musicVideoOrientation);
+              if (!option) return;
+              frame.dataset.videoOrientation = option.key || "";
+              frame.style.setProperty("--video-aspect-ratio", option.aspectRatio || "16 / 9");
+              for (const item of buttons) {
+                item.setAttribute("aria-pressed", item === button ? "true" : "false");
+              }
+            });
+          }
+        }
+
         for (const root of document.querySelectorAll("[data-random-drive-video-player]")) {
           const data = root.querySelector("[data-random-drive-video-data]");
           const frame = root.querySelector("[data-random-drive-video-frame]");
@@ -1358,7 +1468,7 @@ function renderPageMenu(character) {
   const items = [
     ["links", sectionLabels.links.en],
     ["visual", "Visual"],
-    ["videos", "Videos"],
+    ["videos", sectionLabels.videos.en],
     ["fanworks", sectionLabels.fanworks.en],
     ["prompts", "AI"],
     ["profile", sectionLabels.profile.en],
@@ -1380,7 +1490,7 @@ function renderPageMenu(character) {
       return Boolean(character.fanworkGuidelines);
     }
     if (id === "videos") {
-      return randomDriveVideoSets(character.randomVideoPlayer).length > 0;
+      return Boolean(character.musicVideoPlayer) || randomDriveVideoSets(character.randomVideoPlayer).length > 0;
     }
     if (id === "side-flavors") {
       return hasItems(character.sideFlavors);
@@ -2778,6 +2888,13 @@ h3 {
   aspect-ratio: 16 / 9;
 }
 
+.music-video-frame,
+.music-video-frame[data-video-orientation="landscape"],
+.music-video-frame[data-video-orientation="portrait"] {
+  width: min(100%, 680px);
+  aspect-ratio: var(--video-aspect-ratio, 16 / 9);
+}
+
 .official-video-frame video,
 .official-video-frame iframe {
   display: block;
@@ -2803,6 +2920,34 @@ h3 {
   overflow-wrap: anywhere;
   color: var(--theme-text);
   font-weight: 800;
+}
+
+.music-track-card {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.music-track-card img {
+  display: block;
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--theme-paper);
+}
+
+.music-track-card p {
+  margin: 0;
+}
+
+.music-track-card .official-video-title {
+  margin-bottom: 4px;
 }
 
 .official-video-toggle {

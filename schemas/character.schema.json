@@ -87,6 +87,31 @@
         }
       }
     },
+    "musicVideoPlayer": {
+      "type": "object",
+      "required": ["title", "embedUrl"],
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "playlistUrl": { "type": "string" },
+        "embedUrl": { "type": "string" },
+        "icon": { "type": "string" },
+        "trackTitle": { "type": "string" },
+        "trackSubtitle": { "type": "string" },
+        "orientationOptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "aspectRatio"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "aspectRatio": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
     "rights": {
       "type": "object",
       "properties": {
