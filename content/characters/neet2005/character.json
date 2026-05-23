@@ -42,7 +42,15 @@
     "怪しい電子機器",
     "落語"
   ],
-  "links": [],
+  "links": [
+    {
+      "label": "YouTube",
+      "url": "https://www.youtube.com/@KAKI-fo7ki",
+      "type": "youtube",
+      "displayUrl": "youtube.com/@KAKI-fo7ki",
+      "description": "NEET hacker cat のYouTubeチャンネル。"
+    }
+  ],
   "contentLinks": [],
   "rights": {
     "holderName": "未定義",
@@ -189,6 +197,11 @@
     {
       "label": "2026-05-19 ユーザー提供ビジュアル資料",
       "note": "バナー画像と三面図。バナーは assets/brand/banner-source.jpg、三面図は assets/three-view.jpg として保存。"
+    },
+    {
+      "label": "2026-05-23 ユーザー提供YouTubeリンク",
+      "url": "https://www.youtube.com/@KAKI-fo7ki",
+      "note": "NEET hacker cat のYouTubeリンクとして追加。"
     }
   ]
 }
