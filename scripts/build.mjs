@@ -597,6 +597,7 @@ function renderCharacter(character) {
     theme: character.theme,
     body: `
       <main>
+        ${renderDesignSwitcher()}
         <section class="character-hero">
           ${renderBrandBanner(character)}
           <div class="shell">
@@ -678,6 +679,16 @@ function renderCharacter(character) {
       </main>
     `
   });
+}
+
+function renderDesignSwitcher() {
+  return `
+    <div class="design-switcher" data-design-switcher aria-label="デザイン切り替え">
+      <span>Design</span>
+      <button type="button" data-design-option="classic" aria-pressed="true">Classic</button>
+      <button type="button" data-design-option="modern" aria-pressed="false">Modern</button>
+    </div>
+  `;
 }
 
 function hiddenPages(character) {
@@ -2248,6 +2259,28 @@ function renderClientScript() {
   return `
 <script>
 (() => {
+  const designSwitcher = document.querySelector("[data-design-switcher]");
+  if (designSwitcher) {
+    const storageKey = "character-canon-design";
+    const options = Array.from(designSwitcher.querySelectorAll("[data-design-option]"));
+    const applyDesign = (value) => {
+      const design = value === "modern" ? "modern" : "classic";
+      document.body.dataset.design = design;
+      for (const option of options) {
+        option.setAttribute("aria-pressed", option.dataset.designOption === design ? "true" : "false");
+      }
+    };
+
+    applyDesign(localStorage.getItem(storageKey));
+    for (const option of options) {
+      option.addEventListener("click", () => {
+        const design = option.dataset.designOption;
+        localStorage.setItem(storageKey, design);
+        applyDesign(design);
+      });
+    }
+  }
+
   const pageMenu = document.querySelector(".page-menu");
   const menuLinks = Array.from(document.querySelectorAll(".page-menu a[href^='#']"));
   const sections = menuLinks
@@ -4025,6 +4058,738 @@ time {
   color: #666666;
   font-size: 0.82rem;
   text-align: center;
+}
+
+.design-switcher {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid rgba(21, 18, 23, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 38px rgba(21, 18, 23, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.design-switcher span {
+  padding: 0 8px;
+  color: var(--theme-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.design-switcher button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--theme-primary);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.design-switcher button[aria-pressed="true"] {
+  background: var(--theme-primary);
+  color: #ffffff;
+}
+
+body[data-design="modern"] {
+  --modern-ink: color-mix(in srgb, var(--theme-primary) 82%, #17141b);
+  --modern-soft: color-mix(in srgb, var(--theme-accent) 52%, #ffffff);
+  --modern-line: color-mix(in srgb, var(--theme-secondary) 26%, rgba(21, 18, 23, 0.14));
+  --modern-shadow: 0 22px 60px rgba(20, 18, 24, 0.12);
+  color: var(--modern-ink);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-accent) 30%, #ffffff) 0%, #ffffff 38%, color-mix(in srgb, var(--theme-paper) 76%, #ffffff) 100%);
+  background-size: auto;
+}
+
+body[data-design="modern"] a {
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.24em;
+}
+
+body[data-design="modern"] .design-switcher {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(18, 16, 24, 0.78);
+  box-shadow: 0 18px 46px rgba(18, 16, 24, 0.22);
+}
+
+body[data-design="modern"] .design-switcher span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+body[data-design="modern"] .design-switcher button {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+body[data-design="modern"] .design-switcher button[aria-pressed="true"] {
+  background: #ffffff;
+  color: var(--modern-ink);
+}
+
+body[data-design="modern"] .character-hero {
+  display: grid;
+  min-height: min(820px, 82vh);
+  align-content: end;
+  padding: 30px 0 54px;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(18, 16, 24, 0.1), rgba(18, 16, 24, 0.66)),
+    linear-gradient(120deg, color-mix(in srgb, var(--theme-primary) 82%, #111111), color-mix(in srgb, var(--theme-secondary) 48%, #222222));
+  border-bottom: 0;
+}
+
+body[data-design="modern"] .character-hero::before {
+  inset: 0;
+  z-index: 1;
+  height: auto;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 64%, color-mix(in srgb, var(--theme-accent) 42%, #ffffff) 100%);
+  pointer-events: none;
+}
+
+body[data-design="modern"] .brand-banner-shell {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  z-index: 0;
+  width: min(1760px, calc(100% - 48px));
+  margin: 0;
+  transform: translateX(-50%);
+}
+
+body[data-design="modern"] .brand-banner {
+  aspect-ratio: 21 / 8;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+  filter: saturate(1.06) contrast(1.02);
+}
+
+body[data-design="modern"] .character-hero .shell {
+  z-index: 2;
+  width: min(1180px, calc(100% - 56px));
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+body[data-design="modern"] .back-link {
+  min-height: 36px;
+  margin-bottom: 24px;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+}
+
+body[data-design="modern"] .eyebrow,
+body[data-design="modern"] .status {
+  color: color-mix(in srgb, var(--theme-secondary) 74%, #ffffff);
+}
+
+body[data-design="modern"] .character-hero h1 {
+  max-width: 980px;
+  color: #ffffff;
+  font-size: clamp(3.7rem, 8vw, 7.4rem);
+  line-height: 0.98;
+  text-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
+}
+
+body[data-design="modern"] .character-hero .catchphrase,
+body[data-design="modern"] .character-hero .lead {
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.08rem;
+  text-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
+}
+
+body[data-design="modern"] .character-hero .catchphrase {
+  color: #ffffff;
+}
+
+body[data-design="modern"] .hero-facts {
+  max-width: 860px;
+  gap: 8px;
+}
+
+body[data-design="modern"] .hero-facts span {
+  min-height: 42px;
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+}
+
+body[data-design="modern"] .hero-facts strong {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+body[data-design="modern"] .page-menu {
+  top: 0;
+  border-bottom: 1px solid rgba(21, 18, 23, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 34px rgba(21, 18, 23, 0.08);
+}
+
+body[data-design="modern"] .page-menu-inner {
+  width: min(1320px, calc(100% - 40px));
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+body[data-design="modern"] .page-menu-label {
+  background: transparent;
+  color: var(--theme-muted);
+}
+
+body[data-design="modern"] .page-menu a {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--modern-ink);
+}
+
+body[data-design="modern"] .page-menu a:hover,
+body[data-design="modern"] .page-menu a:focus-visible,
+body[data-design="modern"] .page-menu a.is-active,
+body[data-design="modern"] .page-menu a[aria-current="true"] {
+  background: var(--modern-ink);
+  color: #ffffff;
+}
+
+body[data-design="modern"] .content-layout {
+  width: min(1320px, calc(100% - 40px));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  padding: 34px 0 88px;
+}
+
+body[data-design="modern"] .content-layout > .wide,
+body[data-design="modern"] .content-layout > .source-callout,
+body[data-design="modern"] .content-layout > .hidden-entrances {
+  grid-column: 1 / -1;
+}
+
+body[data-design="modern"] .content-layout > #links,
+body[data-design="modern"] .content-layout > #fanworks {
+  grid-column: span 5;
+}
+
+body[data-design="modern"] .content-layout > #prompts {
+  grid-column: span 7;
+}
+
+body[data-design="modern"] .content-layout > #videos,
+body[data-design="modern"] .content-layout > #visual,
+body[data-design="modern"] .content-layout > #settings,
+body[data-design="modern"] .content-layout > #timeline,
+body[data-design="modern"] .content-layout > #rights {
+  grid-column: 1 / -1;
+}
+
+body[data-design="modern"] .content-layout > .detail-layout {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 0.44fr) minmax(0, 0.56fr);
+  gap: 16px;
+}
+
+body[data-design="modern"] .panel,
+body[data-design="modern"] .source-callout {
+  border: 1px solid var(--modern-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--modern-shadow);
+  backdrop-filter: blur(16px);
+}
+
+body[data-design="modern"] .panel::before {
+  display: none;
+}
+
+body[data-design="modern"] .panel h2 {
+  font-size: 1.22rem;
+}
+
+body[data-design="modern"] .section-title {
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+body[data-design="modern"] .section-title small::before {
+  content: "";
+}
+
+body[data-design="modern"] .section-title small {
+  border: 1px solid var(--modern-line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: var(--modern-soft);
+  color: var(--theme-primary);
+  font-size: 0.72rem;
+}
+
+body[data-design="modern"] .official-links {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-primary) 88%, #111111), color-mix(in srgb, var(--theme-secondary) 42%, #1f1a24));
+}
+
+body[data-design="modern"] .link-list {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+body[data-design="modern"] .link-card,
+body[data-design="modern"] .music-track-card,
+body[data-design="modern"] .official-video-meta {
+  border-radius: 8px;
+}
+
+body[data-design="modern"] .link-card {
+  min-height: 82px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body[data-design="modern"] .profile-list {
+  gap: 0;
+}
+
+body[data-design="modern"] .profile-list div {
+  grid-template-columns: minmax(112px, 0.34fr) 1fr;
+  gap: 14px;
+  padding: 14px 0;
+}
+
+body[data-design="modern"] dt {
+  color: var(--theme-muted);
+  font-size: 0.9rem;
+}
+
+body[data-design="modern"] dd {
+  color: var(--modern-ink);
+  font-size: 1.04rem;
+}
+
+body[data-design="modern"] .stack article {
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--modern-line);
+}
+
+body[data-design="modern"] .stack article:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+body[data-design="modern"] .visual-archive {
+  border-color: var(--modern-line);
+  background: var(--modern-soft);
+}
+
+body[data-design="modern"] .visual-link img {
+  border-color: var(--modern-line);
+  box-shadow: 0 16px 38px rgba(21, 18, 23, 0.1);
+}
+
+body[data-design="modern"] .visual-card figcaption {
+  font-size: 0.86rem;
+}
+
+body[data-design="modern"] .official-video-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+}
+
+body[data-design="modern"] .official-video-frame {
+  width: min(100%, 460px);
+  border: 0;
+  box-shadow: 0 24px 58px rgba(21, 18, 23, 0.16);
+}
+
+body[data-design="modern"] .official-video-frame[data-video-orientation="landscape"],
+body[data-design="modern"] .music-video-frame,
+body[data-design="modern"] .music-video-frame[data-video-orientation="landscape"],
+body[data-design="modern"] .music-video-frame[data-video-orientation="portrait"] {
+  width: min(100%, 820px);
+}
+
+body[data-design="modern"] .source-callout {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 10px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), color-mix(in srgb, var(--theme-accent) 34%, #ffffff));
+}
+
+body[data-design="modern"] .timeline li {
+  grid-template-columns: 160px 1fr;
+}
+
+@media (min-width: 901px) {
+  body[data-design="modern"] .character-hero .shell {
+    transform: translateY(58px);
+  }
+
+  body[data-design="modern"] .character-hero h1 {
+    max-width: 760px;
+    font-size: clamp(3.2rem, 5.6vw, 5.7rem);
+  }
+
+  body[data-design="modern"] .character-hero .hero-facts {
+    display: none;
+  }
+}
+
+@media (min-width: 1500px) {
+  body[data-design="modern"] .content-layout {
+    width: min(1640px, calc(100% - 80px));
+    gap: 20px;
+  }
+
+  body[data-design="modern"] .character-hero .shell {
+    width: min(1400px, calc(100% - 96px));
+  }
+
+  body[data-design="modern"] .content-layout > #links {
+    grid-column: span 4;
+  }
+
+  body[data-design="modern"] .content-layout > #fanworks {
+    grid-column: span 4;
+  }
+
+  body[data-design="modern"] .content-layout > #prompts {
+    grid-column: span 8;
+  }
+
+  body[data-design="modern"] .content-layout > .detail-layout {
+    grid-template-columns: minmax(420px, 0.34fr) minmax(0, 0.66fr);
+  }
+}
+
+@media (max-width: 900px) {
+  body[data-design="modern"] .character-hero {
+    min-height: auto;
+    padding: 14px 0 36px;
+  }
+
+  body[data-design="modern"] .brand-banner-shell {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: min(100%, calc(100% - 20px));
+    margin-bottom: 18px;
+  }
+
+  body[data-design="modern"] .brand-banner {
+    aspect-ratio: 16 / 9;
+  }
+
+  body[data-design="modern"] .character-hero .shell {
+    width: min(100%, calc(100% - 28px));
+  }
+
+  body[data-design="modern"] .character-hero h1 {
+    max-width: 100%;
+    font-size: clamp(2.45rem, 14vw, 3.6rem);
+    line-height: 1.05;
+  }
+
+  body[data-design="modern"] .character-hero .lead,
+  body[data-design="modern"] .character-hero .catchphrase {
+    font-size: 1rem;
+  }
+
+  body[data-design="modern"] .hero-facts span {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  body[data-design="modern"] .page-menu-inner,
+  body[data-design="modern"] .content-layout {
+    width: min(100%, calc(100% - 20px));
+  }
+
+  body[data-design="modern"] .page-menu-label {
+    display: none;
+  }
+
+  body[data-design="modern"] .content-layout,
+  body[data-design="modern"] .content-layout > .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-design="modern"] .content-layout > #links,
+  body[data-design="modern"] .content-layout > #fanworks,
+  body[data-design="modern"] .content-layout > #prompts {
+    grid-column: 1;
+  }
+
+  body[data-design="modern"] .official-video-layout,
+  body[data-design="modern"] .source-callout {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-design="modern"] .profile-list div,
+  body[data-design="modern"] .timeline li {
+    grid-template-columns: 1fr;
+  }
+
+  .design-switcher {
+    right: 10px;
+    top: 10px;
+    bottom: auto;
+    max-width: calc(100% - 20px);
+  }
+
+  .design-switcher span {
+    display: none;
+  }
+}
+
+body[data-design="modern"] .character-hero {
+  display: block;
+  min-height: auto;
+  padding: 0 0 56px;
+  overflow: clip;
+  background:
+    linear-gradient(180deg, #151318 0%, color-mix(in srgb, var(--theme-paper) 70%, #ffffff) 100%);
+}
+
+body[data-design="modern"] .character-hero::before {
+  inset: 0 0 auto;
+  z-index: 1;
+  height: clamp(320px, 58vh, 690px);
+  background:
+    linear-gradient(180deg, rgba(10, 9, 12, 0.12) 0%, rgba(10, 9, 12, 0.05) 46%, rgba(10, 9, 12, 0.74) 100%);
+}
+
+body[data-design="modern"] .brand-banner-shell {
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: 0;
+  width: 100%;
+  height: clamp(320px, 58vh, 690px);
+  margin: 0;
+  transform: none;
+}
+
+body[data-design="modern"] .brand-banner {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: none;
+}
+
+body[data-design="modern"] .character-hero .shell {
+  z-index: 2;
+  display: grid;
+  width: min(1320px, calc(100% - 56px));
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: 18px 30px;
+  margin-top: -78px;
+  padding: 30px;
+  transform: none;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+    color-mix(in srgb, var(--theme-paper) 82%, #ffffff);
+  box-shadow: 0 28px 82px rgba(17, 15, 20, 0.2);
+  color: var(--modern-ink);
+  backdrop-filter: blur(18px);
+}
+
+body[data-design="modern"] .character-hero .back-link {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin: 0;
+  border-color: color-mix(in srgb, var(--theme-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--theme-primary) 8%, #ffffff);
+  color: var(--modern-ink);
+  box-shadow: none;
+}
+
+body[data-design="modern"] .character-hero .eyebrow {
+  grid-column: 1;
+  margin: 4px 0 -8px;
+  color: var(--theme-secondary);
+}
+
+body[data-design="modern"] .character-hero h1 {
+  grid-column: 1;
+  max-width: 760px;
+  color: var(--modern-ink);
+  font-size: clamp(3.2rem, 5.6vw, 5.8rem);
+  line-height: 1;
+  text-shadow: none;
+}
+
+body[data-design="modern"] .character-hero .catchphrase,
+body[data-design="modern"] .character-hero .lead {
+  grid-column: 1;
+  max-width: 800px;
+  color: color-mix(in srgb, var(--modern-ink) 76%, #5d5965);
+  text-shadow: none;
+}
+
+body[data-design="modern"] .character-hero .catchphrase {
+  margin-bottom: -2px;
+  color: var(--modern-ink);
+  font-size: 1.1rem;
+}
+
+body[data-design="modern"] .character-hero .hero-facts {
+  display: grid;
+  grid-column: 2;
+  grid-row: 2 / span 4;
+  align-self: end;
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--modern-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+body[data-design="modern"] .character-hero .hero-facts span {
+  min-height: 52px;
+  justify-content: space-between;
+  border: 0;
+  border-bottom: 1px solid var(--modern-line);
+  border-radius: 0;
+  padding: 12px 15px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--modern-ink);
+  white-space: normal;
+}
+
+body[data-design="modern"] .character-hero .hero-facts span:last-child {
+  border-bottom: 0;
+}
+
+body[data-design="modern"] .character-hero .hero-facts strong {
+  color: var(--theme-muted);
+}
+
+body[data-design="modern"] .content-layout {
+  padding-top: 42px;
+}
+
+body[data-design="modern"] .panel,
+body[data-design="modern"] .source-callout {
+  padding: 28px;
+  border-color: rgba(28, 24, 32, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 54px rgba(20, 18, 24, 0.08);
+}
+
+body[data-design="modern"] .official-links {
+  background:
+    linear-gradient(145deg, rgba(14, 13, 18, 0.96), color-mix(in srgb, var(--theme-primary) 74%, #2c2630)),
+    var(--theme-primary);
+}
+
+body[data-design="modern"] .visual-references {
+  padding: 32px;
+}
+
+body[data-design="modern"] .visual-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+body[data-design="modern"] .visual-base .visual-link {
+  width: min(100%, 1080px);
+}
+
+body[data-design="modern"] .detail-layout .panel,
+body[data-design="modern"] #settings,
+body[data-design="modern"] #timeline {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+body[data-design="modern"] .stack article h3 {
+  font-size: 1.08rem;
+}
+
+body[data-design="modern"] .timeline-group-heading {
+  align-items: start;
+}
+
+body[data-design="modern"] .timeline li {
+  padding: 18px 0;
+}
+
+@media (min-width: 901px) {
+  body[data-design="modern"] .character-hero .shell {
+    transform: none;
+  }
+
+  body[data-design="modern"] .character-hero .hero-facts {
+    display: grid;
+  }
+}
+
+@media (max-width: 900px) {
+  body[data-design="modern"] .character-hero {
+    padding-bottom: 32px;
+  }
+
+  body[data-design="modern"] .character-hero::before,
+  body[data-design="modern"] .brand-banner-shell {
+    height: clamp(220px, 36vh, 330px);
+  }
+
+  body[data-design="modern"] .character-hero .shell {
+    width: min(100%, calc(100% - 20px));
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: -34px;
+    padding: 18px;
+  }
+
+  body[data-design="modern"] .character-hero .eyebrow,
+  body[data-design="modern"] .character-hero h1,
+  body[data-design="modern"] .character-hero .catchphrase,
+  body[data-design="modern"] .character-hero .lead,
+  body[data-design="modern"] .character-hero .hero-facts {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  body[data-design="modern"] .character-hero h1 {
+    font-size: clamp(2.35rem, 13vw, 3.45rem);
+  }
+
+  body[data-design="modern"] .character-hero .hero-facts {
+    display: none;
+  }
+
+  body[data-design="modern"] .panel,
+  body[data-design="modern"] .source-callout,
+  body[data-design="modern"] .visual-references {
+    padding: 20px;
+  }
 }
 
 @media (min-width: 1440px) {
