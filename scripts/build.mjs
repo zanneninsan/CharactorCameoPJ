@@ -962,6 +962,7 @@ function renderMusicVideoPlayer(player) {
           style="--video-aspect-ratio: ${escapeHtml(firstAspectRatio)};"
         >
           <iframe
+            data-music-video-iframe
             title="${escapeHtml(trackTitle)}"
             src="${escapeHtml(player.embedUrl)}"
             loading="lazy"
@@ -981,6 +982,8 @@ function renderMusicVideoPlayer(player) {
           </div>
           ${renderMusicVideoToggle(orientationOptions)}
           <div class="links official-video-actions">
+            <button type="button" data-music-video-previous>前のMV</button>
+            <button type="button" data-music-video-next>次のMV</button>
             ${player.playlistUrl ? `<a href="${escapeHtml(player.playlistUrl)}" target="_blank" rel="noopener noreferrer">YouTubeで開く</a>` : ""}
           </div>
         </div>
@@ -1071,11 +1074,46 @@ function renderRandomDriveVideoScript() {
   return `
     <script>
       (() => {
+        const loadYouTubeIframeApi = () => {
+          if (window.YT?.Player) {
+            return Promise.resolve(window.YT);
+          }
+
+          if (window.__characterCameoYouTubeApiPromise) {
+            return window.__characterCameoYouTubeApiPromise;
+          }
+
+          window.__characterCameoYouTubeApiPromise = new Promise((resolve) => {
+            const previousCallback = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+              previousCallback?.();
+              resolve(window.YT);
+            };
+
+            if (!document.querySelector("script[src='https://www.youtube.com/iframe_api']")) {
+              const script = document.createElement("script");
+              script.src = "https://www.youtube.com/iframe_api";
+              script.async = true;
+              document.head.append(script);
+            }
+          });
+
+          return window.__characterCameoYouTubeApiPromise;
+        };
+
         for (const root of document.querySelectorAll("[data-music-video-player]")) {
           const frame = root.querySelector("[data-music-video-frame]");
+          const iframe = root.querySelector("[data-music-video-iframe]");
           const data = root.querySelector("[data-music-video-options]");
           const buttons = Array.from(root.querySelectorAll("[data-music-video-orientation]"));
-          if (!frame || buttons.length === 0) continue;
+          const previousButton = root.querySelector("[data-music-video-previous]");
+          const nextButton = root.querySelector("[data-music-video-next]");
+          if (!frame) continue;
+
+          const setPlaylistButtonsEnabled = (enabled) => {
+            previousButton?.toggleAttribute("disabled", !enabled);
+            nextButton?.toggleAttribute("disabled", !enabled);
+          };
 
           let options = [];
           try {
@@ -1093,6 +1131,43 @@ function renderRandomDriveVideoScript() {
               for (const item of buttons) {
                 item.setAttribute("aria-pressed", item === button ? "true" : "false");
               }
+            });
+          }
+
+          if (iframe && (previousButton || nextButton)) {
+            try {
+              const iframeUrl = new URL(iframe.src);
+              iframeUrl.searchParams.set("enablejsapi", "1");
+              iframeUrl.searchParams.set("playsinline", "1");
+              if (location.protocol === "http:" || location.protocol === "https:") {
+                iframeUrl.searchParams.set("origin", location.origin);
+              }
+              iframe.src = iframeUrl.toString();
+            } catch {
+              // Keep the original iframe URL if the browser cannot parse it.
+            }
+
+            if (!iframe.id) {
+              iframe.id = "music-video-iframe-" + Math.random().toString(36).slice(2);
+            }
+
+            let youtubePlayer;
+            setPlaylistButtonsEnabled(false);
+
+            loadYouTubeIframeApi().then((YT) => {
+              youtubePlayer = new YT.Player(iframe.id, {
+                events: {
+                  onReady: () => setPlaylistButtonsEnabled(true)
+                }
+              });
+            });
+
+            previousButton?.addEventListener("click", () => {
+              youtubePlayer?.previousVideo?.();
+            });
+
+            nextButton?.addEventListener("click", () => {
+              youtubePlayer?.nextVideo?.();
             });
           }
         }
