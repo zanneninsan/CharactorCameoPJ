@@ -6,6 +6,7 @@ import sharp from "sharp";
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = path.join(rootDir, "content", "characters");
 const docsDir = path.join(rootDir, "docs");
+const sharedContentDir = path.join(rootDir, "content", "shared");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
 const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
@@ -68,6 +69,7 @@ async function build() {
         await mkdir(promptDir, { recursive: true });
         await copyCharacterAssets(character, characterDir);
         await generateBrandAssets(character, characterDir);
+        await generateTimelinePlaceholderAsset(characterDir);
         await generateVisualReferenceAssets(character, characterDir);
         if (shouldDownloadDriveVideos) {
           await downloadRandomVideoAssets(character, characterDir);
@@ -76,6 +78,11 @@ async function build() {
         await writeFile(path.join(characterDir, "index.html"), renderCharacter(character), "utf8");
         if (character.fanworkGuidelines) {
           await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
+        }
+        if (character.id === "zannenin") {
+          const manzokukyoDir = path.join(characterDir, "manzokukyo");
+          await mkdir(manzokukyoDir, { recursive: true });
+          await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
         }
         for (const page of hiddenPages(character)) {
           await writeFile(path.join(characterDir, `${page.slug}.html`), renderHiddenPage(character, page), "utf8");
@@ -167,6 +174,23 @@ async function copyPublishedDocs() {
   for (const filename of publishedDocs) {
     await cp(path.join(docsDir, filename), path.join(outputDir, filename));
   }
+}
+
+async function generateTimelinePlaceholderAsset(characterDir) {
+  const sourcePath = path.join(sharedContentDir, "timeline-noimage-zannenin.png");
+  const outputDir = path.join(characterDir, "assets", "generated");
+
+  try {
+    await stat(sourcePath);
+  } catch {
+    return;
+  }
+
+  await mkdir(outputDir, { recursive: true });
+  await sharp(sourcePath)
+    .resize({ width: 720, height: 720, fit: "cover" })
+    .webp({ quality: 86 })
+    .toFile(path.join(outputDir, "timeline-noimage.webp"));
 }
 
 async function generateBrandAssets(character, characterDir) {
@@ -660,7 +684,7 @@ function renderCharacter(character) {
           </section>
           <section class="panel wide" id="timeline">
             ${renderSectionHeading("timeline")}
-            ${renderTimelineGroups(character.timeline)}
+            ${renderTimelineGroups(character)}
           </section>
           ${renderRightsSection(character)}
           ${renderHiddenEntrances(character)}
@@ -676,6 +700,559 @@ function renderCharacter(character) {
           })}
         </div>
         ${hasRandomVideos || hasMusicVideos ? renderRandomDriveVideoScript() : ""}
+      </main>
+    `
+  });
+}
+
+function renderManzokukyoTeaser(character) {
+  const title = "満足教";
+  const description = "残念院さんが開く、まだ全貌の見えない満足教のティザーサイトです。";
+
+  return htmlPage({
+    title: `${title} Teaser`,
+    description,
+    urlPath: `${character.id}/manzokukyo/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "website",
+    theme: character.theme,
+    stylesheetHref: "../../styles.css",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `${title} Teaser`,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      },
+      about: {
+        "@type": "Thing",
+        name: title,
+        description
+      }
+    },
+    body: `
+      <style>
+        :root {
+          --cult-black: #08070b;
+          --cult-ink: #f5ead2;
+          --cult-gold: #d7b451;
+          --cult-red: #ff335c;
+          --cult-cyan: #58f6ff;
+          --cult-violet: #7e3cff;
+        }
+
+        body {
+          margin: 0;
+          overflow-x: hidden;
+          color: var(--cult-ink);
+          background: var(--cult-black);
+        }
+
+        .mk-page {
+          min-height: 100vh;
+          max-width: 100vw;
+          overflow-x: hidden;
+          background:
+            radial-gradient(circle at 18% 18%, rgba(255, 51, 92, 0.25), transparent 26%),
+            radial-gradient(circle at 84% 12%, rgba(88, 246, 255, 0.18), transparent 28%),
+            radial-gradient(circle at 52% 74%, rgba(126, 60, 255, 0.23), transparent 34%),
+            linear-gradient(180deg, #08070b 0%, #151019 46%, #08070b 100%);
+          font-family: var(--font-sans);
+          isolation: isolate;
+        }
+
+        .mk-page,
+        .mk-page * {
+          box-sizing: border-box;
+        }
+
+        .mk-page::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: -2;
+          opacity: 0.2;
+          background:
+            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 64px),
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 64px);
+          mask-image: radial-gradient(circle at center, #000 0%, transparent 74%);
+        }
+
+        .mk-page::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+            radial-gradient(circle at center, transparent 0 52%, rgba(0, 0, 0, 0.5) 100%);
+          background-size: 100% 4px, auto;
+          mix-blend-mode: screen;
+        }
+
+        .mk-hero {
+          position: relative;
+          display: grid;
+          min-height: 100svh;
+          align-items: end;
+          padding: 28px;
+          overflow: hidden;
+        }
+
+        .mk-banner {
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+        }
+
+        .mk-banner img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          filter: saturate(1.2) contrast(1.08) brightness(0.5);
+          transform: scale(1.04);
+        }
+
+        .mk-banner::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(90deg, rgba(8, 7, 11, 0.9) 0%, rgba(8, 7, 11, 0.38) 52%, rgba(8, 7, 11, 0.92) 100%),
+            linear-gradient(180deg, rgba(8, 7, 11, 0.08) 0%, rgba(8, 7, 11, 0.72) 70%, #08070b 100%);
+        }
+
+        .mk-sigil {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: min(72vw, 780px);
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          border: 1px solid rgba(215, 180, 81, 0.5);
+          border-radius: 50%;
+          opacity: 0.52;
+          box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 0 80px rgba(215, 180, 81, 0.18);
+          animation: mk-spin 38s linear infinite;
+        }
+
+        .mk-sigil::before,
+        .mk-sigil::after {
+          content: "";
+          position: absolute;
+          inset: 12%;
+          border: 1px solid rgba(88, 246, 255, 0.28);
+          transform: rotate(45deg);
+        }
+
+        .mk-sigil::after {
+          inset: 26%;
+          border-color: rgba(255, 51, 92, 0.32);
+          transform: rotate(0deg);
+        }
+
+        .mk-nav {
+          position: fixed;
+          top: 18px;
+          left: 50%;
+          z-index: 20;
+          display: flex;
+          width: min(1180px, calc(100% - 28px));
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          transform: translateX(-50%);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 999px;
+          padding: 9px 12px 9px 18px;
+          background: rgba(8, 7, 11, 0.62);
+          backdrop-filter: blur(16px);
+        }
+
+        .mk-nav a {
+          color: var(--cult-ink);
+          text-decoration: none;
+        }
+
+        .mk-nav-brand {
+          font-weight: 900;
+          letter-spacing: 0;
+        }
+
+        .mk-nav-links {
+          display: flex;
+          gap: 6px;
+        }
+
+        .mk-nav-links a {
+          border-radius: 999px;
+          padding: 7px 11px;
+          color: rgba(245, 234, 210, 0.72);
+          font-size: 0.82rem;
+          font-weight: 800;
+        }
+
+        .mk-nav-links a:hover,
+        .mk-nav-links a:focus-visible {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+
+        .mk-hero-inner {
+          position: relative;
+          z-index: 2;
+          width: min(1180px, 100%);
+          margin: 0 auto;
+          padding: 130px 0 56px;
+        }
+
+        .mk-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin: 0 0 18px;
+          color: var(--cult-gold);
+          font-size: 0.8rem;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .mk-kicker::before {
+          content: "";
+          width: 42px;
+          height: 1px;
+          background: var(--cult-gold);
+        }
+
+        .mk-title {
+          max-width: 980px;
+          margin: 0;
+          color: #fff7dc;
+          font-family: var(--font-display);
+          font-size: clamp(5rem, 18vw, 13rem);
+          font-weight: 700;
+          line-height: 0.82;
+          letter-spacing: 0;
+          text-shadow:
+            0 0 18px rgba(215, 180, 81, 0.4),
+            7px 0 0 rgba(255, 51, 92, 0.28),
+            -7px 0 0 rgba(88, 246, 255, 0.22);
+        }
+
+        .mk-subtitle {
+          max-width: 760px;
+          margin: 26px 0 0;
+          color: rgba(245, 234, 210, 0.86);
+          font-size: clamp(1.1rem, 2.3vw, 1.75rem);
+          font-weight: 900;
+          line-height: 1.55;
+        }
+
+        .mk-copy {
+          max-width: 680px;
+          margin: 18px 0 0;
+          color: rgba(245, 234, 210, 0.68);
+          font-size: 1rem;
+          line-height: 1.9;
+        }
+
+        .mk-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 30px;
+        }
+
+        .mk-button {
+          display: inline-flex;
+          min-height: 46px;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(215, 180, 81, 0.72);
+          border-radius: 999px;
+          padding: 10px 18px;
+          background: var(--cult-gold);
+          color: #120d13;
+          font-weight: 900;
+          text-decoration: none;
+          box-shadow: 0 0 34px rgba(215, 180, 81, 0.28);
+        }
+
+        .mk-button-secondary {
+          background: rgba(255, 255, 255, 0.08);
+          color: var(--cult-ink);
+          box-shadow: none;
+        }
+
+        .mk-section {
+          width: min(1180px, calc(100% - 32px));
+          margin: 0 auto;
+          padding: 80px 0;
+        }
+
+        .mk-section h2 {
+          margin: 0 0 18px;
+          color: #fff7dc;
+          font-family: var(--font-display);
+          font-size: clamp(2.2rem, 6vw, 5rem);
+          line-height: 0.95;
+        }
+
+        .mk-section-lead {
+          max-width: 780px;
+          margin: 0;
+          color: rgba(245, 234, 210, 0.68);
+          line-height: 1.9;
+        }
+
+        .mk-tenets {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          margin-top: 34px;
+        }
+
+        .mk-tenet {
+          position: relative;
+          min-height: 280px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 8px;
+          padding: 22px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+            rgba(255, 255, 255, 0.04);
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+        }
+
+        .mk-tenet::before {
+          content: attr(data-number);
+          position: absolute;
+          right: -10px;
+          bottom: -34px;
+          color: rgba(215, 180, 81, 0.13);
+          font-family: var(--font-display);
+          font-size: 9rem;
+          line-height: 1;
+        }
+
+        .mk-tenet h3 {
+          margin: 0 0 12px;
+          color: #ffffff;
+          font-size: 1.4rem;
+        }
+
+        .mk-tenet p {
+          margin: 0;
+          color: rgba(245, 234, 210, 0.66);
+          line-height: 1.8;
+        }
+
+        .mk-fragment {
+          display: grid;
+          grid-template-columns: 0.9fr 1.1fr;
+          gap: 28px;
+          align-items: center;
+          border-top: 1px solid rgba(215, 180, 81, 0.22);
+          border-bottom: 1px solid rgba(215, 180, 81, 0.22);
+        }
+
+        .mk-fragment img {
+          width: 100%;
+          border-radius: 8px;
+          filter: saturate(1.05) contrast(1.04);
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.36);
+        }
+
+        .mk-schedule {
+          display: grid;
+          gap: 1px;
+          margin-top: 34px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 8px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.14);
+        }
+
+        .mk-schedule div {
+          display: grid;
+          grid-template-columns: 180px 1fr;
+          gap: 18px;
+          padding: 18px;
+          background: rgba(8, 7, 11, 0.72);
+        }
+
+        .mk-schedule time {
+          color: var(--cult-gold);
+          font-weight: 900;
+        }
+
+        .mk-schedule strong {
+          color: #ffffff;
+        }
+
+        .mk-footer {
+          width: min(1180px, calc(100% - 32px));
+          margin: 0 auto;
+          padding: 48px 0 64px;
+          color: rgba(245, 234, 210, 0.54);
+          font-size: 0.9rem;
+        }
+
+        @keyframes mk-spin {
+          to {
+            transform: translate(-50%, -50%) rotate(360deg);
+          }
+        }
+
+        @media (max-width: 820px) {
+          .mk-hero {
+            padding: 18px;
+          }
+
+          .mk-nav {
+            top: 10px;
+            width: calc(100% - 20px);
+          }
+
+          .mk-nav-links {
+            display: none;
+          }
+
+          .mk-hero-inner {
+            width: 100%;
+            max-width: calc(100vw - 36px);
+            min-width: 0;
+            padding-bottom: 38px;
+          }
+
+          .mk-title {
+            font-size: clamp(5.4rem, 28vw, 8rem);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            line-height: 0.9;
+          }
+
+          .mk-subtitle {
+            max-width: min(22em, 100%);
+            font-size: 1.02rem;
+            line-break: anywhere;
+            overflow-wrap: anywhere;
+            word-break: normal;
+          }
+
+          .mk-copy {
+            max-width: 100%;
+            line-break: anywhere;
+            overflow-wrap: anywhere;
+            word-break: break-all;
+          }
+
+          .mk-actions {
+            flex-direction: column;
+          }
+
+          .mk-button {
+            width: 100%;
+          }
+
+          .mk-section {
+            width: min(100%, calc(100% - 28px));
+            padding: 58px 0;
+          }
+
+          .mk-tenets,
+          .mk-fragment,
+          .mk-schedule div {
+            grid-template-columns: 1fr;
+          }
+
+          .mk-tenet {
+            min-height: 220px;
+          }
+        }
+      </style>
+      <main class="mk-page">
+        <nav class="mk-nav" aria-label="満足教ティーザーナビゲーション">
+          <a class="mk-nav-brand" href="../">残念院さん</a>
+          <div class="mk-nav-links">
+            <a href="#doctrine">Doctrine</a>
+            <a href="#signs">Signs</a>
+            <a href="#revelation">Revelation</a>
+          </div>
+        </nav>
+        <section class="mk-hero">
+          <div class="mk-banner" aria-hidden="true">
+            <img src="../assets/generated/brand/banner-logo.webp" alt="">
+          </div>
+          <div class="mk-sigil" aria-hidden="true"></div>
+          <div class="mk-hero-inner">
+            <p class="mk-kicker">Satisfaction Cult / teaser transmission</p>
+            <h1 class="mk-title">満足教</h1>
+            <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
+            <p class="mk-copy">このページは仮設のティザーです。満足教の教義、儀式、開祖・残念院さんにまつわる断片を、公開前の暗号めいた告知として配置しています。</p>
+            <div class="mk-actions">
+              <a class="mk-button" href="#doctrine">教義を覗く</a>
+              <a class="mk-button mk-button-secondary" href="../">公式設定へ戻る</a>
+            </div>
+          </div>
+        </section>
+        <section class="mk-section" id="doctrine">
+          <h2>満たされよ、しかし満ち足りるな。</h2>
+          <p class="mk-section-lead">満足教は、過剰な幸福ではなく、見落とされる小さな満足を拾い上げるための仮想宗教です。教義はまだ霧の中にあり、断片だけが残念院さんの周囲に浮かんでいます。</p>
+          <div class="mk-tenets">
+            <article class="mk-tenet" data-number="01">
+              <h3>一杯の救済</h3>
+              <p>温かいものを食べること。くだらない話で笑うこと。それらはすべて、満足の儀式として記録される。</p>
+            </article>
+            <article class="mk-tenet" data-number="02">
+              <h3>おでこの啓示</h3>
+              <p>隠されていない額は、迷いなき自己提示の象徴。見よ、そこに教祖の余白がある。</p>
+            </article>
+            <article class="mk-tenet" data-number="03">
+              <h3>黒金の静寂</h3>
+              <p>黒は沈黙、金は祝福。満足教の色は、冗談と格式が同じ席に座るための合図である。</p>
+            </article>
+          </div>
+        </section>
+        <section class="mk-section mk-fragment" id="signs">
+          <img src="../assets/outfit-reference.png" alt="残念院さん 衣装三面図">
+          <div>
+            <p class="mk-kicker">visual fragment</p>
+            <h2>これは礼拝か、ただの衣装か。</h2>
+            <p class="mk-section-lead">高い黒襟、白い肩掛け、金の装飾、編み上げブーツ。満足教の視覚言語は、儀式めいた冗談として成立する。まだ正式公開前のため、各設定は仮文言です。</p>
+          </div>
+        </section>
+        <section class="mk-section" id="revelation">
+          <h2>Revelation Log</h2>
+          <p class="mk-section-lead">公開に向けた仮の告知ログです。実際の公開日、企画内容、導線は今後の設定整理に合わせて差し替えます。</p>
+          <div class="mk-schedule">
+            <div>
+              <time>Phase 00</time>
+              <strong>ティザーサイト開門。教義はまだ仮置き。</strong>
+            </div>
+            <div>
+              <time>Phase 01</time>
+              <strong>満足教の用語、儀式、禁止事項を整理予定。</strong>
+            </div>
+            <div>
+              <time>Phase 02</time>
+              <strong>画像、動画、AIプロンプト用のビジュアル断片を追加予定。</strong>
+            </div>
+          </div>
+        </section>
+        <footer class="mk-footer">
+          <p>このページは満足教ティザーのデザイン試作です。文章は仮置きであり、公式設定として確定する場合は character.json へ反映してください。</p>
+        </footer>
       </main>
     `
   });
@@ -1568,7 +2145,8 @@ function sourceFileUrl(filePath) {
   return `${sourceRepoUrl}/${route}/main/${normalizedPath}`;
 }
 
-function renderTimelineGroups(timeline) {
+function renderTimelineGroups(character) {
+  const timeline = character.timeline ?? [];
   const groups = [
     {
       type: "fictional",
@@ -1605,10 +2183,16 @@ function renderTimelineGroups(timeline) {
         <ol class="timeline">
           ${(entriesByType.get(group.type) ?? []).map((item) => `
             <li>
-              ${renderTimelineDate(item.date)}
-              <div>
+              <div class="timeline-marker">
+                ${renderTimelineDate(item.date)}
+              </div>
+              <figure class="timeline-media">
+                <img src="${escapeHtml(timelineImageSrc(item))}" alt="${escapeHtml(timelineImageAlt(item, character))}" loading="lazy">
+              </figure>
+              <div class="timeline-copy">
                 <h3>${escapeHtml(item.event)}</h3>
                 ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
+                ${timelineImageCaption(item) ? `<p class="timeline-image-caption">${escapeHtml(timelineImageCaption(item))}</p>` : ""}
               </div>
             </li>
           `).join("")}
@@ -1616,6 +2200,44 @@ function renderTimelineGroups(timeline) {
       </section>
     `)
     .join("");
+}
+
+function timelineImageData(item) {
+  if (!item?.image) {
+    return null;
+  }
+
+  if (typeof item.image === "string") {
+    return { path: item.image };
+  }
+
+  if (typeof item.image === "object" && item.image.path) {
+    return item.image;
+  }
+
+  return null;
+}
+
+function timelineImageSrc(item) {
+  const image = timelineImageData(item);
+  if (!image) {
+    return "./assets/generated/timeline-noimage.webp";
+  }
+
+  if (/^https?:\/\//.test(image.path)) {
+    return image.path;
+  }
+
+  return `./${image.path.replace(/^\.?\//, "")}`;
+}
+
+function timelineImageAlt(item, character) {
+  const image = timelineImageData(item);
+  return image?.alt ?? `${character.displayName} 年表: ${item.event}`;
+}
+
+function timelineImageCaption(item) {
+  return timelineImageData(item)?.caption ?? "";
 }
 
 function renderVisualReferences(character) {
@@ -2119,7 +2741,7 @@ function outfitChangeGuidance(character) {
 - 年齢は自称17歳（成人済）として扱い、キャラクター性に反する性的な衣装・演出へ寄せない。${reference}`;
 }
 
-function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData, headExtra = "" }) {
+function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData, headExtra = "", stylesheetHref }) {
   const canonicalUrl = absoluteUrl(urlPath);
   const seoDescription = normalizeDescription(description ?? title);
   const absoluteImageUrl = imagePath ? absoluteUrl(imagePath) : null;
@@ -2159,7 +2781,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
-    <link rel="stylesheet" href="${title === "Character Canon" ? "./styles.css" : "../styles.css"}">
+    <link rel="stylesheet" href="${escapeHtml(stylesheetHref ?? (title === "Character Canon" ? "./styles.css" : "../styles.css"))}">
     ${headExtra}
     ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
@@ -2240,6 +2862,7 @@ function renderSitemap(characters) {
     { loc: absoluteUrl("docs/codex-beginner-manual.html"), priority: "0.5" },
     ...characters.flatMap((character) => [
       { loc: absoluteUrl(`${character.id}/`), priority: "1.0" },
+      ...(character.id === "zannenin" ? [{ loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" }] : []),
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
     ])
   ];
@@ -3720,11 +4343,22 @@ dd {
 }
 
 .timeline {
+  position: relative;
   display: grid;
-  gap: 16px;
+  gap: 18px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 83px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--theme-secondary), color-mix(in srgb, var(--theme-secondary) 18%, transparent));
 }
 
 .timeline-group {
@@ -3770,11 +4404,73 @@ dd {
 }
 
 .timeline li {
+  position: relative;
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: 170px minmax(132px, 220px) minmax(0, 1fr);
   gap: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
+  align-items: stretch;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(21, 18, 23, 0.07);
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: 76px;
+  top: 50%;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  border: 3px solid var(--theme-secondary);
+  border-radius: 999px;
+  background: var(--theme-primary);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--theme-secondary) 18%, #ffffff);
+}
+
+.timeline-marker {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.timeline-media {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border: 1px solid color-mix(in srgb, var(--theme-secondary) 38%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--theme-accent) 40%, #ffffff);
+}
+
+.timeline-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.timeline-copy {
+  min-width: 0;
+  align-self: center;
+}
+
+.timeline-copy h3 {
+  margin-bottom: 8px;
+}
+
+.timeline-image-caption {
+  margin-top: 10px;
+  color: var(--theme-muted);
+  font-size: 0.84rem;
+  font-weight: 800;
 }
 
 time {
@@ -5250,6 +5946,28 @@ body[data-design="modern"] .timeline li {
     flex-wrap: wrap;
     gap: 4px;
     align-items: baseline;
+  }
+
+  .timeline::before {
+    left: 23px;
+  }
+
+  .timeline li {
+    grid-template-columns: 48px minmax(96px, 0.36fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .timeline li::before {
+    left: 16px;
+  }
+
+  .timeline-marker {
+    align-content: start;
+  }
+
+  .timeline-media {
+    align-self: start;
   }
 }
 
