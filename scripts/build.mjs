@@ -744,6 +744,7 @@ function renderManzokukyoTeaser(character) {
           --cult-red: #ff335c;
           --cult-cyan: #58f6ff;
           --cult-violet: #7e3cff;
+          --cult-sick: #9fff6e;
         }
 
         body {
@@ -796,6 +797,17 @@ function renderManzokukyoTeaser(character) {
           mix-blend-mode: screen;
         }
 
+        .mk-abyss-canvas {
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          width: 100%;
+          height: 100%;
+          opacity: 0.46;
+          pointer-events: none;
+          mix-blend-mode: screen;
+        }
+
         .mk-hero {
           position: relative;
           display: grid;
@@ -803,6 +815,19 @@ function renderManzokukyoTeaser(character) {
           align-items: end;
           padding: 28px;
           overflow: hidden;
+        }
+
+        .mk-hero::before {
+          content: "";
+          position: absolute;
+          inset: -8%;
+          z-index: 1;
+          pointer-events: none;
+          background:
+            conic-gradient(from 90deg at 50% 50%, transparent 0 9deg, rgba(215, 180, 81, 0.12) 10deg 11deg, transparent 12deg 36deg),
+            radial-gradient(circle at 50% 48%, transparent 0 36%, rgba(0, 0, 0, 0.54) 64%, rgba(0, 0, 0, 0.9) 100%);
+          opacity: 0.72;
+          animation: mk-pulse 5.8s ease-in-out infinite;
         }
 
         .mk-banner {
@@ -858,6 +883,103 @@ function renderManzokukyoTeaser(character) {
           inset: 26%;
           border-color: rgba(255, 51, 92, 0.32);
           transform: rotate(0deg);
+        }
+
+        .mk-orbit-scene {
+          position: absolute;
+          top: 50%;
+          right: clamp(-120px, 8vw, 140px);
+          z-index: 1;
+          width: min(54vw, 720px);
+          aspect-ratio: 1;
+          transform: translateY(-50%);
+          perspective: 900px;
+          pointer-events: none;
+        }
+
+        .mk-altar {
+          position: absolute;
+          inset: 12%;
+          transform-style: preserve-3d;
+          transform: rotateX(64deg) rotateZ(-18deg);
+          animation: mk-altar-drift 11s ease-in-out infinite;
+        }
+
+        .mk-altar-ring,
+        .mk-altar-ring::before,
+        .mk-altar-ring::after {
+          position: absolute;
+          inset: 0;
+          border: 1px solid rgba(215, 180, 81, 0.5);
+          border-radius: 50%;
+          box-shadow: 0 0 42px rgba(215, 180, 81, 0.14), inset 0 0 32px rgba(255, 51, 92, 0.12);
+          transform-style: preserve-3d;
+        }
+
+        .mk-altar-ring::before,
+        .mk-altar-ring::after {
+          content: "";
+          inset: 11%;
+          border-color: rgba(88, 246, 255, 0.34);
+          transform: translateZ(72px) rotateZ(45deg);
+        }
+
+        .mk-altar-ring::after {
+          inset: 24%;
+          border-color: rgba(159, 255, 110, 0.26);
+          transform: translateZ(-96px) rotateZ(0deg);
+        }
+
+        .mk-monolith {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 24%;
+          height: 42%;
+          transform: translate(-50%, -50%) translateZ(108px) rotateX(-18deg);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background:
+            linear-gradient(120deg, rgba(255, 255, 255, 0.11), transparent 36%),
+            linear-gradient(180deg, rgba(8, 7, 11, 0.82), rgba(255, 51, 92, 0.16));
+          box-shadow:
+            0 0 52px rgba(255, 51, 92, 0.22),
+            inset 0 0 42px rgba(0, 0, 0, 0.76);
+        }
+
+        .mk-eye {
+          position: absolute;
+          top: 40%;
+          left: 51%;
+          width: min(14vw, 124px);
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%) translateZ(180px);
+          border: 1px solid rgba(215, 180, 81, 0.48);
+          border-radius: 50%;
+          background:
+            radial-gradient(circle at 52% 52%, #09070b 0 13%, var(--cult-gold) 14% 20%, rgba(255, 247, 220, 0.92) 21% 31%, rgba(255, 51, 92, 0.2) 32% 44%, transparent 45%),
+            radial-gradient(circle, rgba(215, 180, 81, 0.28), transparent 62%);
+          box-shadow: 0 0 70px rgba(215, 180, 81, 0.42);
+          animation: mk-eye-watch 4.8s steps(2, end) infinite;
+        }
+
+        .mk-whisper {
+          position: absolute;
+          left: 28px;
+          bottom: 28px;
+          z-index: 2;
+          display: grid;
+          gap: 6px;
+          color: rgba(245, 234, 210, 0.46);
+          font-size: 0.74rem;
+          font-weight: 900;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          writing-mode: vertical-rl;
+        }
+
+        .mk-whisper span {
+          text-shadow: 2px 0 rgba(255, 51, 92, 0.55), -2px 0 rgba(88, 246, 255, 0.38);
+          animation: mk-flicker 3.2s linear infinite;
         }
 
         .mk-nav {
@@ -934,6 +1056,7 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-title {
+          position: relative;
           max-width: 980px;
           margin: 0;
           color: #fff7dc;
@@ -946,6 +1069,29 @@ function renderManzokukyoTeaser(character) {
             0 0 18px rgba(215, 180, 81, 0.4),
             7px 0 0 rgba(255, 51, 92, 0.28),
             -7px 0 0 rgba(88, 246, 255, 0.22);
+        }
+
+        .mk-title::before,
+        .mk-title::after {
+          content: attr(data-text);
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0;
+        }
+
+        .mk-title::before {
+          color: var(--cult-red);
+          transform: translate(9px, 0);
+          clip-path: inset(9% 0 68% 0);
+          animation: mk-glitch 4.6s steps(1, end) infinite;
+        }
+
+        .mk-title::after {
+          color: var(--cult-cyan);
+          transform: translate(-8px, 0);
+          clip-path: inset(58% 0 16% 0);
+          animation: mk-glitch 5.3s steps(1, end) infinite reverse;
         }
 
         .mk-subtitle {
@@ -1034,6 +1180,17 @@ function renderManzokukyoTeaser(character) {
           box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
         }
 
+        .mk-tenet::after {
+          content: "";
+          position: absolute;
+          inset: auto 18px 18px auto;
+          width: 54px;
+          aspect-ratio: 1;
+          border: 1px solid rgba(159, 255, 110, 0.24);
+          transform: rotate(45deg);
+          box-shadow: 0 0 28px rgba(159, 255, 110, 0.1);
+        }
+
         .mk-tenet::before {
           content: attr(data-number);
           position: absolute;
@@ -1114,6 +1271,65 @@ function renderManzokukyoTeaser(character) {
           }
         }
 
+        @keyframes mk-altar-drift {
+          0%, 100% {
+            transform: rotateX(64deg) rotateZ(-18deg) translateZ(0);
+          }
+
+          50% {
+            transform: rotateX(58deg) rotateZ(-26deg) translateZ(34px);
+          }
+        }
+
+        @keyframes mk-eye-watch {
+          0%, 34%, 100% {
+            transform: translate(-50%, -50%) translateZ(180px) scale(1);
+            filter: hue-rotate(0deg);
+          }
+
+          35%, 43% {
+            transform: translate(-46%, -50%) translateZ(220px) scale(1.08);
+            filter: hue-rotate(116deg);
+          }
+        }
+
+        @keyframes mk-glitch {
+          0%, 88%, 100% {
+            opacity: 0;
+          }
+
+          89%, 91% {
+            opacity: 0.72;
+          }
+
+          94% {
+            opacity: 0.42;
+            transform: translate(18px, -5px);
+          }
+        }
+
+        @keyframes mk-flicker {
+          0%, 19%, 21%, 64%, 66%, 100% {
+            opacity: 0.34;
+          }
+
+          20%, 65% {
+            opacity: 0.92;
+          }
+        }
+
+        @keyframes mk-pulse {
+          0%, 100% {
+            opacity: 0.56;
+            transform: scale(1);
+          }
+
+          50% {
+            opacity: 0.82;
+            transform: scale(1.04);
+          }
+        }
+
         @media (max-width: 820px) {
           .mk-hero {
             padding: 18px;
@@ -1133,6 +1349,20 @@ function renderManzokukyoTeaser(character) {
             max-width: calc(100vw - 36px);
             min-width: 0;
             padding-bottom: 38px;
+          }
+
+          .mk-orbit-scene {
+            top: 42%;
+            right: -22vw;
+            width: 104vw;
+            opacity: 0.78;
+          }
+
+          .mk-whisper {
+            left: auto;
+            right: 12px;
+            bottom: 92px;
+            font-size: 0.58rem;
           }
 
           .mk-title {
@@ -1180,8 +1410,21 @@ function renderManzokukyoTeaser(character) {
             min-height: 220px;
           }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .mk-sigil,
+          .mk-altar,
+          .mk-eye,
+          .mk-whisper span,
+          .mk-title::before,
+          .mk-title::after,
+          .mk-hero::before {
+            animation: none;
+          }
+        }
       </style>
       <main class="mk-page">
+        <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <nav class="mk-nav" aria-label="満足教ティーザーナビゲーション">
           <a class="mk-nav-brand" href="../">残念院さん</a>
           <div class="mk-nav-links">
@@ -1195,9 +1438,20 @@ function renderManzokukyoTeaser(character) {
             <img src="../assets/generated/brand/banner-logo.webp" alt="">
           </div>
           <div class="mk-sigil" aria-hidden="true"></div>
+          <div class="mk-orbit-scene" aria-hidden="true">
+            <div class="mk-altar">
+              <div class="mk-altar-ring"></div>
+              <div class="mk-monolith"></div>
+              <div class="mk-eye"></div>
+            </div>
+          </div>
+          <div class="mk-whisper" aria-hidden="true">
+            <span>do not be satisfied</span>
+            <span>the bowl is watching</span>
+          </div>
           <div class="mk-hero-inner">
             <p class="mk-kicker">Satisfaction Cult / teaser transmission</p>
-            <h1 class="mk-title">満足教</h1>
+            <h1 class="mk-title" data-text="満足教">満足教</h1>
             <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
             <p class="mk-copy">このページは仮設のティザーです。満足教の教義、儀式、開祖・残念院さんにまつわる断片を、公開前の暗号めいた告知として配置しています。</p>
             <div class="mk-actions">
@@ -1254,6 +1508,64 @@ function renderManzokukyoTeaser(character) {
           <p>このページは満足教ティザーのデザイン試作です。文章は仮置きであり、公式設定として確定する場合は character.json へ反映してください。</p>
         </footer>
       </main>
+      <script>
+        (() => {
+          const canvas = document.querySelector("[data-mk-abyss]");
+          if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          const ctx = canvas.getContext("2d");
+          const particles = Array.from({ length: 72 }, (_, index) => ({
+            angle: index * 0.78,
+            radius: 40 + (index % 18) * 18,
+            speed: 0.002 + (index % 7) * 0.0004,
+            size: 0.6 + (index % 5) * 0.34
+          }));
+          let width = 0;
+          let height = 0;
+          let raf = 0;
+
+          function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
+
+          function draw(time) {
+            ctx.clearRect(0, 0, width, height);
+            const cx = width * 0.56;
+            const cy = height * 0.46;
+            ctx.globalCompositeOperation = "lighter";
+
+            for (const particle of particles) {
+              const t = time * particle.speed;
+              const orbit = particle.radius + Math.sin(t * 3) * 26;
+              const x = cx + Math.cos(particle.angle + t) * orbit;
+              const y = cy + Math.sin(particle.angle * 0.7 + t * 1.8) * orbit * 0.56;
+              const alpha = 0.18 + Math.sin(t * 8 + particle.angle) * 0.12;
+
+              ctx.beginPath();
+              ctx.fillStyle = "rgba(215, 180, 81, " + Math.max(0.04, alpha) + ")";
+              ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            ctx.globalCompositeOperation = "source-over";
+            raf = requestAnimationFrame(draw);
+          }
+
+          resize();
+          window.addEventListener("resize", resize, { passive: true });
+          raf = requestAnimationFrame(draw);
+          window.addEventListener("pagehide", () => cancelAnimationFrame(raf), { once: true });
+        })();
+      </script>
     `
   });
 }
@@ -5949,25 +6261,33 @@ body[data-design="modern"] .timeline li {
   }
 
   .timeline::before {
-    left: 23px;
+    left: 20px;
   }
 
   .timeline li {
-    grid-template-columns: 48px minmax(96px, 0.36fr) minmax(0, 1fr);
+    grid-template-columns: 1fr;
+    min-width: 0;
     gap: 12px;
     padding: 12px;
   }
 
   .timeline li::before {
-    left: 16px;
+    left: 13px;
   }
 
   .timeline-marker {
     align-content: start;
+    padding-left: 28px;
   }
 
   .timeline-media {
     align-self: start;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .timeline-media img {
+    max-width: 100%;
   }
 }
 
