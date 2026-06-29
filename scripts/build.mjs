@@ -7,6 +7,7 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const contentDir = path.join(rootDir, "content", "characters");
 const docsDir = path.join(rootDir, "docs");
 const sharedContentDir = path.join(rootDir, "content", "shared");
+const staticSitesDir = path.join(rootDir, "content", "static-sites");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
 const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
@@ -86,6 +87,7 @@ async function build() {
           const manzokukyoDir = path.join(characterDir, "manzokukyo");
           await mkdir(manzokukyoDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
+          await copyStaticSite(character, characterDir, "desktopchillko");
         }
         for (const page of hiddenPages(character)) {
           await writeFile(path.join(characterDir, `${page.slug}.html`), renderHiddenPage(character, page), "utf8");
@@ -165,6 +167,19 @@ async function copyCharacterAssets(character, characterDir) {
   await cp(assetsDir, path.join(characterDir, "assets"), { recursive: true });
 }
 
+async function copyStaticSite(character, characterDir, slug) {
+  const sourceDir = path.join(staticSitesDir, character.id, slug);
+
+  try {
+    const sourceStat = await stat(sourceDir);
+    if (!sourceStat.isDirectory()) return;
+  } catch {
+    return;
+  }
+
+  await cp(sourceDir, path.join(characterDir, slug), { recursive: true });
+}
+
 async function copyPublishedDocs() {
   const publishedDocs = [
     "codex-beginner-manual.html",
@@ -199,7 +214,16 @@ async function generateTimelinePlaceholderAsset(characterDir) {
 async function generateManzokukyoAssets(characterDir) {
   const sourcePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "key-visual.png");
   const altarPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "altar-cutout.png");
-  const flamePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "purple-flame-cutout.png");
+  const propAssets = [
+    ["prop-coffin.png", "prop-coffin.webp", 760],
+    ["prop-mirror.png", "prop-mirror.webp", 760],
+    ["prop-door.png", "prop-door.webp", 980],
+    ["prop-painting.png", "prop-painting.webp", 780],
+  ];
+  const textureAssets = [
+    ["corridor-wall.png", "corridor-wall.webp"],
+    ["corridor-floor.png", "corridor-floor.webp"],
+  ];
   const outputDir = path.join(characterDir, "assets", "generated", "manzokukyo");
 
   try {
@@ -231,11 +255,25 @@ async function generateManzokukyoAssets(characterDir) {
       .toFile(path.join(outputDir, "altar.webp"));
   }
 
-  if (await fileExists(flamePath)) {
-    await sharp(flamePath)
-      .resize({ width: 240, withoutEnlargement: true })
-      .webp({ quality: 82, alphaQuality: 96 })
-      .toFile(path.join(outputDir, "purple-flame.webp"));
+  for (const [inputName, outputName, width] of propAssets) {
+    const propPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", inputName);
+    if (await fileExists(propPath)) {
+      await sharp(propPath)
+        .resize({ width, withoutEnlargement: true })
+        .webp({ quality: 78, alphaQuality: 92 })
+        .toFile(path.join(outputDir, outputName));
+    }
+  }
+
+  for (const [inputName, outputName] of textureAssets) {
+    const texturePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", inputName);
+    if (await fileExists(texturePath)) {
+      await sharp(texturePath)
+        .resize({ width: 1024, height: 1024, fit: "cover", withoutEnlargement: true })
+        .modulate({ brightness: 0.9, saturation: 0.88 })
+        .webp({ quality: 58 })
+        .toFile(path.join(outputDir, outputName));
+    }
   }
 }
 
@@ -793,6 +831,21 @@ function renderManzokukyoTeaser(character) {
           --cult-sick: #9fff6e;
         }
 
+        html,
+        body {
+          height: 100%;
+          overflow: hidden;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+          display: none;
+        }
+
         body {
           margin: 0;
           overflow-x: hidden;
@@ -801,9 +854,27 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-page {
-          min-height: 100vh;
+          --mk-depth: 0;
+          --mk-copy-opacity: 1;
+          --mk-copy-y: 0px;
+          --mk-copy-z: 180px;
+          --mk-altar-y: 0px;
+          --mk-altar-z: 120px;
+          --mk-altar-scale: 1.02;
+          --mk-portrait-y: 0px;
+          --mk-portrait-z: -260px;
+          --mk-portrait-scale: 0.82;
+          --mk-portrait-opacity: 0.18;
+          --mk-tunnel-opacity: 0;
+          --mk-tunnel-scale: 1.16;
+          --mk-road-shift: 0px;
+          --mk-wall-shift: 0px;
+          --mk-horizon-shift: 0px;
+          --mk-footer-opacity: 0;
+          height: 100svh;
+          min-height: 100svh;
           max-width: 100vw;
-          overflow-x: hidden;
+          overflow: hidden;
           background:
             radial-gradient(circle at 18% 18%, rgba(255, 51, 92, 0.18), transparent 26%),
             radial-gradient(circle at 84% 12%, rgba(215, 180, 81, 0.16), transparent 28%),
@@ -811,6 +882,10 @@ function renderManzokukyoTeaser(character) {
             linear-gradient(180deg, #08070b 0%, #151019 46%, #08070b 100%);
           font-family: var(--font-sans);
           isolation: isolate;
+          perspective: 1200px;
+          perspective-origin: 50% 38%;
+          touch-action: none;
+          user-select: none;
         }
 
         .mk-page,
@@ -855,12 +930,16 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-hero {
-          position: relative;
+          position: fixed;
+          inset: 0;
+          top: 0;
           display: grid;
           min-height: 100svh;
+          height: 100svh;
           align-items: end;
-          padding: 42px;
+          padding: clamp(18px, 2.5vw, 34px);
           overflow: hidden;
+          transform-style: preserve-3d;
         }
 
         .mk-hero::before {
@@ -871,9 +950,348 @@ function renderManzokukyoTeaser(character) {
           pointer-events: none;
           background:
             conic-gradient(from 90deg at 50% 50%, transparent 0 9deg, rgba(215, 180, 81, 0.12) 10deg 11deg, transparent 12deg 36deg),
-            radial-gradient(circle at 50% 48%, transparent 0 36%, rgba(0, 0, 0, 0.54) 64%, rgba(0, 0, 0, 0.9) 100%);
-          opacity: 0.72;
+            radial-gradient(circle at 50% 48%, transparent 0 44%, rgba(0, 0, 0, 0.24) 70%, rgba(0, 0, 0, 0.54) 100%);
+          opacity: 0.38;
           animation: mk-pulse 5.8s ease-in-out infinite;
+        }
+
+        .mk-perspective-corridor {
+          --corridor-back-left: 37%;
+          --corridor-back-right: 63%;
+          --corridor-back-top: 34%;
+          --corridor-back-bottom: 66%;
+          position: absolute;
+          inset: 0;
+          z-index: 3;
+          pointer-events: none;
+          overflow: hidden;
+          opacity: 1;
+        }
+
+        .mk-loop-tunnel {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          overflow: hidden;
+          background:
+            radial-gradient(ellipse at 50% 50%, rgba(126, 60, 255, 0.18), transparent 35%),
+            linear-gradient(180deg, #161323 0%, #111018 45%, #17111b 100%);
+        }
+
+        .mk-loop-tunnel::before,
+        .mk-loop-tunnel::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 5;
+          pointer-events: none;
+        }
+
+        .mk-loop-tunnel::before {
+          background:
+            radial-gradient(ellipse at 50% 50%, transparent 0 44%, rgba(0, 0, 0, 0.18) 72%, rgba(0, 0, 0, 0.42) 100%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 20% 80%, rgba(0, 0, 0, 0.18));
+          mix-blend-mode: multiply;
+        }
+
+        .mk-loop-tunnel::after {
+          background:
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 5px),
+            radial-gradient(ellipse at 50% 50%, transparent 0 18%, rgba(245, 234, 210, 0.08) 18.2% 18.45%, transparent 18.7% 24%);
+          opacity: 0.38;
+          mix-blend-mode: screen;
+        }
+
+        .mk-loop-surface {
+          position: absolute;
+          inset: 0;
+          background-repeat: repeat;
+          background-blend-mode: screen, normal;
+          pointer-events: none;
+          will-change: background-position, transform, opacity;
+        }
+
+        .mk-loop-floor {
+          z-index: 2;
+          clip-path: polygon(0 100%, 100% 100%, var(--corridor-back-right) var(--corridor-back-bottom), var(--corridor-back-left) var(--corridor-back-bottom));
+          background-image:
+            linear-gradient(0deg, rgba(245, 234, 210, 0.1), rgba(0, 0, 0, 0.06) 34%, rgba(0, 0, 0, 0.34) 100%),
+            url("../assets/generated/manzokukyo/corridor-floor.webp");
+          background-size: auto, 44vw 44vw;
+          background-position:
+            center,
+            center var(--mk-road-shift);
+          opacity: 1;
+          filter: brightness(1.46) contrast(1.02) saturate(0.95);
+        }
+
+        .mk-loop-road-core {
+          position: absolute;
+          inset: 0;
+          z-index: 5;
+          clip-path: polygon(29% 100%, 71% 100%, 55% var(--corridor-back-bottom), 45% var(--corridor-back-bottom));
+          background:
+            linear-gradient(0deg, rgba(215, 180, 81, 0.2), rgba(126, 60, 255, 0.08) 36%, rgba(0, 0, 0, 0.22) 100%),
+            repeating-linear-gradient(0deg, rgba(245, 234, 210, 0.22) 0 1px, transparent 1px 9.5vh),
+            repeating-linear-gradient(90deg, transparent 0 18%, rgba(215, 180, 81, 0.28) 18.2% 18.45%, transparent 18.7% 81.3%, rgba(215, 180, 81, 0.28) 81.55% 81.8%, transparent 82%);
+          opacity: 0.72;
+          filter:
+            drop-shadow(0 0 30px rgba(126, 60, 255, 0.24))
+            drop-shadow(0 0 18px rgba(215, 180, 81, 0.12));
+          box-shadow:
+            inset 0 0 38px rgba(0, 0, 0, 0.3);
+          will-change: background-position, transform;
+        }
+
+        .mk-loop-road-core::before,
+        .mk-loop-road-core::after {
+          content: "";
+          position: absolute;
+          top: var(--corridor-back-bottom);
+          bottom: 0;
+          width: 1px;
+          background: linear-gradient(180deg, rgba(215, 180, 81, 0.38), rgba(245, 234, 210, 0.14));
+          box-shadow: 0 0 18px rgba(215, 180, 81, 0.28);
+        }
+
+        .mk-loop-road-core::before {
+          left: 38.5%;
+          transform: skewX(-18deg);
+        }
+
+        .mk-loop-road-core::after {
+          right: 38.5%;
+          transform: skewX(18deg);
+        }
+
+        .mk-loop-ceiling {
+          z-index: 1;
+          clip-path: polygon(0 0, 100% 0, var(--corridor-back-right) var(--corridor-back-top), var(--corridor-back-left) var(--corridor-back-top));
+          background-image:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(126, 60, 255, 0.06) 48%, rgba(0, 0, 0, 0.22) 100%),
+            url("../assets/generated/manzokukyo/corridor-wall.webp");
+          background-size: auto, 42vw 42vw;
+          background-position:
+            center,
+            center calc(var(--mk-wall-shift) * -0.52);
+          opacity: 0.92;
+          filter: brightness(1.22) contrast(1.04) saturate(0.92);
+        }
+
+        .mk-loop-wall-left,
+        .mk-loop-wall-right {
+          z-index: 3;
+          background-image:
+            linear-gradient(90deg, rgba(0, 0, 0, 0.28), rgba(245, 234, 210, 0.08) 50%, rgba(0, 0, 0, 0.2)),
+            url("../assets/generated/manzokukyo/corridor-wall.webp");
+          background-size: auto, 42vw 42vw;
+          background-position:
+            center,
+            calc(var(--mk-wall-shift) * 0.7) center;
+          opacity: 0.96;
+          filter: brightness(1.2) contrast(1.06) saturate(0.92);
+        }
+
+        .mk-loop-wall-left {
+          clip-path: polygon(0 0, var(--corridor-back-left) var(--corridor-back-top), var(--corridor-back-left) var(--corridor-back-bottom), 0 100%);
+        }
+
+        .mk-loop-wall-right {
+          clip-path: polygon(100% 0, var(--corridor-back-right) var(--corridor-back-top), var(--corridor-back-right) var(--corridor-back-bottom), 100% 100%);
+          transform: scaleX(-1);
+        }
+
+        .mk-loop-horizon {
+          position: absolute;
+          top: var(--corridor-back-top);
+          right: calc(100% - var(--corridor-back-right));
+          bottom: calc(100% - var(--corridor-back-bottom));
+          left: var(--corridor-back-left);
+          z-index: 4;
+          border: 1px solid rgba(215, 180, 81, 0.5);
+          background:
+            radial-gradient(ellipse at center, rgba(245, 234, 210, 0.18), rgba(126, 60, 255, 0.08) 38%, rgba(8, 7, 11, 0.82) 100%),
+            url("../assets/generated/manzokukyo/corridor-wall.webp") center calc(var(--mk-horizon-shift) * -0.48) / 115% repeat;
+          box-shadow:
+            0 0 72px rgba(126, 60, 255, 0.26),
+            inset 0 0 42px rgba(0, 0, 0, 0.78);
+          opacity: 0.94;
+        }
+
+        .mk-tunnel-edges {
+          position: absolute;
+          inset: 0;
+          z-index: 12;
+          width: 100%;
+          height: 100%;
+          opacity: 0.72;
+          overflow: visible;
+          filter:
+            drop-shadow(0 0 10px rgba(215, 180, 81, 0.22))
+            drop-shadow(0 0 18px rgba(126, 60, 255, 0.14));
+        }
+
+        .mk-tunnel-edges path,
+        .mk-tunnel-edges rect {
+          fill: none;
+          stroke: rgba(215, 180, 81, 0.5);
+          stroke-width: 0.12;
+          vector-effect: non-scaling-stroke;
+        }
+
+        .mk-tunnel-edges .mk-edge-secondary {
+          stroke: rgba(245, 234, 210, 0.2);
+          stroke-width: 0.08;
+        }
+
+        .mk-perspective-corridor::before,
+        .mk-perspective-corridor::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .mk-perspective-corridor::before {
+          background:
+            linear-gradient(90deg, rgba(215, 180, 81, 0.36) 0 1px, transparent 1px),
+            linear-gradient(0deg, rgba(215, 180, 81, 0.26) 0 1px, transparent 1px),
+            repeating-radial-gradient(ellipse at 50% 50%, transparent 0 4.6%, rgba(215, 180, 81, 0.2) 4.8% 5%, transparent 5.25% 6.6%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 15%, rgba(8, 7, 11, 0.2) 24%, rgba(8, 7, 11, 0.82) 76%, rgba(0, 0, 0, 0.92) 100%);
+          background-size: 15.6vw 100%, 100% 13.8vh, auto, auto;
+          mask-image: radial-gradient(ellipse at 50% 50%, #000 0 72%, transparent 86%);
+          opacity: 0.06;
+          transform: translateZ(-260px) scale(calc(1.02 + var(--mk-depth) * 0.32));
+        }
+
+        .mk-perspective-corridor::after {
+          background:
+            radial-gradient(ellipse at 50% 50%, transparent 0 13%, rgba(255, 255, 255, 0.08) 13.15% 13.35%, transparent 13.5%),
+            radial-gradient(ellipse at 50% 50%, rgba(245, 234, 210, 0.08), transparent 18%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 42%, rgba(0, 0, 0, 0.58) 75%, rgba(0, 0, 0, 0.96) 100%);
+          opacity: 0.12;
+          transform: translateZ(90px) scale(calc(1.01 + var(--mk-depth) * 0.12));
+          mix-blend-mode: screen;
+        }
+
+        .mk-corridor-plane {
+          position: absolute;
+          inset: 0;
+          display: none;
+          background:
+            repeating-linear-gradient(var(--plane-angle), rgba(215, 180, 81, 0.26) 0 1px, transparent 1px 7.5%),
+            repeating-linear-gradient(calc(var(--plane-angle) + 90deg), rgba(88, 246, 255, 0.1) 0 1px, transparent 1px 12%),
+            linear-gradient(var(--plane-shade), rgba(215, 180, 81, 0.18), rgba(126, 60, 255, 0.04) 42%, rgba(0, 0, 0, 0.64));
+          clip-path: var(--plane-clip);
+          opacity: 0.36;
+          transform: translateZ(var(--plane-z)) rotateX(var(--plane-rx)) rotateY(var(--plane-ry)) scale(var(--plane-scale));
+          transform-origin: 50% 50%;
+          mix-blend-mode: screen;
+        }
+
+        .mk-corridor-plane-top {
+          --plane-angle: 0deg;
+          --plane-shade: 180deg;
+          --plane-clip: polygon(0 0, 100% 0, 62% 36%, 38% 36%);
+          --plane-z: -120px;
+          --plane-rx: 18deg;
+          --plane-ry: 0deg;
+          --plane-scale: 1.04;
+        }
+
+        .mk-corridor-plane-bottom {
+          --plane-angle: 0deg;
+          --plane-shade: 0deg;
+          --plane-clip: polygon(0 100%, 100% 100%, 62% 64%, 38% 64%);
+          --plane-z: -80px;
+          --plane-rx: -18deg;
+          --plane-ry: 0deg;
+          --plane-scale: 1.06;
+        }
+
+        .mk-corridor-plane-left {
+          --plane-angle: 90deg;
+          --plane-shade: 90deg;
+          --plane-clip: polygon(0 0, 38% 36%, 38% 64%, 0 100%);
+          --plane-z: 10px;
+          --plane-rx: 0deg;
+          --plane-ry: -16deg;
+          --plane-scale: 1.08;
+        }
+
+        .mk-corridor-plane-right {
+          --plane-angle: 90deg;
+          --plane-shade: 270deg;
+          --plane-clip: polygon(100% 0, 62% 36%, 62% 64%, 100% 100%);
+          --plane-z: 10px;
+          --plane-rx: 0deg;
+          --plane-ry: 16deg;
+          --plane-scale: 1.08;
+        }
+
+        .mk-corridor-vortex {
+          position: absolute;
+          display: none;
+          top: 50%;
+          left: 50%;
+          width: min(28vw, 460px);
+          aspect-ratio: 1.8 / 1;
+          border: 1px solid rgba(215, 180, 81, 0.36);
+          transform:
+            translate(-50%, -50%)
+            translateZ(calc(-360px + var(--mk-depth) * -180px))
+            scale(calc(0.76 + var(--mk-depth) * 0.2));
+          background:
+            radial-gradient(ellipse at center, rgba(245, 234, 210, 0.12), transparent 48%),
+            linear-gradient(90deg, rgba(8, 7, 11, 0.86), rgba(8, 7, 11, 0.42), rgba(8, 7, 11, 0.86));
+          box-shadow:
+            0 0 50px rgba(215, 180, 81, 0.14),
+            inset 0 0 60px rgba(0, 0, 0, 0.86);
+          opacity: 0.88;
+        }
+
+        .mk-corridor-frame {
+          --frame-z: -1400px;
+          --frame-scale: 0.1;
+          --frame-opacity: 0;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: min(76vw, 1360px);
+          aspect-ratio: 1.95 / 1;
+          border: 1px solid rgba(215, 180, 81, 0.46);
+          opacity: var(--frame-opacity);
+          transform:
+            translate(-50%, -50%)
+            translateZ(var(--frame-z))
+            scale(var(--frame-scale));
+          transform-origin: 50% 50%;
+          box-shadow:
+            0 0 22px rgba(215, 180, 81, 0.12),
+            inset 0 0 38px rgba(126, 60, 255, 0.1);
+          will-change: transform, opacity;
+        }
+
+        .mk-corridor-frame::before,
+        .mk-corridor-frame::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0.72;
+        }
+
+        .mk-corridor-frame::before {
+          background:
+            linear-gradient(90deg, transparent 0 19%, rgba(215, 180, 81, 0.52) 19.1% 19.25%, transparent 19.35% 80.65%, rgba(215, 180, 81, 0.52) 80.75% 80.9%, transparent 81%),
+            linear-gradient(0deg, transparent 0 21%, rgba(215, 180, 81, 0.38) 21.1% 21.25%, transparent 21.35% 78.65%, rgba(215, 180, 81, 0.38) 78.75% 78.9%, transparent 79%);
+        }
+
+        .mk-corridor-frame::after {
+          background:
+            repeating-linear-gradient(90deg, transparent 0 9.6%, rgba(88, 246, 255, 0.16) 9.7% 9.82%, transparent 9.92% 19.2%),
+            repeating-linear-gradient(0deg, transparent 0 11.8%, rgba(215, 180, 81, 0.18) 11.9% 12.02%, transparent 12.12% 23.6%);
+          mask-image: radial-gradient(ellipse at center, #000 0 70%, transparent 88%);
         }
 
         .mk-banner {
@@ -883,6 +1301,8 @@ function renderManzokukyoTeaser(character) {
           background:
             linear-gradient(90deg, rgba(8, 7, 11, 0.94) 0%, rgba(8, 7, 11, 0.74) 38%, rgba(8, 7, 11, 0.9) 100%),
             url("../assets/generated/manzokukyo/key-visual-bg.webp") center / cover no-repeat;
+          transform: translateZ(-520px) scale(1.44);
+          transform-origin: 50% 42%;
         }
 
         .mk-banner::after {
@@ -894,23 +1314,81 @@ function renderManzokukyoTeaser(character) {
             linear-gradient(180deg, rgba(8, 7, 11, 0.08) 0%, rgba(8, 7, 11, 0.54) 68%, #08070b 100%);
         }
 
+        .mk-corridor-props {
+          position: absolute;
+          inset: 0;
+          z-index: 4;
+          overflow: hidden;
+          pointer-events: none;
+          perspective: 1200px;
+          transform-style: preserve-3d;
+        }
+
+        .mk-depth-prop {
+          --prop-x: 0px;
+          --prop-z: -900px;
+          --prop-scale: 0.12;
+          --prop-opacity: 0;
+          --prop-blur: 8px;
+          --prop-ry: 0deg;
+          --prop-rz: 0deg;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          display: block;
+          width: var(--prop-width);
+          max-width: none;
+          height: auto;
+          opacity: var(--prop-opacity);
+          transform:
+            translate(-50%, -50%)
+            translate3d(var(--prop-x), 0, var(--prop-z))
+            rotateY(var(--prop-ry))
+            rotateZ(var(--prop-rz))
+            scale(var(--prop-scale));
+          transform-origin: 50% 50%;
+          filter:
+            blur(var(--prop-blur))
+            brightness(0.86)
+            contrast(1.16)
+            saturate(0.92)
+            drop-shadow(0 0 42px rgba(126, 60, 255, 0.28))
+            drop-shadow(0 42px 88px rgba(0, 0, 0, 0.72));
+          will-change: transform, opacity, filter;
+        }
+
+        .mk-depth-prop[data-mk-prop^="door"] {
+          z-index: 1;
+        }
+
+        .mk-depth-prop[data-mk-prop^="mirror"],
+        .mk-depth-prop[data-mk-prop^="painting"] {
+          z-index: 2;
+        }
+
+        .mk-depth-prop[data-mk-prop^="coffin"] {
+          z-index: 3;
+        }
+
         .mk-key-visual {
           position: absolute;
-          top: 74px;
-          right: clamp(34px, 5vw, 96px);
-          bottom: 44px;
-          z-index: 1;
-          width: min(46vw, 720px);
-          min-width: 520px;
-          transform: translateZ(0);
-          border: 1px solid rgba(215, 180, 81, 0.4);
+          top: clamp(72px, 10vh, 118px);
+          right: clamp(210px, 18vw, 360px);
+          z-index: 2;
+          width: min(27vw, 460px);
+          min-width: 330px;
+          height: min(48vh, 480px);
+          transform: translate3d(0, var(--mk-portrait-y), var(--mk-portrait-z)) scale(var(--mk-portrait-scale));
+          transform-origin: 50% 72%;
+          border: 1px solid rgba(215, 180, 81, 0.28);
           border-radius: 18px;
           overflow: hidden;
           background: #08070b;
+          opacity: var(--mk-portrait-opacity);
           box-shadow:
             0 0 0 1px rgba(255, 255, 255, 0.08),
-            0 36px 110px rgba(0, 0, 0, 0.6),
-            0 0 90px rgba(215, 180, 81, 0.16);
+            0 28px 90px rgba(0, 0, 0, 0.72),
+            0 0 74px rgba(90, 34, 122, 0.2);
           isolation: isolate;
           animation: mk-portrait-breathe 9s ease-in-out infinite;
         }
@@ -953,8 +1431,8 @@ function renderManzokukyoTeaser(character) {
           height: 100%;
           object-fit: cover;
           object-position: center top;
-          filter: saturate(0.9) contrast(1.08) brightness(0.82) hue-rotate(0deg);
-          transform: scale(1.01);
+          filter: saturate(0.74) contrast(1.16) brightness(0.58) hue-rotate(-5deg);
+          transform: scale(1.02);
           animation: mk-portrait-decay 12s ease-in-out infinite;
         }
 
@@ -985,14 +1463,17 @@ function renderManzokukyoTeaser(character) {
 
         .mk-black-mass {
           position: absolute;
-          right: clamp(42px, 5.8vw, 108px);
-          bottom: 0;
-          z-index: 4;
-          width: min(48vw, 820px);
-          min-width: 560px;
+          right: clamp(-320px, -18vw, -120px);
+          bottom: -8vh;
+          z-index: 5;
+          width: min(39vw, 680px);
+          min-width: 430px;
           aspect-ratio: 1672 / 941;
+          opacity: 0.62;
           pointer-events: none;
           perspective: 900px;
+          transform: translate3d(0, var(--mk-altar-y), var(--mk-altar-z)) scale(var(--mk-altar-scale));
+          transform-origin: 50% 100%;
         }
 
         .mk-altar-prop {
@@ -1052,48 +1533,29 @@ function renderManzokukyoTeaser(character) {
           z-index: 2;
         }
 
-        .mk-flame {
+        .mk-flame-canvas {
           position: absolute;
-          left: var(--flame-left);
-          bottom: var(--flame-bottom, 68%);
-          width: var(--flame-width, clamp(32px, 3vw, 56px));
-          opacity: 1;
-          transform: translate(-50%, 6%) scale(var(--flame-scale, 1));
-          transform-origin: 50% 92%;
-          animation: mk-flame-extinguish 18s linear 2;
-          animation-play-state: var(--ritual-play-state, running);
-          mix-blend-mode: screen;
-        }
-
-        .mk-flame img {
-          display: block;
+          top: -24%;
+          right: 0;
+          bottom: 0;
+          left: 0;
           width: 100%;
-          height: auto;
-          filter:
-            drop-shadow(0 0 10px rgba(255, 255, 255, 0.4))
-            drop-shadow(0 0 24px rgba(175, 78, 255, 0.72))
-            drop-shadow(0 0 54px rgba(93, 35, 255, 0.46));
-          animation: mk-flame-image-dance 0.86s ease-in-out infinite alternate;
+          opacity: 1;
+          mix-blend-mode: normal;
+          filter: saturate(0.86) contrast(1.18);
+          transition: opacity 0.36s ease;
         }
 
-        .mk-flame:nth-child(1) {
-          animation-name: mk-flame-out-1;
-        }
-
-        .mk-flame:nth-child(2) {
-          animation-name: mk-flame-out-2;
-        }
-
-        .mk-flame:nth-child(3) {
-          animation-name: mk-flame-out-3;
-        }
-
-        .mk-flame:nth-child(4) {
-          animation-name: mk-flame-out-4;
-        }
-
-        .mk-flame:nth-child(5) {
-          animation-name: mk-flame-out-5;
+        .mk-ritual-dim {
+          position: fixed;
+          inset: 0;
+          z-index: 45;
+          pointer-events: none;
+          background:
+            radial-gradient(ellipse at 52% 42%, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.72) 68%, #000 100%),
+            rgba(0, 0, 0, 0.72);
+          opacity: var(--mk-ritual-dim, 0);
+          transition: opacity 0.12s linear;
         }
 
         .mk-wake-overlay {
@@ -1121,10 +1583,10 @@ function renderManzokukyoTeaser(character) {
 
         .mk-wake-overlay::before {
           background:
-            radial-gradient(ellipse at 50% 48%, rgba(255, 255, 255, 0.92) 0 5%, transparent 6%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 19%, rgba(255, 255, 255, 0.16) 21%, transparent 32%),
-            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, transparent 1px 4px);
-          filter: blur(1px) contrast(1.5);
+            radial-gradient(ellipse at 50% 48%, rgba(255, 255, 255, 0.92) 0 4%, transparent 5.5%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 16%, rgba(255, 255, 255, 0.18) 20%, transparent 36%),
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 4px);
+          filter: blur(1px) contrast(1.65);
           mix-blend-mode: screen;
           animation: mk-eye-open-cycle 18s linear 2;
           animation-play-state: var(--ritual-play-state, running);
@@ -1145,11 +1607,13 @@ function renderManzokukyoTeaser(character) {
           --ritual-play-state: paused;
         }
 
-        .mk-page[data-ritual-state="resetting"] .mk-flame,
+        .mk-page[data-ritual-state="resetting"] .mk-flame-canvas,
+        .mk-page[data-ritual-state="resetting"] .mk-ritual-dim,
         .mk-page[data-ritual-state="resetting"] .mk-wake-overlay,
         .mk-page[data-ritual-state="resetting"] .mk-wake-overlay::before,
         .mk-page[data-ritual-state="resetting"] .mk-wake-overlay::after,
-        .mk-page[data-ritual-state="ended"] .mk-flame,
+        .mk-page[data-ritual-state="ended"] .mk-flame-canvas,
+        .mk-page[data-ritual-state="ended"] .mk-ritual-dim,
         .mk-page[data-ritual-state="ended"] .mk-wake-overlay,
         .mk-page[data-ritual-state="ended"] .mk-wake-overlay::before,
         .mk-page[data-ritual-state="ended"] .mk-wake-overlay::after {
@@ -1321,6 +1785,7 @@ function renderManzokukyoTeaser(character) {
           letter-spacing: 0.22em;
           text-transform: uppercase;
           writing-mode: vertical-rl;
+          opacity: 0;
         }
 
         .mk-whisper span {
@@ -1330,10 +1795,13 @@ function renderManzokukyoTeaser(character) {
 
         .mk-hero-inner {
           position: relative;
-          z-index: 3;
+          z-index: 6;
           width: min(1180px, 100%);
           margin: 0 auto;
-          padding: 76px 0 56px;
+          padding: clamp(34px, 4.5vh, 56px) 0 clamp(24px, 3.8vh, 40px);
+          opacity: 0;
+          pointer-events: none;
+          transform: translate3d(0, var(--mk-copy-y), var(--mk-copy-z));
         }
 
         .mk-kicker {
@@ -1360,7 +1828,7 @@ function renderManzokukyoTeaser(character) {
           margin: 0;
           color: #fff7dc;
           font-family: var(--font-display);
-          font-size: clamp(5.4rem, 14vw, 11.6rem);
+          font-size: clamp(4.6rem, 11.4vw, 9.2rem);
           font-weight: 700;
           line-height: 0.82;
           letter-spacing: 0;
@@ -1395,26 +1863,26 @@ function renderManzokukyoTeaser(character) {
 
         .mk-subtitle {
           max-width: 640px;
-          margin: 26px 0 0;
+          margin: 18px 0 0;
           color: rgba(245, 234, 210, 0.86);
-          font-size: clamp(1.1rem, 2.3vw, 1.75rem);
+          font-size: clamp(1.05rem, 2vw, 1.55rem);
           font-weight: 900;
           line-height: 1.55;
         }
 
         .mk-copy {
           max-width: 580px;
-          margin: 18px 0 0;
+          margin: 12px 0 0;
           color: rgba(245, 234, 210, 0.68);
           font-size: 1rem;
-          line-height: 1.9;
+          line-height: 1.75;
         }
 
         .mk-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
-          margin-top: 30px;
+          margin-top: 22px;
         }
 
         .mk-button {
@@ -1439,9 +1907,57 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-section {
-          width: min(1180px, calc(100% - 32px));
-          margin: 0 auto;
-          padding: 80px 0;
+          --mk-panel-z: -760;
+          --mk-panel-lift: 0;
+          --mk-panel-tilt: 13;
+          --mk-panel-opacity: 0;
+          --mk-panel-scale: 0.88;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          z-index: 1;
+          width: min(880px, calc(100% - 64px));
+          min-height: auto;
+          margin: 0;
+          padding: clamp(22px, 4vw, 44px);
+          border: 1px solid rgba(215, 180, 81, 0.22);
+          border-radius: 18px;
+          background:
+            linear-gradient(135deg, rgba(255, 51, 92, 0.1), transparent 34%),
+            linear-gradient(180deg, rgba(17, 12, 20, 0.88), rgba(5, 4, 8, 0.76));
+          box-shadow:
+            0 30px 120px rgba(0, 0, 0, 0.52),
+            inset 0 0 54px rgba(215, 180, 81, 0.05);
+          opacity: var(--mk-panel-opacity);
+          transform:
+            translate(-50%, -50%)
+            perspective(1200px)
+            translate3d(0, calc(var(--mk-panel-lift) * 1px), calc(var(--mk-panel-z) * 1px))
+            rotateX(calc(var(--mk-panel-tilt) * 1deg))
+            scale(var(--mk-panel-scale));
+          transform-origin: 50% 56%;
+          transition: opacity 0.18s linear;
+          pointer-events: none;
+          will-change: transform, opacity;
+        }
+
+        .mk-depth-journey {
+          display: none;
+        }
+
+        .mk-depth-journey::before {
+          content: "";
+          position: absolute;
+          inset: -12%;
+          z-index: 0;
+          display: block;
+          pointer-events: none;
+          background:
+            repeating-radial-gradient(ellipse at 50% 42%, rgba(215, 180, 81, 0.16) 0 1px, transparent 2px 76px),
+            radial-gradient(ellipse at 50% 42%, transparent 0 22%, rgba(44, 8, 72, 0.24) 38%, rgba(0, 0, 0, 0.78) 72%, #08070b 100%);
+          opacity: var(--mk-tunnel-opacity);
+          transform: translateZ(-420px) scale(var(--mk-tunnel-scale));
+          transform-origin: 50% 42%;
         }
 
         .mk-section h2 {
@@ -1557,11 +2073,17 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-footer {
-          width: min(1180px, calc(100% - 32px));
-          margin: 0 auto;
-          padding: 48px 0 64px;
+          position: fixed;
+          right: 24px;
+          bottom: 18px;
+          z-index: 10;
+          width: auto;
+          margin: 0;
+          padding: 0;
           color: rgba(245, 234, 210, 0.54);
           font-size: 0.9rem;
+          opacity: var(--mk-footer-opacity);
+          pointer-events: none;
         }
 
         @keyframes mk-spin {
@@ -1711,136 +2233,21 @@ function renderManzokukyoTeaser(character) {
           }
         }
 
-        @keyframes mk-flame-image-dance {
-          0% {
-            transform: translate3d(-3%, 0, 0) scale(0.96, 1.05) rotate(-2deg);
-            filter:
-              drop-shadow(0 0 8px rgba(255, 255, 255, 0.34))
-              drop-shadow(0 0 20px rgba(175, 78, 255, 0.58))
-              drop-shadow(0 0 42px rgba(93, 35, 255, 0.38));
-          }
-
-          100% {
-            transform: translate3d(3%, -1.6%, 0) scale(1.05, 0.98) rotate(2deg);
-            filter:
-              drop-shadow(0 0 12px rgba(255, 255, 255, 0.5))
-              drop-shadow(0 0 30px rgba(190, 86, 255, 0.84))
-              drop-shadow(0 0 68px rgba(111, 42, 255, 0.54));
-          }
-        }
-
-        @keyframes mk-flame-extinguish {
-          0%, 72% {
-            opacity: 1;
-          }
-
-          77%, 100% {
-            opacity: 0;
-          }
-        }
-
-        @keyframes mk-flame-out-1 {
-          0%, 18% { opacity: 1; }
-          23%, 100% { opacity: 0; }
-        }
-
-        @keyframes mk-flame-out-2 {
-          0%, 32% { opacity: 1; }
-          37%, 100% { opacity: 0; }
-        }
-
-        @keyframes mk-flame-out-3 {
-          0%, 46% { opacity: 1; }
-          51%, 100% { opacity: 0; }
-        }
-
-        @keyframes mk-flame-out-4 {
-          0%, 60% { opacity: 1; }
-          65%, 100% { opacity: 0; }
-        }
-
-        @keyframes mk-flame-out-5 {
-          0%, 74% { opacity: 1; }
-          79%, 100% { opacity: 0; }
-        }
-
         @keyframes mk-blackout-cycle {
-          0%, 82.5% {
+          0%, 86% {
             opacity: 0;
           }
 
-          84%, 89.5% {
+          88%, 91.5% {
             opacity: 1;
-          }
-
-          90.5% {
-            opacity: 0.84;
           }
 
           92.5% {
-            opacity: 0.24;
-          }
-
-          95%, 100% {
-            opacity: 0;
-          }
-        }
-
-        @keyframes mk-eye-open-cycle {
-          0%, 86% {
-            opacity: 0;
-            clip-path: inset(50% 0 50% 0);
-            transform: scaleY(0.08);
-          }
-
-          89% {
-            opacity: 0;
-            clip-path: inset(50% 0 50% 0);
-          }
-
-          90.5% {
-            opacity: 0.95;
-            clip-path: inset(46% 0 46% 0);
-            transform: scaleY(0.22);
-          }
-
-          92.2% {
             opacity: 0.72;
-            clip-path: inset(26% 0 26% 0);
-            transform: scaleY(0.72);
           }
 
           94% {
-            opacity: 0.28;
-            clip-path: inset(0 0 0 0);
-            transform: scaleY(1);
-          }
-
-          96%, 100% {
-            opacity: 0;
-            clip-path: inset(0 0 0 0);
-          }
-        }
-
-        @keyframes mk-wake-chroma {
-          0%, 89% {
-            opacity: 0;
-            transform: translate3d(0, 0, 0) scaleX(1.02);
-          }
-
-          90% {
-            opacity: 0.72;
-            transform: translate3d(-22px, 0, 0) scaleX(1.1);
-          }
-
-          91% {
-            opacity: 0.42;
-            transform: translate3d(18px, -8px, 0) scaleX(1.06);
-          }
-
-          94% {
-            opacity: 0.18;
-            transform: translate3d(0, 0, 0) scaleX(1);
+            opacity: 0.22;
           }
 
           97%, 100% {
@@ -1848,27 +2255,95 @@ function renderManzokukyoTeaser(character) {
           }
         }
 
+        @keyframes mk-eye-open-cycle {
+          0%, 89% {
+            opacity: 0;
+            clip-path: inset(50% 0 50% 0);
+            transform: scaleY(0.08);
+          }
+
+          90.5% {
+            opacity: 0;
+            clip-path: inset(50% 0 50% 0);
+          }
+
+          92% {
+            opacity: 0.95;
+            clip-path: inset(46% 0 46% 0);
+            transform: scaleY(0.22);
+          }
+
+          93.8% {
+            opacity: 0.72;
+            clip-path: inset(26% 0 26% 0);
+            transform: scaleY(0.72);
+          }
+
+          95.5% {
+            opacity: 0.28;
+            clip-path: inset(0 0 0 0);
+            transform: scaleY(1);
+          }
+
+          98%, 100% {
+            opacity: 0;
+            clip-path: inset(0 0 0 0);
+          }
+        }
+
+        @keyframes mk-wake-chroma {
+          0%, 91% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scaleX(1.02);
+          }
+
+          92.2% {
+            opacity: 0.72;
+            transform: translate3d(-22px, 0, 0) scaleX(1.1);
+          }
+
+          93.2% {
+            opacity: 0.42;
+            transform: translate3d(18px, -8px, 0) scaleX(1.06);
+          }
+
+          95.4% {
+            opacity: 0.18;
+            transform: translate3d(0, 0, 0) scaleX(1);
+          }
+
+          98%, 100% {
+            opacity: 0;
+          }
+        }
+
         @media (max-width: 820px) {
           .mk-hero {
+            min-height: 100svh;
+            height: 100svh;
             padding: 18px;
           }
 
           .mk-key-visual {
-            top: 76px;
-            right: -24vw;
+            top: 82px;
+            right: -8vw;
             bottom: auto;
-            width: 86vw;
+            width: 74vw;
             min-width: 0;
-            height: 56svh;
-            opacity: 0.54;
+            height: 42svh;
+            opacity: 0.42;
             border-radius: 14px;
+          }
+
+          .mk-depth-prop {
+            width: var(--prop-mobile-width, var(--prop-width));
           }
 
           .mk-hero-inner {
             width: 100%;
             max-width: calc(100vw - 36px);
             min-width: 0;
-            padding-bottom: 38px;
+            padding-bottom: 28px;
           }
 
           .mk-orbit-scene {
@@ -1879,19 +2354,15 @@ function renderManzokukyoTeaser(character) {
           }
 
           .mk-black-mass {
-            right: -22vw;
+            right: -30vw;
             bottom: 0;
-            width: 102vw;
+            width: 116vw;
             min-width: 0;
-            opacity: 0.74;
+            opacity: 0.82;
           }
 
           .mk-candles {
             inset: 0;
-          }
-
-          .mk-flame {
-            width: var(--flame-width-mobile, 34px);
           }
 
           .mk-whisper {
@@ -1933,7 +2404,14 @@ function renderManzokukyoTeaser(character) {
 
           .mk-section {
             width: min(100%, calc(100% - 28px));
-            padding: 58px 0;
+            min-height: auto;
+            padding: 22px;
+          }
+
+          .mk-depth-journey {
+            margin-top: 0;
+            padding-top: 0;
+            overflow: clip;
           }
 
           .mk-tenets,
@@ -1959,8 +2437,8 @@ function renderManzokukyoTeaser(character) {
           .mk-key-visual::before,
           .mk-key-visual::after,
           .mk-key-visual-glitch,
-          .mk-flame,
-          .mk-flame img,
+          .mk-depth-prop,
+          .mk-flame-canvas,
           .mk-wake-overlay,
           .mk-wake-overlay::before,
           .mk-wake-overlay::after,
@@ -1977,6 +2455,37 @@ function renderManzokukyoTeaser(character) {
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <section class="mk-hero">
           <div class="mk-banner" aria-hidden="true"></div>
+          <div class="mk-perspective-corridor" aria-hidden="true">
+            <div class="mk-loop-tunnel">
+              <div class="mk-loop-surface mk-loop-ceiling"></div>
+              <div class="mk-loop-surface mk-loop-floor"></div>
+              <div class="mk-loop-surface mk-loop-wall-left"></div>
+              <div class="mk-loop-surface mk-loop-wall-right"></div>
+              <div class="mk-loop-road-core"></div>
+              <div class="mk-loop-horizon"></div>
+              <svg class="mk-tunnel-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 0 L37 34 M100 0 L63 34 M0 100 L37 66 M100 100 L63 66"></path>
+                <rect x="37" y="34" width="26" height="32"></rect>
+                <path class="mk-edge-secondary" d="M18 100 L42 66 M82 100 L58 66 M18 0 L42 34 M82 0 L58 34"></path>
+              </svg>
+            </div>
+            <div class="mk-corridor-plane mk-corridor-plane-top"></div>
+            <div class="mk-corridor-plane mk-corridor-plane-bottom"></div>
+            <div class="mk-corridor-plane mk-corridor-plane-left"></div>
+            <div class="mk-corridor-plane mk-corridor-plane-right"></div>
+            ${Array.from({ length: 28 }, (_, index) => `<div class="mk-corridor-frame" data-mk-corridor-frame="${index}"></div>`).join("")}
+            <div class="mk-corridor-vortex"></div>
+          </div>
+          <div class="mk-corridor-props" aria-hidden="true">
+            <img class="mk-depth-prop" data-mk-prop="door-far" src="../assets/generated/manzokukyo/prop-door.webp" alt="" width="980" height="653" loading="eager" style="--prop-width: min(24vw, 430px); --prop-mobile-width: 72vw;">
+            <img class="mk-depth-prop" data-mk-prop="mirror-far" src="../assets/generated/manzokukyo/prop-mirror.webp" alt="" width="760" height="1140" loading="eager" style="--prop-width: min(15vw, 270px); --prop-mobile-width: 48vw;">
+            <img class="mk-depth-prop" data-mk-prop="painting-far" src="../assets/generated/manzokukyo/prop-painting.webp" alt="" width="780" height="1170" loading="eager" style="--prop-width: min(16vw, 290px); --prop-mobile-width: 50vw;">
+            <img class="mk-depth-prop" data-mk-prop="coffin-far" src="../assets/generated/manzokukyo/prop-coffin.webp" alt="" width="760" height="507" loading="eager" style="--prop-width: min(15vw, 260px); --prop-mobile-width: 46vw;">
+            <img class="mk-depth-prop" data-mk-prop="door" src="../assets/generated/manzokukyo/prop-door.webp" alt="" width="980" height="653" loading="eager" style="--prop-width: min(36vw, 620px); --prop-mobile-width: 86vw;">
+            <img class="mk-depth-prop" data-mk-prop="mirror" src="../assets/generated/manzokukyo/prop-mirror.webp" alt="" width="760" height="1140" loading="eager" style="--prop-width: min(24vw, 410px); --prop-mobile-width: 66vw;">
+            <img class="mk-depth-prop" data-mk-prop="coffin" src="../assets/generated/manzokukyo/prop-coffin.webp" alt="" width="760" height="507" loading="eager" style="--prop-width: min(20vw, 340px); --prop-mobile-width: 58vw;">
+            <img class="mk-depth-prop" data-mk-prop="painting" src="../assets/generated/manzokukyo/prop-painting.webp" alt="" width="780" height="1170" loading="eager" style="--prop-width: min(25vw, 430px); --prop-mobile-width: 68vw;">
+          </div>
           <picture class="mk-key-visual">
             <source srcset="../assets/generated/manzokukyo/key-visual-hero.avif" type="image/avif">
             <img src="../assets/generated/manzokukyo/key-visual-hero.webp" alt="満足教キービジュアル" width="1254" height="1254" fetchpriority="high">
@@ -1986,11 +2495,7 @@ function renderManzokukyoTeaser(character) {
           <div class="mk-black-mass" aria-hidden="true">
             <img class="mk-altar-prop" src="../assets/generated/manzokukyo/altar.webp" alt="" width="1280" height="720" loading="eager">
             <div class="mk-candles">
-              <span class="mk-flame" style="--flame-left: 15.2%; --flame-bottom: 81.8%; --flame-scale: 0.82; --flame-width-mobile: 20px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
-              <span class="mk-flame" style="--flame-left: 34.4%; --flame-bottom: 81%; --flame-scale: 0.9; --flame-width-mobile: 22px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
-              <span class="mk-flame" style="--flame-left: 50.3%; --flame-bottom: 85.4%; --flame-scale: 1; --flame-width-mobile: 26px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
-              <span class="mk-flame" style="--flame-left: 66.1%; --flame-bottom: 81%; --flame-scale: 0.88; --flame-width-mobile: 22px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
-              <span class="mk-flame" style="--flame-left: 84%; --flame-bottom: 81.6%; --flame-scale: 0.82; --flame-width-mobile: 20px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+              <canvas class="mk-flame-canvas" data-mk-flames aria-hidden="true"></canvas>
             </div>
             <div class="mk-altar-table"></div>
           </div>
@@ -2017,8 +2522,10 @@ function renderManzokukyoTeaser(character) {
             </div>
           </div>
         </section>
+        <div class="mk-ritual-dim" aria-hidden="true"></div>
         <div class="mk-wake-overlay" aria-hidden="true"></div>
         <button class="mk-ritual-replay" type="button" data-mk-ritual-replay aria-label="黒ミサ演出をリプレイ">Replay Ritual</button>
+        <div class="mk-depth-journey" data-mk-depth-journey>
         <section class="mk-section" id="doctrine">
           <h2>満たされよ、しかし満ち足りるな。</h2>
           <p class="mk-section-lead">満足教は、過剰な幸福ではなく、見落とされる小さな満足を拾い上げるための仮想宗教です。教義はまだ霧の中にあり、断片だけが残念院さんの周囲に浮かんでいます。</p>
@@ -2066,6 +2573,7 @@ function renderManzokukyoTeaser(character) {
         <footer class="mk-footer">
           <p>このページは満足教ティザーのデザイン試作です。文章は仮置きであり、公式設定として確定する場合は character.json へ反映してください。</p>
         </footer>
+        </div>
       </main>
       <script>
         (() => {
@@ -2086,8 +2594,10 @@ function renderManzokukyoTeaser(character) {
           function startRitual() {
             window.clearTimeout(ritualTimer);
             page.dataset.ritualState = "resetting";
+            page.style.setProperty("--mk-ritual-dim", "0");
             page.offsetWidth;
             page.dataset.ritualState = "running";
+            page.dispatchEvent(new CustomEvent("mk:ritual-start"));
             ritualTimer = window.setTimeout(endRitual, ritualDurationMs);
           }
 
@@ -2099,6 +2609,450 @@ function renderManzokukyoTeaser(character) {
           replay.addEventListener("click", startRitual);
           startRitual();
           window.addEventListener("pagehide", () => window.clearTimeout(ritualTimer), { once: true });
+        })();
+        (() => {
+          const page = document.querySelector(".mk-page");
+          const panels = Array.from(document.querySelectorAll(".mk-depth-journey > .mk-section"));
+          const props = Array.from(document.querySelectorAll("[data-mk-prop]"));
+          const corridorFrames = Array.from(document.querySelectorAll("[data-mk-corridor-frame]"));
+          if (!page || !panels.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          let ticking = false;
+          let virtualDepth = 0;
+          let lastTouchY = null;
+          const maxDepth = 6.8;
+          const panelSlots = [0.34, 0.58, 0.82];
+          const propRoutes = {
+            "door-far": { offset: 0.0, cycle: 1.9, side: -1, lane: 5, pass: 86, scale: 1.65, opacity: 0.5, tilt: 28 },
+            "mirror-far": { offset: 0.28, cycle: 2.0, side: 1, lane: 8, pass: 92, scale: 1.9, opacity: 0.54, tilt: -34 },
+            "painting-far": { offset: 0.56, cycle: 2.05, side: -1, lane: 13, pass: 98, scale: 2.05, opacity: 0.52, tilt: 30 },
+            "coffin-far": { offset: 0.86, cycle: 2.1, side: 1, lane: 11, pass: 92, scale: 2.0, opacity: 0.56, tilt: -32 },
+            door: { offset: 1.24, cycle: 2.15, side: -1, lane: 2, pass: 124, scale: 3.15, opacity: 0.76, tilt: 42 },
+            mirror: { offset: 1.54, cycle: 2.2, side: 1, lane: 5, pass: 126, scale: 2.85, opacity: 0.78, tilt: -48 },
+            coffin: { offset: 1.88, cycle: 2.18, side: -1, lane: 7, pass: 132, scale: 3.1, opacity: 0.82, tilt: 46 },
+            painting: { offset: 2.2, cycle: 2.24, side: 1, lane: 4, pass: 128, scale: 2.95, opacity: 0.78, tilt: -44 },
+          };
+
+          function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+          }
+
+          function updateDepth() {
+            ticking = false;
+            const depth = virtualDepth;
+            const sceneDepth = clamp(depth / maxDepth, 0, 1);
+            page.style.setProperty("--mk-depth", sceneDepth.toFixed(3));
+            page.style.setProperty("--mk-road-shift", (depth * 620).toFixed(1) + "px");
+            page.style.setProperty("--mk-wall-shift", (depth * 430).toFixed(1) + "px");
+            page.style.setProperty("--mk-horizon-shift", (depth * 310).toFixed(1) + "px");
+            page.style.setProperty("--mk-copy-opacity", clamp(1 - sceneDepth * 2.4, 0, 1).toFixed(3));
+            page.style.setProperty("--mk-copy-y", "0px");
+            page.style.setProperty("--mk-copy-z", (180 + sceneDepth * 360).toFixed(1) + "px");
+            page.style.setProperty("--mk-altar-y", "0px");
+            page.style.setProperty("--mk-altar-z", (60 + sceneDepth * 160).toFixed(1) + "px");
+            page.style.setProperty("--mk-altar-scale", (0.82 + sceneDepth * 0.16).toFixed(3));
+            page.style.setProperty("--mk-portrait-y", "0px");
+            page.style.setProperty("--mk-portrait-z", (-260 - sceneDepth * 300).toFixed(1) + "px");
+            page.style.setProperty("--mk-portrait-scale", (0.82 - sceneDepth * 0.18).toFixed(3));
+            page.style.setProperty("--mk-portrait-opacity", clamp(0.18 - sceneDepth * 0.08, 0.06, 0.18).toFixed(3));
+            page.style.setProperty("--mk-tunnel-opacity", clamp((sceneDepth - 0.02) / 0.22, 0, 0.78).toFixed(3));
+            page.style.setProperty("--mk-tunnel-scale", (1.16 + sceneDepth * 0.42).toFixed(3));
+            page.style.setProperty("--mk-footer-opacity", clamp((sceneDepth - 0.9) / 0.08, 0, 1).toFixed(3));
+
+            panels.forEach((panel, index) => {
+              const slot = panelSlots[index] ?? (0.34 + index * 0.24);
+              const presence = clamp(1 - Math.abs(depth - slot) / 0.17, 0, 1);
+              const z = -820 + presence * 860;
+              const lift = 0;
+              const tilt = 14 - presence * 14;
+              const opacity = presence * 0.94;
+              panel.style.setProperty("--mk-panel-z", z.toFixed(1));
+              panel.style.setProperty("--mk-panel-lift", lift.toFixed(1));
+              panel.style.setProperty("--mk-panel-tilt", tilt.toFixed(2));
+              panel.style.setProperty("--mk-panel-scale", (0.86 + presence * 0.16).toFixed(3));
+              panel.style.setProperty("--mk-panel-opacity", opacity.toFixed(3));
+            });
+
+            corridorFrames.forEach((frame, index) => {
+              const lane = ((index / corridorFrames.length) + depth * 0.24) % 1;
+              const progress = lane;
+              const fisheye = Math.pow(progress, 2.35);
+              const z = -1680 + fisheye * 2050;
+              const scale = 0.08 + Math.pow(progress, 1.78) * 2.45;
+              const farGlow = clamp((0.38 - progress) / 0.38, 0, 1);
+              const nearFade = clamp((1 - progress) / 0.18, 0, 1);
+              const opacity = (0.06 + farGlow * 0.18 + progress * 0.1) * nearFade;
+              frame.style.setProperty("--frame-z", z.toFixed(1) + "px");
+              frame.style.setProperty("--frame-scale", scale.toFixed(3));
+              frame.style.setProperty("--frame-opacity", opacity.toFixed(3));
+            });
+
+            props.forEach((prop) => {
+              const route = propRoutes[prop.dataset.mkProp];
+              if (!route) return;
+              const cycle = route.cycle ?? 2;
+              const raw = depth < route.offset
+                ? -1
+                : ((depth - route.offset) % cycle + cycle) % cycle;
+              const progress = raw < 0 ? 0 : clamp(raw / cycle, 0, 1);
+              const isActive = raw >= 0 ? 1 : 0;
+              const enter = clamp(progress / 0.16, 0, 1);
+              const exit = clamp((1 - progress) / 0.18, 0, 1);
+              const presence = enter * exit * isActive;
+              const eased = progress * progress * (3 - 2 * progress);
+              const fisheye = Math.pow(progress, 2.42);
+              const x = route.side * (route.lane + fisheye * route.pass);
+              const z = -1120 + eased * 1510;
+              const scale = 0.06 + Math.pow(progress, 2.16) * route.scale;
+              const blur = (1 - presence) * 9.5 + progress * 0.5;
+              const rotateY = route.tilt * (0.16 + progress * 0.84);
+              const rotateZ = route.side * -1 * progress * 3.5;
+              prop.style.setProperty("--prop-x", x.toFixed(2) + "vw");
+              prop.style.setProperty("--prop-z", z.toFixed(1) + "px");
+              prop.style.setProperty("--prop-scale", scale.toFixed(3));
+              prop.style.setProperty("--prop-opacity", (presence * route.opacity).toFixed(3));
+              prop.style.setProperty("--prop-blur", blur.toFixed(2) + "px");
+              prop.style.setProperty("--prop-ry", rotateY.toFixed(2) + "deg");
+              prop.style.setProperty("--prop-rz", rotateZ.toFixed(2) + "deg");
+            });
+          }
+
+          function setDepth(nextDepth) {
+            virtualDepth = clamp(nextDepth, 0, maxDepth);
+            requestDepthUpdate();
+          }
+
+          function requestDepthUpdate() {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(updateDepth);
+          }
+
+          updateDepth();
+          window.addEventListener("wheel", (event) => {
+            event.preventDefault();
+            setDepth(virtualDepth + event.deltaY / 1900);
+          }, { passive: false });
+          window.addEventListener("touchstart", (event) => {
+            lastTouchY = event.touches[0]?.clientY ?? null;
+          }, { passive: true });
+          window.addEventListener("touchmove", (event) => {
+            const currentY = event.touches[0]?.clientY;
+            if (lastTouchY == null || currentY == null) return;
+            event.preventDefault();
+            setDepth(virtualDepth + (lastTouchY - currentY) / 1300);
+            lastTouchY = currentY;
+          }, { passive: false });
+          window.addEventListener("touchend", () => {
+            lastTouchY = null;
+          }, { passive: true });
+          window.addEventListener("keydown", (event) => {
+            const forwardKeys = ["ArrowDown", "PageDown", " ", "End"];
+            const backKeys = ["ArrowUp", "PageUp", "Home"];
+            if (forwardKeys.includes(event.key) || backKeys.includes(event.key)) {
+              event.preventDefault();
+              const direction = forwardKeys.includes(event.key) ? 1 : -1;
+              setDepth(event.key === "End" ? maxDepth : event.key === "Home" ? 0 : virtualDepth + direction * 0.42);
+            }
+          });
+          document.querySelectorAll(".mk-actions a[href^='#']").forEach((link) => {
+            link.addEventListener("click", (event) => {
+              const targetId = link.getAttribute("href").slice(1);
+              const targetIndex = panels.findIndex((panel) => panel.id === targetId);
+              if (targetIndex === -1) return;
+              event.preventDefault();
+              setDepth((panelSlots[targetIndex] ?? 0.34) * maxDepth);
+            });
+          });
+          window.addEventListener("resize", requestDepthUpdate);
+        })();
+        (() => {
+          const page = document.querySelector(".mk-page");
+          const canvas = document.querySelector("[data-mk-flames]");
+          if (!page || !canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          const ctx = canvas.getContext("2d");
+          const cycleMs = 18000;
+          const flameCanvasBleedTop = 0.24;
+          const fadeWindows = [
+            [0.14, 0.19],
+            [0.28, 0.34],
+            [0.43, 0.5],
+            [0.59, 0.67],
+            [0.76, 0.88]
+          ];
+          const altarSpace = { width: 1672, height: 941 };
+          // Coordinates are measured on the original altar image so the flames stay locked to the candle tips after resize.
+          const flames = [
+            { x: 160, y: 235, h: 72, w: 10, seed: 1.2 },
+            { x: 501, y: 260, h: 86, w: 12, seed: 2.1 },
+            { x: 788, y: 250, h: 108, w: 14, seed: 3.4 },
+            { x: 1077, y: 260, h: 86, w: 12, seed: 4.3 },
+            { x: 1417, y: 235, h: 72, w: 10, seed: 5.5 }
+          ];
+          let width = 0;
+          let height = 0;
+          let altarScale = 1;
+          let altarOffsetX = 0;
+          let altarOffsetY = 0;
+          let raf = 0;
+          let startTime = performance.now();
+
+          function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const rect = canvas.getBoundingClientRect();
+            width = Math.max(1, rect.width);
+            height = Math.max(1, rect.height);
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const altarViewportHeight = height / (1 + flameCanvasBleedTop);
+            const altarViewportTop = height - altarViewportHeight;
+            altarScale = Math.min(width / altarSpace.width, altarViewportHeight / altarSpace.height);
+            altarOffsetX = (width - altarSpace.width * altarScale) / 2;
+            altarOffsetY = altarViewportTop + (altarViewportHeight - altarSpace.height * altarScale) / 2;
+          }
+
+          function flameAlpha(index, elapsed) {
+            const progress = (elapsed % cycleMs) / cycleMs;
+            const loop = Math.floor(elapsed / cycleMs);
+            if (loop >= 2 || page.dataset.ritualState !== "running") {
+              return 0;
+            }
+
+            const [start, end] = fadeWindows[index];
+            if (progress < start) return 1;
+            if (progress > end) return 0;
+            return 1 - ((progress - start) / (end - start));
+          }
+
+          function ritualDim(elapsed, alphas) {
+            if (page.dataset.ritualState !== "running") {
+              return 0;
+            }
+
+            const progress = (elapsed % cycleMs) / cycleMs;
+            const loop = Math.floor(elapsed / cycleMs);
+            if (loop >= 2) {
+              return 0;
+            }
+
+            const lit = alphas.reduce((sum, value) => sum + value, 0);
+            const extinguished = 1 - lit / flames.length;
+            const finalFade = Math.max(0, Math.min(1, (progress - 0.76) / 0.12));
+            const blackoutPull = Math.max(0, Math.min(1, (progress - 0.86) / 0.03));
+            return Math.min(0.96, 0.05 + extinguished * 0.62 + finalFade * 0.12 + blackoutPull * 0.24);
+          }
+
+          function flameAnchor(flame) {
+            return {
+              x: altarOffsetX + flame.x * altarScale,
+              y: altarOffsetY + flame.y * altarScale,
+              h: flame.h * altarScale,
+              w: flame.w * altarScale
+            };
+          }
+
+          function drawCandleLight(anchor, alpha) {
+            const lightR = anchor.h * 2.65;
+            const lightX = anchor.x;
+            const lightY = anchor.y - anchor.h * 0.36;
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha;
+
+            const warmAura = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightR);
+            warmAura.addColorStop(0, "rgba(255, 218, 112, 0.42)");
+            warmAura.addColorStop(0.18, "rgba(210, 126, 43, 0.28)");
+            warmAura.addColorStop(0.46, "rgba(126, 48, 88, 0.14)");
+            warmAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = warmAura;
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, lightR, 0, Math.PI * 2);
+            ctx.fill();
+
+            const violetCore = ctx.createRadialGradient(anchor.x, anchor.y - anchor.h * 0.12, 0, anchor.x, anchor.y - anchor.h * 0.12, anchor.h * 1.22);
+            violetCore.addColorStop(0, "rgba(220, 116, 255, 0.42)");
+            violetCore.addColorStop(0.28, "rgba(116, 34, 178, 0.26)");
+            violetCore.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = violetCore;
+            ctx.beginPath();
+            ctx.arc(anchor.x, anchor.y - anchor.h * 0.12, anchor.h * 1.22, 0, Math.PI * 2);
+            ctx.fill();
+
+            const wickBloom = ctx.createRadialGradient(anchor.x, anchor.y, 0, anchor.x, anchor.y, anchor.h * 0.46);
+            wickBloom.addColorStop(0, "rgba(255, 230, 172, 0.42)");
+            wickBloom.addColorStop(0.36, "rgba(190, 96, 36, 0.18)");
+            wickBloom.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = wickBloom;
+            ctx.beginPath();
+            ctx.arc(anchor.x, anchor.y, anchor.h * 0.46, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+          }
+
+          function drawFlame(flame, index, time, alpha) {
+            const anchor = flameAnchor(flame);
+            const baseX = anchor.x;
+            const baseY = anchor.y;
+            const flameH = anchor.h;
+            const flameW = anchor.w;
+            const flicker = Math.sin(time * 0.006 + flame.seed) * 0.5 + Math.sin(time * 0.013 + flame.seed * 2) * 0.5;
+            const lean = flicker * flameW * 0.08;
+
+            ctx.save();
+            ctx.globalCompositeOperation = "source-over";
+            ctx.globalAlpha = alpha;
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha;
+            const halo = ctx.createRadialGradient(baseX, baseY - flameH * 0.18, 0, baseX, baseY - flameH * 0.18, flameH * 1.18);
+            halo.addColorStop(0, "rgba(212, 94, 255, 0.44)");
+            halo.addColorStop(0.22, "rgba(128, 34, 176, 0.3)");
+            halo.addColorStop(0.55, "rgba(78, 12, 118, 0.16)");
+            halo.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = halo;
+            ctx.beginPath();
+            ctx.arc(baseX, baseY - flameH * 0.18, flameH * 1.18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha * 0.7;
+            const tipLight = ctx.createRadialGradient(baseX, baseY, 0, baseX, baseY, flameH * 0.28);
+            tipLight.addColorStop(0, "rgba(230, 150, 255, 0.48)");
+            tipLight.addColorStop(0.38, "rgba(126, 28, 170, 0.3)");
+            tipLight.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = tipLight;
+            ctx.beginPath();
+            ctx.arc(baseX, baseY, flameH * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            const glow = ctx.createRadialGradient(baseX, baseY - flameH * 0.34, 0, baseX, baseY - flameH * 0.34, flameH * 0.94);
+            glow.addColorStop(0, "rgba(58, 8, 68, 0.5)");
+            glow.addColorStop(0.36, "rgba(28, 2, 42, 0.36)");
+            glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.ellipse(baseX, baseY - flameH * 0.38, flameW * 3.8, flameH * 0.86, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const smoke = ctx.createRadialGradient(baseX + lean * 0.22, baseY - flameH * 0.72, 0, baseX + lean * 0.22, baseY - flameH * 0.72, flameH * 0.72);
+            smoke.addColorStop(0, "rgba(4, 0, 9, 0.72)");
+            smoke.addColorStop(0.44, "rgba(22, 2, 32, 0.38)");
+            smoke.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = smoke;
+            ctx.beginPath();
+            ctx.ellipse(baseX + lean * 0.12, baseY - flameH * 0.68, flameW * 2.2, flameH * 0.58, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            for (let layer = 0; layer < 8; layer++) {
+              const t = time * (0.002 + layer * 0.0008) + flame.seed * (layer + 1);
+              const offset = Math.sin(t * 3.1) * flameW * (0.06 + layer * 0.025);
+              const topX = baseX + lean + offset;
+              const topY = baseY - flameH * (0.76 + layer * 0.046);
+              const cp1x = baseX - flameW * (0.6 + layer * 0.04) + Math.sin(t) * flameW * 0.18;
+              const cp1y = baseY - flameH * (0.2 + layer * 0.03);
+              const cp2x = baseX + flameW * (0.54 + layer * 0.035) + Math.cos(t * 1.7) * flameW * 0.16;
+              const cp2y = baseY - flameH * (0.46 + layer * 0.035);
+              const strokeAlpha = alpha * (0.26 - layer * 0.018);
+
+              ctx.beginPath();
+              ctx.moveTo(baseX + Math.sin(t) * flameW * 0.08, baseY);
+              ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, topX, topY);
+              ctx.lineWidth = Math.max(1, flameW * (0.9 - layer * 0.055));
+              ctx.strokeStyle = "rgba(" + (26 + layer * 5) + ", " + (0 + layer * 2) + ", " + (42 + layer * 10) + ", " + strokeAlpha + ")";
+              ctx.stroke();
+            }
+
+            const core = ctx.createLinearGradient(baseX, baseY, baseX + lean, baseY - flameH * 0.9);
+            core.addColorStop(0, "rgba(12, 0, 18, 0.88)");
+            core.addColorStop(0.16, "rgba(102, 18, 142, 0.82)");
+            core.addColorStop(0.58, "rgba(38, 0, 62, 0.88)");
+            core.addColorStop(1, "rgba(2, 0, 5, 0)");
+            ctx.beginPath();
+            ctx.moveTo(baseX - flameW * 0.28, baseY);
+            ctx.bezierCurveTo(baseX - flameW * 0.9, baseY - flameH * 0.34, baseX + lean - flameW * 0.4, baseY - flameH * 0.7, baseX + lean, baseY - flameH);
+            ctx.bezierCurveTo(baseX + lean + flameW * 0.38, baseY - flameH * 0.66, baseX + flameW * 0.82, baseY - flameH * 0.28, baseX + flameW * 0.28, baseY);
+            ctx.closePath();
+            ctx.fillStyle = core;
+            ctx.fill();
+
+            const foot = ctx.createRadialGradient(baseX, baseY - flameH * 0.08, 0, baseX, baseY - flameH * 0.08, flameH * 0.24);
+            foot.addColorStop(0, "rgba(158, 38, 218, 0.72)");
+            foot.addColorStop(0.36, "rgba(66, 4, 94, 0.44)");
+            foot.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = foot;
+            ctx.beginPath();
+            ctx.ellipse(baseX, baseY - flameH * 0.04, flameW * 1.25, flameH * 0.12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha * 0.68;
+            const ember = ctx.createLinearGradient(baseX, baseY, baseX, baseY - flameH * 0.56);
+            ember.addColorStop(0, "rgba(122, 35, 176, 0.4)");
+            ember.addColorStop(0.52, "rgba(86, 12, 132, 0.34)");
+            ember.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = ember;
+            ctx.beginPath();
+            ctx.moveTo(baseX - flameW * 0.08, baseY);
+            ctx.bezierCurveTo(baseX - flameW * 0.34, baseY - flameH * 0.22, baseX + lean - flameW * 0.16, baseY - flameH * 0.46, baseX + lean, baseY - flameH * 0.62);
+            ctx.bezierCurveTo(baseX + lean + flameW * 0.12, baseY - flameH * 0.38, baseX + flameW * 0.28, baseY - flameH * 0.18, baseX + flameW * 0.08, baseY);
+            ctx.closePath();
+            ctx.fill();
+
+            for (let i = 0; i < 7; i++) {
+              const particleT = (time * 0.0015 + i * 0.19 + flame.seed) % 1;
+              const px = baseX + Math.sin(i * 9.7 + time * 0.004) * flameW * 1.7;
+              const py = baseY - particleT * flameH * 1.25;
+              const pa = alpha * (1 - particleT) * 0.22;
+              ctx.fillStyle = "rgba(72, 10, 108, " + pa + ")";
+              ctx.beginPath();
+              ctx.arc(px, py, Math.max(0.7, flameW * 0.12), 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            ctx.restore();
+          }
+
+          function draw(time) {
+            ctx.clearRect(0, 0, width, height);
+            const elapsed = time - startTime;
+            const alphas = flames.map((_flame, index) => flameAlpha(index, elapsed));
+            page.style.setProperty("--mk-ritual-dim", ritualDim(elapsed, alphas).toFixed(3));
+            flames.forEach((flame, index) => {
+              const alpha = alphas[index];
+              if (alpha > 0.01) {
+                drawCandleLight(flameAnchor(flame), alpha);
+              }
+            });
+            flames.forEach((flame, index) => {
+              const alpha = alphas[index];
+              if (alpha > 0.01) {
+                drawFlame(flame, index, time, alpha);
+              }
+            });
+            raf = requestAnimationFrame(draw);
+          }
+
+          page.addEventListener("mk:ritual-start", () => {
+            startTime = performance.now();
+          });
+          resize();
+          window.addEventListener("resize", resize, { passive: true });
+          raf = requestAnimationFrame(draw);
+          window.addEventListener("pagehide", () => cancelAnimationFrame(raf), { once: true });
         })();
         (() => {
           const canvas = document.querySelector("[data-mk-abyss]");
@@ -3804,7 +4758,10 @@ function renderSitemap(characters) {
     { loc: absoluteUrl("docs/codex-beginner-manual.html"), priority: "0.5" },
     ...characters.flatMap((character) => [
       { loc: absoluteUrl(`${character.id}/`), priority: "1.0" },
-      ...(character.id === "zannenin" ? [{ loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" }] : []),
+      ...(character.id === "zannenin" ? [
+        { loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" },
+        { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
+      ] : []),
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
     ])
   ];
