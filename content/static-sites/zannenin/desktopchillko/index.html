@@ -3,225 +3,78 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="残念院ちる子のデスクトップマスコット紹介ページです。GitHub PagesやBOOTHの紹介ページとして使いやすい静的HTMLです。">
-    <title>デスクトップちる子 | 残念院ちる子 公式紹介ページ</title>
+    <meta name="description" content="残念院ちる子のデスクトップアクセサリ紹介ページ。ちる子ちゃんがPC画面のすみにやってくる、ちいさくてかわいいデスクトップマスコットです。">
+    <title>デスクトップちる子 | 残念院ちる子</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="デスクトップちる子 トップへ">
-        <span class="brand-mark" aria-hidden="true">ち</span>
-        <span>デスクトップちる子</span>
-      </a>
-      <nav class="site-nav" aria-label="ページ内メニュー">
-        <a href="#about">概要</a>
-        <a href="#features">できること</a>
-        <a href="#screenshots">画面</a>
-        <a href="#standees">立ち絵</a>
-        <a href="#download">公開情報</a>
-      </nav>
-    </header>
-
-    <main id="top">
+    <main class="page-shell">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-visual">
-          <div class="desktop-window">
-            <div class="window-bar">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <div class="window-body">
-              <figure class="hero-image-frame">
-                <img src="assets/desktop-chiruko-booth.png" alt="デスクトップちる子のBOOTH掲載イメージ">
-                <figcaption>BOOTH掲載イメージ</figcaption>
-              </figure>
-            </div>
-          </div>
-        </div>
         <div class="hero-copy">
-          <p class="eyebrow">Desktop Mascot / Character Introduction</p>
-          <h1 id="hero-title">残念院ちる子が、あなたのデスクトップにやってくる。</h1>
+          <p class="tiny-label">Desktop Accessory</p>
+          <h1 id="hero-title">
+            <span>デスクトップに、</span>
+            <span>ちる子ちゃんを。</span>
+          </h1>
           <p class="lead">
-            「デスクトップちる子」は、キャラクター「残念院ちる子」をPC上で楽しむための小さなデスクトップマスコットです。
-            黒と金のシックなピクセル調に、ちる子らしいポップなかわいさを重ねて、作業中の画面にそっと居場所を作ります。
+            作業中も、休憩中も、PCのすみにちょこん。
+            残念院ちる子のちいさなデスクトップアクセサリです。
           </p>
-          <div class="hero-actions">
-            <a class="primary-button" href="#download">公開情報を見る</a>
-            <a class="ghost-button" href="#materials">必要素材を確認</a>
+        </div>
+
+        <div class="hero-art" aria-label="デスクトップちる子のイメージ">
+          <div class="soft-window">
+            <img src="assets/desktop-chiruko-booth.png" alt="デスクトップちる子の紹介ビジュアル">
           </div>
+          <img class="chillko-float" src="assets/chiruko-stand-sitting.png" alt="座っている残念院ちる子のミニキャラ">
         </div>
       </section>
 
-      <section class="section intro-section" id="about" aria-labelledby="about-title">
-        <div class="section-heading">
-          <p class="eyebrow">About</p>
-          <h2 id="about-title">これは何？</h2>
+      <section class="mood-section" aria-labelledby="mood-title">
+        <div class="section-title">
+          <p class="tiny-label">Mood</p>
+          <h2 id="mood-title">PC時間に、ちいさな表情を。</h2>
         </div>
-        <div class="text-columns">
-          <p>
-            デスクトップ上に残念院ちる子が表示され、作業の合間に眺めたり、ちょっとした反応を楽しんだりできる紹介・配布向けのプロジェクトです。
-            現在のビジュアルは黒基調のデスクトップUI風で、かわいさとゲーム画面のようなワクワク感が伝わる方向性です。
-          </p>
-          <p>
-            このページはGitHub Pagesでの公開、BOOTHの商品説明、メタコミなどの紹介文に流用しやすい内容で構成しています。
-            配布リンクや対応OSが決まったら、公開情報を差し替えるだけで初回告知ページとして使えます。
-          </p>
-        </div>
-      </section>
-
-      <section class="section feature-band" id="features" aria-labelledby="features-title">
-        <div class="section-heading">
-          <p class="eyebrow">Features</p>
-          <h2 id="features-title">紹介したいポイント</h2>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">01</span>
-            <h3>デスクトップに常駐</h3>
-            <p>作業中の画面にちる子がそっと現れます。小さな存在感で、PC時間にキャラクター性を足します。</p>
+        <div class="mood-grid">
+          <article class="mood-card">
+            <img src="assets/chiruko-startup.png" alt="起動時のデスクトップちる子">
+            <h3>おはよう</h3>
+            <p>起動したら、まずはちる子ちゃんがお出迎え。</p>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">02</span>
-            <h3>表情や動きで反応</h3>
-            <p>表情差分や待機モーションを追加すれば、眺めるだけでも楽しいマスコットとして育てられます。</p>
+          <article class="mood-card">
+            <img src="assets/chiruko-game.png" alt="ミニゲーム中のデスクトップちる子">
+            <h3>あそぶ</h3>
+            <p>ちょっとした息抜きも、デスクトップの上で。</p>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">03</span>
-            <h3>配布ページに転用しやすい</h3>
-            <p>HTMLとCSSだけで作っているため、GitHub Pages、BOOTH、紹介記事用の素材整理に向いています。</p>
+          <article class="mood-card">
+            <img src="assets/chiruko-music.png" alt="音楽再生中のデスクトップちる子">
+            <h3>くつろぐ</h3>
+            <p>音楽を流しながら、ふんわり休憩モード。</p>
           </article>
         </div>
       </section>
 
-      <section class="section screenshot-section" id="screenshots" aria-labelledby="screenshots-title">
-        <div class="section-heading">
-          <p class="eyebrow">Screenshots</p>
-          <h2 id="screenshots-title">ちる子と過ごすデスクトップ時間</h2>
-        </div>
-        <div class="screenshot-grid">
-          <figure class="screenshot-card">
-            <img src="assets/chiruko-startup.png" alt="起動時のデスクトップちる子画面">
-            <figcaption>
-              <span>起動時</span>
-              今日のPCに少しだけ気分を足してくれる、最初のあいさつ。
-            </figcaption>
-          </figure>
-          <figure class="screenshot-card">
-            <img src="assets/chiruko-game.png" alt="ゲーム中のデスクトップちる子画面">
-            <figcaption>
-              <span>ゲーム</span>
-              連勝を目指して、ちる子とちょっとした勝負を楽しめます。
-            </figcaption>
-          </figure>
-          <figure class="screenshot-card">
-            <img src="assets/chiruko-music.png" alt="音楽再生中のデスクトップちる子画面">
-            <figcaption>
-              <span>音楽再生</span>
-              音楽を流しながら、くつろぐちる子を眺められます。
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="section standee-section" id="standees" aria-labelledby="standees-title">
-        <div class="section-heading">
-          <p class="eyebrow">Mini Character</p>
-          <h2 id="standees-title">透過済みミニキャラ立ち絵</h2>
-        </div>
-        <div class="standee-grid">
-          <figure class="standee-card">
-            <img src="assets/chiruko-stand-reading.png" alt="本を読んでいる残念院ちる子のミニキャラ立ち絵">
-            <figcaption>読書</figcaption>
-          </figure>
-          <figure class="standee-card">
-            <img src="assets/chiruko-stand-running.png" alt="走っている残念院ちる子のミニキャラ立ち絵">
-            <figcaption>移動</figcaption>
-          </figure>
-          <figure class="standee-card">
-            <img src="assets/chiruko-stand-sleeping.png" alt="眠っている残念院ちる子のミニキャラ立ち絵">
-            <figcaption>おやすみ</figcaption>
-          </figure>
-          <figure class="standee-card">
-            <img src="assets/chiruko-stand-sitting.png" alt="座っている残念院ちる子のミニキャラ立ち絵">
-            <figcaption>待機</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="section" id="materials" aria-labelledby="materials-title">
-        <div class="section-heading">
-          <p class="eyebrow">Materials</p>
-          <h2 id="materials-title">これから用意するとよい素材</h2>
-        </div>
-        <div class="checklist">
-          <div>
-            <h3>最低限ほしいもの</h3>
-            <ul>
-              <li>残念院ちる子の立ち絵またはメインビジュアル1枚</li>
-              <li>実際にデスクトップ上で動いているスクリーンショット2〜3枚</li>
-              <li>配布ファイル名、対応OS、更新日、バージョン</li>
-              <li>利用規約、問い合わせ先、クレジット表記</li>
-            </ul>
-          </div>
-          <div>
-            <h3>あると伝わりやすいもの</h3>
-            <ul>
-              <li>表情差分やポーズ差分</li>
-              <li>短い紹介動画またはGIF</li>
-              <li>BOOTH用サムネイルや告知画像の別サイズ版</li>
-              <li>制作意図やキャラクターの一言プロフィール</li>
-              <li>今後追加したい機能のメモ</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="section copy-section" aria-labelledby="copy-title">
-        <div class="section-heading">
-          <p class="eyebrow">Copy</p>
-          <h2 id="copy-title">BOOTHなどに使える短い紹介文</h2>
-        </div>
-        <div class="copy-box">
+      <section class="standee-section" aria-labelledby="standee-title">
+        <div class="standee-copy">
+          <p class="tiny-label">Chillko</p>
+          <h2 id="standee-title">いろんなちる子ちゃん。</h2>
           <p>
-            残念院ちる子が、あなたのデスクトップに小さく滞在するマスコットアプリです。
-            作業中の画面にちょこんと現れて、ちょっと残念で、でもなんだか気になる時間をお届けします。
+            読む、走る、眠る、待つ。
+            デスクトップの片隅で、ちる子ちゃんが気ままに過ごします。
           </p>
         </div>
-      </section>
-
-      <section class="section download-section" id="download" aria-labelledby="download-title">
-        <div class="section-heading">
-          <p class="eyebrow">Release</p>
-          <h2 id="download-title">公開情報</h2>
-        </div>
-        <div class="release-panel">
-          <dl>
-            <div>
-              <dt>公開先</dt>
-              <dd>未定。GitHub Pages / BOOTH / メタコミ紹介ページなどに対応予定。</dd>
-            </div>
-            <div>
-              <dt>配布形式</dt>
-              <dd>未定。ZIP配布、インストーラー配布など。</dd>
-            </div>
-            <div>
-              <dt>対応環境</dt>
-              <dd>確認中</dd>
-            </div>
-            <div>
-              <dt>更新日</dt>
-              <dd>2026年6月29日</dd>
-            </div>
-          </dl>
-          <a class="primary-button" href="#" aria-disabled="true">配布準備中</a>
+        <div class="standee-stage">
+          <img src="assets/chiruko-stand-reading.png" alt="本を読んでいる残念院ちる子">
+          <img src="assets/chiruko-stand-running.png" alt="走っている残念院ちる子">
+          <img src="assets/chiruko-stand-sleeping.png" alt="眠っている残念院ちる子">
+          <img src="assets/chiruko-stand-sitting.png" alt="座っている残念院ちる子">
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <p>&copy; 残念院ちる子 / Desktop Chiruko Project</p>
-      <p>このページは静的HTML/CSSで制作されています。</p>
+      <span>Desktop Chillko</span>
+      <a href="../">残念院さん公式ページへ</a>
     </footer>
   </body>
 </html>
