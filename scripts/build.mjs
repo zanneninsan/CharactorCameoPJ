@@ -70,6 +70,9 @@ async function build() {
         await copyCharacterAssets(character, characterDir);
         await generateBrandAssets(character, characterDir);
         await generateTimelinePlaceholderAsset(characterDir);
+        if (character.id === "zannenin") {
+          await generateManzokukyoAssets(characterDir);
+        }
         await generateVisualReferenceAssets(character, characterDir);
         if (shouldDownloadDriveVideos) {
           await downloadRandomVideoAssets(character, characterDir);
@@ -191,6 +194,49 @@ async function generateTimelinePlaceholderAsset(characterDir) {
     .resize({ width: 720, height: 720, fit: "cover" })
     .webp({ quality: 86 })
     .toFile(path.join(outputDir, "timeline-noimage.webp"));
+}
+
+async function generateManzokukyoAssets(characterDir) {
+  const sourcePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "key-visual.png");
+  const altarPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "altar-cutout.png");
+  const flamePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "purple-flame-cutout.png");
+  const outputDir = path.join(characterDir, "assets", "generated", "manzokukyo");
+
+  try {
+    await stat(sourcePath);
+  } catch {
+    return;
+  }
+
+  await mkdir(outputDir, { recursive: true });
+  await sharp(sourcePath)
+    .resize({ width: 1480, withoutEnlargement: true })
+    .avif({ quality: 50, effort: 6 })
+    .toFile(path.join(outputDir, "key-visual-hero.avif"));
+  await sharp(sourcePath)
+    .resize({ width: 1480, withoutEnlargement: true })
+    .webp({ quality: 74 })
+    .toFile(path.join(outputDir, "key-visual-hero.webp"));
+  await sharp(sourcePath)
+    .resize({ width: 960, withoutEnlargement: true })
+    .blur(10)
+    .modulate({ brightness: 0.42, saturation: 0.85 })
+    .webp({ quality: 46 })
+    .toFile(path.join(outputDir, "key-visual-bg.webp"));
+
+  if (await fileExists(altarPath)) {
+    await sharp(altarPath)
+      .resize({ width: 1280, withoutEnlargement: true })
+      .webp({ quality: 78, alphaQuality: 90 })
+      .toFile(path.join(outputDir, "altar.webp"));
+  }
+
+  if (await fileExists(flamePath)) {
+    await sharp(flamePath)
+      .resize({ width: 240, withoutEnlargement: true })
+      .webp({ quality: 82, alphaQuality: 96 })
+      .toFile(path.join(outputDir, "purple-flame.webp"));
+  }
 }
 
 async function generateBrandAssets(character, characterDir) {
@@ -759,9 +805,9 @@ function renderManzokukyoTeaser(character) {
           max-width: 100vw;
           overflow-x: hidden;
           background:
-            radial-gradient(circle at 18% 18%, rgba(255, 51, 92, 0.25), transparent 26%),
-            radial-gradient(circle at 84% 12%, rgba(88, 246, 255, 0.18), transparent 28%),
-            radial-gradient(circle at 52% 74%, rgba(126, 60, 255, 0.23), transparent 34%),
+            radial-gradient(circle at 18% 18%, rgba(255, 51, 92, 0.18), transparent 26%),
+            radial-gradient(circle at 84% 12%, rgba(215, 180, 81, 0.16), transparent 28%),
+            radial-gradient(circle at 52% 74%, rgba(126, 60, 255, 0.16), transparent 34%),
             linear-gradient(180deg, #08070b 0%, #151019 46%, #08070b 100%);
           font-family: var(--font-sans);
           isolation: isolate;
@@ -813,7 +859,7 @@ function renderManzokukyoTeaser(character) {
           display: grid;
           min-height: 100svh;
           align-items: end;
-          padding: 28px;
+          padding: 42px;
           overflow: hidden;
         }
 
@@ -834,15 +880,9 @@ function renderManzokukyoTeaser(character) {
           position: absolute;
           inset: 0;
           z-index: -1;
-        }
-
-        .mk-banner img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
-          filter: saturate(1.2) contrast(1.08) brightness(0.5);
-          transform: scale(1.04);
+          background:
+            linear-gradient(90deg, rgba(8, 7, 11, 0.94) 0%, rgba(8, 7, 11, 0.74) 38%, rgba(8, 7, 11, 0.9) 100%),
+            url("../assets/generated/manzokukyo/key-visual-bg.webp") center / cover no-repeat;
         }
 
         .mk-banner::after {
@@ -850,8 +890,314 @@ function renderManzokukyoTeaser(character) {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(90deg, rgba(8, 7, 11, 0.9) 0%, rgba(8, 7, 11, 0.38) 52%, rgba(8, 7, 11, 0.92) 100%),
-            linear-gradient(180deg, rgba(8, 7, 11, 0.08) 0%, rgba(8, 7, 11, 0.72) 70%, #08070b 100%);
+            linear-gradient(90deg, rgba(8, 7, 11, 0.36) 0%, rgba(8, 7, 11, 0.18) 48%, rgba(8, 7, 11, 0.82) 100%),
+            linear-gradient(180deg, rgba(8, 7, 11, 0.08) 0%, rgba(8, 7, 11, 0.54) 68%, #08070b 100%);
+        }
+
+        .mk-key-visual {
+          position: absolute;
+          top: 74px;
+          right: clamp(34px, 5vw, 96px);
+          bottom: 44px;
+          z-index: 1;
+          width: min(46vw, 720px);
+          min-width: 520px;
+          transform: translateZ(0);
+          border: 1px solid rgba(215, 180, 81, 0.4);
+          border-radius: 18px;
+          overflow: hidden;
+          background: #08070b;
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 36px 110px rgba(0, 0, 0, 0.6),
+            0 0 90px rgba(215, 180, 81, 0.16);
+          isolation: isolate;
+          animation: mk-portrait-breathe 9s ease-in-out infinite;
+        }
+
+        .mk-key-visual::before,
+        .mk-key-visual::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .mk-key-visual::before {
+          background:
+            linear-gradient(90deg, transparent 0 47%, rgba(255, 51, 92, 0.16) 48%, transparent 50%),
+            radial-gradient(circle at 52% 42%, transparent 0 31%, rgba(0, 0, 0, 0.18) 46%, rgba(0, 0, 0, 0.68) 100%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%);
+          opacity: 0.92;
+          mix-blend-mode: multiply;
+          animation: mk-portrait-vignette 7s ease-in-out infinite;
+        }
+
+        .mk-key-visual::after {
+          border: 1px solid rgba(215, 180, 81, 0.28);
+          background:
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 5px),
+            repeating-linear-gradient(90deg, transparent 0 21px, rgba(215, 180, 81, 0.08) 22px 23px, transparent 24px 64px);
+          opacity: 0.3;
+          box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.72);
+          mix-blend-mode: overlay;
+          animation: mk-portrait-scan 2.8s steps(6, end) infinite;
+        }
+
+        .mk-key-visual img {
+          position: relative;
+          z-index: 0;
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center top;
+          filter: saturate(0.9) contrast(1.08) brightness(0.82) hue-rotate(0deg);
+          transform: scale(1.01);
+          animation: mk-portrait-decay 12s ease-in-out infinite;
+        }
+
+        .mk-key-visual-glitch,
+        .mk-key-visual-noise {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .mk-key-visual-glitch {
+          background: url("../assets/generated/manzokukyo/key-visual-hero.webp") center top / cover no-repeat;
+          opacity: 0;
+          mix-blend-mode: screen;
+          filter: contrast(1.4) saturate(1.5) hue-rotate(150deg);
+          clip-path: inset(42% 0 38% 0);
+          animation: mk-portrait-glitch 6.4s steps(1, end) infinite;
+        }
+
+        .mk-key-visual-noise {
+          z-index: 3;
+          width: 100%;
+          height: 100%;
+          opacity: 0.28;
+          mix-blend-mode: overlay;
+        }
+
+        .mk-black-mass {
+          position: absolute;
+          right: clamp(42px, 5.8vw, 108px);
+          bottom: 0;
+          z-index: 4;
+          width: min(48vw, 820px);
+          min-width: 560px;
+          aspect-ratio: 1672 / 941;
+          pointer-events: none;
+          perspective: 900px;
+        }
+
+        .mk-altar-prop {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter:
+            drop-shadow(0 34px 54px rgba(0, 0, 0, 0.72))
+            drop-shadow(0 0 22px rgba(127, 51, 255, 0.18))
+            saturate(0.92)
+            contrast(1.08);
+        }
+
+        .mk-altar-table {
+          position: absolute;
+          right: 6%;
+          bottom: 0;
+          left: 6%;
+          z-index: 0;
+          height: 26%;
+          transform: rotateX(64deg);
+          transform-origin: center bottom;
+          border: 1px solid rgba(215, 180, 81, 0.46);
+          border-radius: 10px 10px 28px 28px;
+          background:
+            linear-gradient(90deg, rgba(215, 180, 81, 0.42), transparent 8% 92%, rgba(215, 180, 81, 0.42)),
+            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 46px),
+            linear-gradient(180deg, rgba(25, 18, 32, 0.92), rgba(5, 4, 8, 0.96));
+          box-shadow:
+            0 -20px 90px rgba(124, 43, 255, 0.16),
+            0 28px 80px rgba(0, 0, 0, 0.82),
+            inset 0 0 44px rgba(0, 0, 0, 0.72);
+        }
+
+        .mk-altar-table::before {
+          content: "";
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          width: 32%;
+          height: 42%;
+          transform: translateX(-50%);
+          border: 1px solid rgba(215, 180, 81, 0.4);
+          background:
+            linear-gradient(45deg, transparent 48%, rgba(215, 180, 81, 0.46) 49% 51%, transparent 52%),
+            linear-gradient(-45deg, transparent 48%, rgba(215, 180, 81, 0.34) 49% 51%, transparent 52%);
+          opacity: 0.68;
+        }
+
+        .mk-candles {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+        }
+
+        .mk-flame {
+          position: absolute;
+          left: var(--flame-left);
+          bottom: var(--flame-bottom, 68%);
+          width: var(--flame-width, clamp(32px, 3vw, 56px));
+          opacity: 1;
+          transform: translate(-50%, 6%) scale(var(--flame-scale, 1));
+          transform-origin: 50% 92%;
+          animation: mk-flame-extinguish 18s linear 2;
+          animation-play-state: var(--ritual-play-state, running);
+          mix-blend-mode: screen;
+        }
+
+        .mk-flame img {
+          display: block;
+          width: 100%;
+          height: auto;
+          filter:
+            drop-shadow(0 0 10px rgba(255, 255, 255, 0.4))
+            drop-shadow(0 0 24px rgba(175, 78, 255, 0.72))
+            drop-shadow(0 0 54px rgba(93, 35, 255, 0.46));
+          animation: mk-flame-image-dance 0.86s ease-in-out infinite alternate;
+        }
+
+        .mk-flame:nth-child(1) {
+          animation-name: mk-flame-out-1;
+        }
+
+        .mk-flame:nth-child(2) {
+          animation-name: mk-flame-out-2;
+        }
+
+        .mk-flame:nth-child(3) {
+          animation-name: mk-flame-out-3;
+        }
+
+        .mk-flame:nth-child(4) {
+          animation-name: mk-flame-out-4;
+        }
+
+        .mk-flame:nth-child(5) {
+          animation-name: mk-flame-out-5;
+        }
+
+        .mk-wake-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 60;
+          pointer-events: none;
+          background:
+            radial-gradient(ellipse at center, transparent 0 18%, rgba(0, 0, 0, 0.92) 48%, #000 72%),
+            linear-gradient(180deg, #000, #000);
+          opacity: 0;
+          mix-blend-mode: normal;
+          animation: mk-blackout-cycle 18s linear 2;
+          animation-play-state: var(--ritual-play-state, running);
+        }
+
+        .mk-wake-overlay::before,
+        .mk-wake-overlay::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .mk-wake-overlay::before {
+          background:
+            radial-gradient(ellipse at 50% 48%, rgba(255, 255, 255, 0.92) 0 5%, transparent 6%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 19%, rgba(255, 255, 255, 0.16) 21%, transparent 32%),
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, transparent 1px 4px);
+          filter: blur(1px) contrast(1.5);
+          mix-blend-mode: screen;
+          animation: mk-eye-open-cycle 18s linear 2;
+          animation-play-state: var(--ritual-play-state, running);
+        }
+
+        .mk-wake-overlay::after {
+          background:
+            linear-gradient(90deg, rgba(255, 51, 92, 0.28), transparent 16% 84%, rgba(88, 246, 255, 0.24)),
+            radial-gradient(ellipse at center, transparent 0 36%, rgba(0, 0, 0, 0.82) 76%);
+          transform: scaleX(1.08);
+          animation: mk-wake-chroma 18s linear 2;
+          animation-play-state: var(--ritual-play-state, running);
+          mix-blend-mode: screen;
+        }
+
+        .mk-page[data-ritual-state="ended"],
+        .mk-page[data-ritual-state="resetting"] {
+          --ritual-play-state: paused;
+        }
+
+        .mk-page[data-ritual-state="resetting"] .mk-flame,
+        .mk-page[data-ritual-state="resetting"] .mk-wake-overlay,
+        .mk-page[data-ritual-state="resetting"] .mk-wake-overlay::before,
+        .mk-page[data-ritual-state="resetting"] .mk-wake-overlay::after,
+        .mk-page[data-ritual-state="ended"] .mk-flame,
+        .mk-page[data-ritual-state="ended"] .mk-wake-overlay,
+        .mk-page[data-ritual-state="ended"] .mk-wake-overlay::before,
+        .mk-page[data-ritual-state="ended"] .mk-wake-overlay::after {
+          animation: none;
+          opacity: 0;
+        }
+
+        .mk-ritual-replay {
+          position: fixed;
+          right: clamp(22px, 4vw, 72px);
+          bottom: clamp(22px, 4vw, 58px);
+          z-index: 80;
+          display: inline-flex;
+          min-height: 52px;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(215, 180, 81, 0.72);
+          border-radius: 999px;
+          padding: 12px 20px;
+          background:
+            radial-gradient(circle at 30% 20%, rgba(154, 75, 255, 0.32), transparent 42%),
+            rgba(8, 7, 11, 0.78);
+          color: #fff7dc;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          box-shadow:
+            0 0 34px rgba(154, 75, 255, 0.34),
+            0 20px 60px rgba(0, 0, 0, 0.54);
+          cursor: pointer;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(14px);
+          transition: opacity 0.38s ease, transform 0.38s ease, border-color 0.38s ease;
+        }
+
+        .mk-ritual-replay:hover,
+        .mk-ritual-replay:focus-visible {
+          border-color: rgba(255, 255, 255, 0.86);
+          box-shadow:
+            0 0 44px rgba(154, 75, 255, 0.48),
+            0 24px 72px rgba(0, 0, 0, 0.64);
+        }
+
+        .mk-page[data-ritual-state="ended"] .mk-ritual-replay {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0);
         }
 
         .mk-sigil {
@@ -888,9 +1234,9 @@ function renderManzokukyoTeaser(character) {
         .mk-orbit-scene {
           position: absolute;
           top: 50%;
-          right: clamp(-120px, 8vw, 140px);
-          z-index: 1;
-          width: min(54vw, 720px);
+          right: clamp(120px, 22vw, 420px);
+          z-index: 2;
+          width: min(38vw, 560px);
           aspect-ratio: 1;
           transform: translateY(-50%);
           perspective: 900px;
@@ -982,59 +1328,12 @@ function renderManzokukyoTeaser(character) {
           animation: mk-flicker 3.2s linear infinite;
         }
 
-        .mk-nav {
-          position: fixed;
-          top: 18px;
-          left: 50%;
-          z-index: 20;
-          display: flex;
-          width: min(1180px, calc(100% - 28px));
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          transform: translateX(-50%);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 999px;
-          padding: 9px 12px 9px 18px;
-          background: rgba(8, 7, 11, 0.62);
-          backdrop-filter: blur(16px);
-        }
-
-        .mk-nav a {
-          color: var(--cult-ink);
-          text-decoration: none;
-        }
-
-        .mk-nav-brand {
-          font-weight: 900;
-          letter-spacing: 0;
-        }
-
-        .mk-nav-links {
-          display: flex;
-          gap: 6px;
-        }
-
-        .mk-nav-links a {
-          border-radius: 999px;
-          padding: 7px 11px;
-          color: rgba(245, 234, 210, 0.72);
-          font-size: 0.82rem;
-          font-weight: 800;
-        }
-
-        .mk-nav-links a:hover,
-        .mk-nav-links a:focus-visible {
-          background: rgba(255, 255, 255, 0.1);
-          color: #ffffff;
-        }
-
         .mk-hero-inner {
           position: relative;
-          z-index: 2;
+          z-index: 3;
           width: min(1180px, 100%);
           margin: 0 auto;
-          padding: 130px 0 56px;
+          padding: 76px 0 56px;
         }
 
         .mk-kicker {
@@ -1057,11 +1356,11 @@ function renderManzokukyoTeaser(character) {
 
         .mk-title {
           position: relative;
-          max-width: 980px;
+          max-width: 760px;
           margin: 0;
           color: #fff7dc;
           font-family: var(--font-display);
-          font-size: clamp(5rem, 18vw, 13rem);
+          font-size: clamp(5.4rem, 14vw, 11.6rem);
           font-weight: 700;
           line-height: 0.82;
           letter-spacing: 0;
@@ -1095,7 +1394,7 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-subtitle {
-          max-width: 760px;
+          max-width: 640px;
           margin: 26px 0 0;
           color: rgba(245, 234, 210, 0.86);
           font-size: clamp(1.1rem, 2.3vw, 1.75rem);
@@ -1104,7 +1403,7 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-copy {
-          max-width: 680px;
+          max-width: 580px;
           margin: 18px 0 0;
           color: rgba(245, 234, 210, 0.68);
           font-size: 1rem;
@@ -1330,18 +1629,239 @@ function renderManzokukyoTeaser(character) {
           }
         }
 
+        @keyframes mk-portrait-breathe {
+          0%, 100% {
+            box-shadow:
+              0 0 0 1px rgba(255, 255, 255, 0.08),
+              0 36px 110px rgba(0, 0, 0, 0.6),
+              0 0 90px rgba(215, 180, 81, 0.16);
+          }
+
+          50% {
+            box-shadow:
+              0 0 0 1px rgba(159, 255, 110, 0.15),
+              0 44px 130px rgba(0, 0, 0, 0.68),
+              0 0 120px rgba(255, 51, 92, 0.18);
+          }
+        }
+
+        @keyframes mk-portrait-decay {
+          0%, 100% {
+            filter: saturate(0.9) contrast(1.08) brightness(0.82) hue-rotate(0deg);
+            transform: scale(1.01) translate3d(0, 0, 0);
+          }
+
+          42% {
+            filter: saturate(0.72) contrast(1.18) brightness(0.72) hue-rotate(-8deg);
+          }
+
+          67% {
+            filter: saturate(1.04) contrast(1.24) brightness(0.78) hue-rotate(12deg);
+            transform: scale(1.022) translate3d(0.7%, -0.4%, 0);
+          }
+        }
+
+        @keyframes mk-portrait-vignette {
+          0%, 100% {
+            opacity: 0.82;
+            transform: translate3d(0, 0, 0);
+          }
+
+          48% {
+            opacity: 1;
+            transform: translate3d(-1.2%, 0.6%, 0);
+          }
+        }
+
+        @keyframes mk-portrait-scan {
+          0%, 100% {
+            opacity: 0.24;
+            transform: translateY(0);
+          }
+
+          50% {
+            opacity: 0.42;
+            transform: translateY(9px);
+          }
+        }
+
+        @keyframes mk-portrait-glitch {
+          0%, 78%, 82%, 100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(1.01);
+            clip-path: inset(42% 0 38% 0);
+          }
+
+          79% {
+            opacity: 0.44;
+            transform: translate3d(-18px, 0, 0) scale(1.018);
+            clip-path: inset(18% 0 62% 0);
+          }
+
+          80% {
+            opacity: 0.36;
+            transform: translate3d(16px, -4px, 0) scale(1.018);
+            clip-path: inset(58% 0 20% 0);
+          }
+
+          81% {
+            opacity: 0.52;
+            transform: translate3d(-8px, 5px, 0) scale(1.018);
+            clip-path: inset(34% 0 43% 0);
+          }
+        }
+
+        @keyframes mk-flame-image-dance {
+          0% {
+            transform: translate3d(-3%, 0, 0) scale(0.96, 1.05) rotate(-2deg);
+            filter:
+              drop-shadow(0 0 8px rgba(255, 255, 255, 0.34))
+              drop-shadow(0 0 20px rgba(175, 78, 255, 0.58))
+              drop-shadow(0 0 42px rgba(93, 35, 255, 0.38));
+          }
+
+          100% {
+            transform: translate3d(3%, -1.6%, 0) scale(1.05, 0.98) rotate(2deg);
+            filter:
+              drop-shadow(0 0 12px rgba(255, 255, 255, 0.5))
+              drop-shadow(0 0 30px rgba(190, 86, 255, 0.84))
+              drop-shadow(0 0 68px rgba(111, 42, 255, 0.54));
+          }
+        }
+
+        @keyframes mk-flame-extinguish {
+          0%, 72% {
+            opacity: 1;
+          }
+
+          77%, 100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes mk-flame-out-1 {
+          0%, 18% { opacity: 1; }
+          23%, 100% { opacity: 0; }
+        }
+
+        @keyframes mk-flame-out-2 {
+          0%, 32% { opacity: 1; }
+          37%, 100% { opacity: 0; }
+        }
+
+        @keyframes mk-flame-out-3 {
+          0%, 46% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+
+        @keyframes mk-flame-out-4 {
+          0%, 60% { opacity: 1; }
+          65%, 100% { opacity: 0; }
+        }
+
+        @keyframes mk-flame-out-5 {
+          0%, 74% { opacity: 1; }
+          79%, 100% { opacity: 0; }
+        }
+
+        @keyframes mk-blackout-cycle {
+          0%, 82.5% {
+            opacity: 0;
+          }
+
+          84%, 89.5% {
+            opacity: 1;
+          }
+
+          90.5% {
+            opacity: 0.84;
+          }
+
+          92.5% {
+            opacity: 0.24;
+          }
+
+          95%, 100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes mk-eye-open-cycle {
+          0%, 86% {
+            opacity: 0;
+            clip-path: inset(50% 0 50% 0);
+            transform: scaleY(0.08);
+          }
+
+          89% {
+            opacity: 0;
+            clip-path: inset(50% 0 50% 0);
+          }
+
+          90.5% {
+            opacity: 0.95;
+            clip-path: inset(46% 0 46% 0);
+            transform: scaleY(0.22);
+          }
+
+          92.2% {
+            opacity: 0.72;
+            clip-path: inset(26% 0 26% 0);
+            transform: scaleY(0.72);
+          }
+
+          94% {
+            opacity: 0.28;
+            clip-path: inset(0 0 0 0);
+            transform: scaleY(1);
+          }
+
+          96%, 100% {
+            opacity: 0;
+            clip-path: inset(0 0 0 0);
+          }
+        }
+
+        @keyframes mk-wake-chroma {
+          0%, 89% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scaleX(1.02);
+          }
+
+          90% {
+            opacity: 0.72;
+            transform: translate3d(-22px, 0, 0) scaleX(1.1);
+          }
+
+          91% {
+            opacity: 0.42;
+            transform: translate3d(18px, -8px, 0) scaleX(1.06);
+          }
+
+          94% {
+            opacity: 0.18;
+            transform: translate3d(0, 0, 0) scaleX(1);
+          }
+
+          97%, 100% {
+            opacity: 0;
+          }
+        }
+
         @media (max-width: 820px) {
           .mk-hero {
             padding: 18px;
           }
 
-          .mk-nav {
-            top: 10px;
-            width: calc(100% - 20px);
-          }
-
-          .mk-nav-links {
-            display: none;
+          .mk-key-visual {
+            top: 76px;
+            right: -24vw;
+            bottom: auto;
+            width: 86vw;
+            min-width: 0;
+            height: 56svh;
+            opacity: 0.54;
+            border-radius: 14px;
           }
 
           .mk-hero-inner {
@@ -1356,6 +1876,22 @@ function renderManzokukyoTeaser(character) {
             right: -22vw;
             width: 104vw;
             opacity: 0.78;
+          }
+
+          .mk-black-mass {
+            right: -22vw;
+            bottom: 0;
+            width: 102vw;
+            min-width: 0;
+            opacity: 0.74;
+          }
+
+          .mk-candles {
+            inset: 0;
+          }
+
+          .mk-flame {
+            width: var(--flame-width-mobile, 34px);
           }
 
           .mk-whisper {
@@ -1418,24 +1954,45 @@ function renderManzokukyoTeaser(character) {
           .mk-whisper span,
           .mk-title::before,
           .mk-title::after,
+          .mk-key-visual,
+          .mk-key-visual img,
+          .mk-key-visual::before,
+          .mk-key-visual::after,
+          .mk-key-visual-glitch,
+          .mk-flame,
+          .mk-flame img,
+          .mk-wake-overlay,
+          .mk-wake-overlay::before,
+          .mk-wake-overlay::after,
           .mk-hero::before {
             animation: none;
           }
+
+          .mk-wake-overlay {
+            display: none;
+          }
         }
       </style>
-      <main class="mk-page">
+      <main class="mk-page" data-ritual-state="running">
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
-        <nav class="mk-nav" aria-label="満足教ティーザーナビゲーション">
-          <a class="mk-nav-brand" href="../">残念院さん</a>
-          <div class="mk-nav-links">
-            <a href="#doctrine">Doctrine</a>
-            <a href="#signs">Signs</a>
-            <a href="#revelation">Revelation</a>
-          </div>
-        </nav>
         <section class="mk-hero">
-          <div class="mk-banner" aria-hidden="true">
-            <img src="../assets/generated/brand/banner-logo.webp" alt="">
+          <div class="mk-banner" aria-hidden="true"></div>
+          <picture class="mk-key-visual">
+            <source srcset="../assets/generated/manzokukyo/key-visual-hero.avif" type="image/avif">
+            <img src="../assets/generated/manzokukyo/key-visual-hero.webp" alt="満足教キービジュアル" width="1254" height="1254" fetchpriority="high">
+            <span class="mk-key-visual-glitch" aria-hidden="true"></span>
+            <canvas class="mk-key-visual-noise" data-mk-portrait-noise aria-hidden="true"></canvas>
+          </picture>
+          <div class="mk-black-mass" aria-hidden="true">
+            <img class="mk-altar-prop" src="../assets/generated/manzokukyo/altar.webp" alt="" width="1280" height="720" loading="eager">
+            <div class="mk-candles">
+              <span class="mk-flame" style="--flame-left: 15.2%; --flame-bottom: 81.8%; --flame-scale: 0.82; --flame-width-mobile: 20px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+              <span class="mk-flame" style="--flame-left: 34.4%; --flame-bottom: 81%; --flame-scale: 0.9; --flame-width-mobile: 22px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+              <span class="mk-flame" style="--flame-left: 50.3%; --flame-bottom: 85.4%; --flame-scale: 1; --flame-width-mobile: 26px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+              <span class="mk-flame" style="--flame-left: 66.1%; --flame-bottom: 81%; --flame-scale: 0.88; --flame-width-mobile: 22px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+              <span class="mk-flame" style="--flame-left: 84%; --flame-bottom: 81.6%; --flame-scale: 0.82; --flame-width-mobile: 20px;"><img src="../assets/generated/manzokukyo/purple-flame.webp" alt=""></span>
+            </div>
+            <div class="mk-altar-table"></div>
           </div>
           <div class="mk-sigil" aria-hidden="true"></div>
           <div class="mk-orbit-scene" aria-hidden="true">
@@ -1460,6 +2017,8 @@ function renderManzokukyoTeaser(character) {
             </div>
           </div>
         </section>
+        <div class="mk-wake-overlay" aria-hidden="true"></div>
+        <button class="mk-ritual-replay" type="button" data-mk-ritual-replay aria-label="黒ミサ演出をリプレイ">Replay Ritual</button>
         <section class="mk-section" id="doctrine">
           <h2>満たされよ、しかし満ち足りるな。</h2>
           <p class="mk-section-lead">満足教は、過剰な幸福ではなく、見落とされる小さな満足を拾い上げるための仮想宗教です。教義はまだ霧の中にあり、断片だけが残念院さんの周囲に浮かんでいます。</p>
@@ -1509,6 +2068,38 @@ function renderManzokukyoTeaser(character) {
         </footer>
       </main>
       <script>
+        (() => {
+          const page = document.querySelector(".mk-page");
+          const replay = document.querySelector("[data-mk-ritual-replay]");
+          const wakeOverlay = document.querySelector(".mk-wake-overlay");
+          if (!page || !replay || !wakeOverlay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          const ritualDurationMs = 37200;
+          let ritualTimer = 0;
+
+          function endRitual() {
+            page.dataset.ritualState = "ended";
+          }
+
+          function startRitual() {
+            window.clearTimeout(ritualTimer);
+            page.dataset.ritualState = "resetting";
+            page.offsetWidth;
+            page.dataset.ritualState = "running";
+            ritualTimer = window.setTimeout(endRitual, ritualDurationMs);
+          }
+
+          wakeOverlay.addEventListener("animationend", (event) => {
+            if (event.animationName === "mk-blackout-cycle" && page.dataset.ritualState === "running") {
+              endRitual();
+            }
+          });
+          replay.addEventListener("click", startRitual);
+          startRitual();
+          window.addEventListener("pagehide", () => window.clearTimeout(ritualTimer), { once: true });
+        })();
         (() => {
           const canvas = document.querySelector("[data-mk-abyss]");
           if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -1562,6 +2153,45 @@ function renderManzokukyoTeaser(character) {
 
           resize();
           window.addEventListener("resize", resize, { passive: true });
+          raf = requestAnimationFrame(draw);
+          window.addEventListener("pagehide", () => cancelAnimationFrame(raf), { once: true });
+        })();
+        (() => {
+          const canvas = document.querySelector("[data-mk-portrait-noise]");
+          if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          const ctx = canvas.getContext("2d");
+          const noiseSize = 96;
+          const imageData = ctx.createImageData(noiseSize, noiseSize);
+          let raf = 0;
+          let lastDraw = 0;
+
+          function resize() {
+            canvas.width = noiseSize;
+            canvas.height = noiseSize;
+          }
+
+          function draw(time) {
+            if (time - lastDraw > 86) {
+              const data = imageData.data;
+              for (let i = 0; i < data.length; i += 4) {
+                const value = Math.random() * 255;
+                data[i] = value;
+                data[i + 1] = value * 0.92;
+                data[i + 2] = value * 0.72;
+                data[i + 3] = Math.random() > 0.58 ? 84 : 0;
+              }
+
+              ctx.putImageData(imageData, 0, 0);
+              lastDraw = time;
+            }
+
+            raf = requestAnimationFrame(draw);
+          }
+
+          resize();
           raf = requestAnimationFrame(draw);
           window.addEventListener("pagehide", () => cancelAnimationFrame(raf), { once: true });
         })();
