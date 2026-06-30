@@ -3,78 +3,109 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="残念院ちる子のデスクトップアクセサリ紹介ページ。ちる子ちゃんがPC画面のすみにやってくる、ちいさくてかわいいデスクトップマスコットです。">
-    <title>デスクトップちる子 | 残念院ちる子</title>
+    <meta name="description" content="残念院ちる子のデスクトップアクセサリ。会話、ミニゲーム、音楽再生を楽しめる、かわいい常駐マスコットです。">
+    <title>デスクトップちる子</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="page-shell">
+    <main>
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="tiny-label">Desktop Accessory</p>
-          <h1 id="hero-title">
-            <span>デスクトップに、</span>
-            <span>ちる子ちゃんを。</span>
-          </h1>
+        <div class="hero-card">
+          <div class="hero-copy">
+            <p class="tiny-label"><span></span>Desktop Accessory</p>
+            <h1 id="hero-title"><span>デスクトップ</span><span>ちる子ちゃん</span></h1>
           <p class="lead">
-            作業中も、休憩中も、PCのすみにちょこん。
-            残念院ちる子のちいさなデスクトップアクセサリです。
+            <span>PCのすみに、ちる子ちゃんがちょこん。</span>
+            <span>おしゃべりしたり、遊んだり、音楽を流したり。</span>
+            <span>あなたの作業時間に、ちいさな癒しをお届けします。</span>
           </p>
-        </div>
-
-        <div class="hero-art" aria-label="デスクトップちる子のイメージ">
-          <div class="soft-window">
-            <img src="assets/desktop-chiruko-booth.png" alt="デスクトップちる子の紹介ビジュアル">
+          <div class="soft-tags" aria-label="機能">
+            <span>会話</span>
+            <span>ミニゲーム</span>
+            <span>音楽再生</span>
           </div>
-          <img class="chillko-float" src="assets/chiruko-stand-sitting.png" alt="座っている残念院ちる子のミニキャラ">
+          <a class="download-button" href="#" aria-label="デスクトップちる子をダウンロード">
+            <span class="download-main">Download</span>
+            <span class="download-sub">デスクトップちる子</span>
+          </a>
+        </div>
+
+          <figure class="hero-window" aria-label="デスクトップちる子のイメージ">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <img src="assets/desktop-chiruko-booth.png" alt="デスクトップちる子のメインビジュアル">
+          </figure>
         </div>
       </section>
 
-      <section class="mood-section" aria-labelledby="mood-title">
+      <section class="section feature-section" aria-labelledby="features-title">
         <div class="section-title">
-          <p class="tiny-label">Mood</p>
-          <h2 id="mood-title">PC時間に、ちいさな表情を。</h2>
+          <p class="tiny-label">What She Does</p>
+          <h2 id="features-title">ちる子と過ごす、ちいさな時間。</h2>
         </div>
-        <div class="mood-grid">
-          <article class="mood-card">
-            <img src="assets/chiruko-startup.png" alt="起動時のデスクトップちる子">
-            <h3>おはよう</h3>
-            <p>起動したら、まずはちる子ちゃんがお出迎え。</p>
+        <div class="feature-list">
+          <article class="feature-item">
+            <img src="assets/chiruko-startup.png" alt="ちる子が話しかけている画面">
+            <h3>話しかける</h3>
+            <p>画面の片隅から、ちる子がひとこと。作業中のデスクトップが、少しだけにぎやかになります。</p>
           </article>
-          <article class="mood-card">
-            <img src="assets/chiruko-game.png" alt="ミニゲーム中のデスクトップちる子">
-            <h3>あそぶ</h3>
-            <p>ちょっとした息抜きも、デスクトップの上で。</p>
+          <article class="feature-item">
+            <img src="assets/chiruko-game.png" alt="ちる子とミニゲームで遊んでいる画面">
+            <h3>遊ぶ</h3>
+            <p>短い休憩にちょうどいいミニゲーム。ほんの少しの息抜きに、ちる子が付き合ってくれます。</p>
           </article>
-          <article class="mood-card">
-            <img src="assets/chiruko-music.png" alt="音楽再生中のデスクトップちる子">
-            <h3>くつろぐ</h3>
-            <p>音楽を流しながら、ふんわり休憩モード。</p>
+          <article class="feature-item">
+            <img src="assets/chiruko-music.png" alt="音楽再生中に眠っているちる子の画面">
+            <h3>音楽を流す</h3>
+            <p>音楽を流している間は、眠るちる子をそっと眺められます。邪魔をしない、かわいい存在感です。</p>
           </article>
         </div>
       </section>
 
-      <section class="standee-section" aria-labelledby="standee-title">
-        <div class="standee-copy">
-          <p class="tiny-label">Chillko</p>
-          <h2 id="standee-title">いろんなちる子ちゃん。</h2>
+      <section class="section chiruko-section" aria-labelledby="chiruko-title">
+        <div class="chiruko-copy">
+          <p class="tiny-label">Character</p>
+          <h2 id="chiruko-title">残念院ちる子</h2>
           <p>
-            読む、走る、眠る、待つ。
-            デスクトップの片隅で、ちる子ちゃんが気ままに過ごします。
+            黒と金をまとった、気品といたずら心のある小さな教祖さま。
+            かわいいのに少しだけ謎めいていて、デスクトップに置いておきたくなる存在です。
           </p>
         </div>
-        <div class="standee-stage">
+        <div class="standee-gallery" aria-label="残念院ちる子のミニキャラ">
           <img src="assets/chiruko-stand-reading.png" alt="本を読んでいる残念院ちる子">
           <img src="assets/chiruko-stand-running.png" alt="走っている残念院ちる子">
           <img src="assets/chiruko-stand-sleeping.png" alt="眠っている残念院ちる子">
           <img src="assets/chiruko-stand-sitting.png" alt="座っている残念院ちる子">
         </div>
       </section>
+
+      <section class="section visual-section" aria-labelledby="visual-title">
+        <div class="section-title">
+          <p class="tiny-label">Preview</p>
+          <h2 id="visual-title" class="balanced-title">
+            <span>ちっちゃくても、</span>
+            <span>ちゃんとちる子</span>
+          </h2>
+          <p>
+            画面のすみっこに常駐して、作業中も休憩中もそばにいてくれます。
+            ふと目に入るたびに少し楽しくなる、残念院ちる子の小さなPCマスコットです。
+          </p>
+          <a class="download-button" href="#" aria-label="デスクトップちる子をダウンロード">
+            <span class="download-main">Download</span>
+            <span class="download-sub">デスクトップちる子</span>
+          </a>
+        </div>
+        <figure class="booth-visual">
+          <img src="assets/desktop-chiruko-booth.png" alt="デスクトップちる子のBOOTH掲載イメージ">
+        </figure>
+      </section>
     </main>
 
     <footer class="site-footer">
-      <span>Desktop Chillko</span>
-      <a href="../">残念院さん公式ページへ</a>
+      <p>Desktop Chiruko</p>
+      <p>残念院ちる子のデスクトップアクセサリ</p>
     </footer>
   </body>
 </html>

@@ -859,12 +859,15 @@ function renderManzokukyoTeaser(character) {
           --mk-copy-y: 0px;
           --mk-copy-z: 180px;
           --mk-altar-y: 0px;
-          --mk-altar-z: 120px;
-          --mk-altar-scale: 1.02;
+          --mk-altar-z: 80px;
+          --mk-altar-scale: 1;
           --mk-portrait-y: 0px;
-          --mk-portrait-z: -260px;
+          --mk-portrait-z: -220px;
           --mk-portrait-scale: 0.82;
-          --mk-portrait-opacity: 0.18;
+          --mk-portrait-opacity: 0.64;
+          --mk-corridor-opacity: 0;
+          --mk-hero-exit: 0;
+          --mk-banner-opacity: 1;
           --mk-tunnel-opacity: 0;
           --mk-tunnel-scale: 1.16;
           --mk-road-shift: 0px;
@@ -936,8 +939,8 @@ function renderManzokukyoTeaser(character) {
           display: grid;
           min-height: 100svh;
           height: 100svh;
-          align-items: end;
-          padding: clamp(18px, 2.5vw, 34px);
+          align-items: center;
+          padding: clamp(22px, 3vw, 46px);
           overflow: hidden;
           transform-style: preserve-3d;
         }
@@ -965,7 +968,8 @@ function renderManzokukyoTeaser(character) {
           z-index: 3;
           pointer-events: none;
           overflow: hidden;
-          opacity: 1;
+          opacity: var(--mk-corridor-opacity);
+          transition: opacity 0.16s linear;
         }
 
         .mk-loop-tunnel {
@@ -1303,6 +1307,7 @@ function renderManzokukyoTeaser(character) {
             url("../assets/generated/manzokukyo/key-visual-bg.webp") center / cover no-repeat;
           transform: translateZ(-520px) scale(1.44);
           transform-origin: 50% 42%;
+          opacity: var(--mk-banner-opacity);
         }
 
         .mk-banner::after {
@@ -1372,23 +1377,25 @@ function renderManzokukyoTeaser(character) {
 
         .mk-key-visual {
           position: absolute;
-          top: clamp(72px, 10vh, 118px);
-          right: clamp(210px, 18vw, 360px);
-          z-index: 2;
-          width: min(27vw, 460px);
-          min-width: 330px;
-          height: min(48vh, 480px);
+          top: auto;
+          right: clamp(210px, 17vw, 340px);
+          bottom: clamp(270px, 38vh, 360px);
+          z-index: 3;
+          width: min(24vw, 390px);
+          min-width: 280px;
+          height: min(36vh, 360px);
           transform: translate3d(0, var(--mk-portrait-y), var(--mk-portrait-z)) scale(var(--mk-portrait-scale));
+          translate: 0 0;
           transform-origin: 50% 72%;
-          border: 1px solid rgba(215, 180, 81, 0.28);
+          border: 1px solid rgba(215, 180, 81, 0.4);
           border-radius: 18px;
           overflow: hidden;
           background: #08070b;
           opacity: var(--mk-portrait-opacity);
           box-shadow:
             0 0 0 1px rgba(255, 255, 255, 0.08),
-            0 28px 90px rgba(0, 0, 0, 0.72),
-            0 0 74px rgba(90, 34, 122, 0.2);
+            0 26px 86px rgba(0, 0, 0, 0.72),
+            0 0 54px rgba(215, 180, 81, 0.14);
           isolation: isolate;
           animation: mk-portrait-breathe 9s ease-in-out infinite;
         }
@@ -1431,8 +1438,8 @@ function renderManzokukyoTeaser(character) {
           height: 100%;
           object-fit: cover;
           object-position: center top;
-          filter: saturate(0.74) contrast(1.16) brightness(0.58) hue-rotate(-5deg);
-          transform: scale(1.02);
+          filter: saturate(0.82) contrast(1.12) brightness(0.64) hue-rotate(-4deg);
+          transform: scale(1.01);
           animation: mk-portrait-decay 12s ease-in-out infinite;
         }
 
@@ -1463,13 +1470,13 @@ function renderManzokukyoTeaser(character) {
 
         .mk-black-mass {
           position: absolute;
-          right: clamp(-320px, -18vw, -120px);
-          bottom: -8vh;
-          z-index: 5;
-          width: min(39vw, 680px);
-          min-width: 430px;
+          right: clamp(42px, 5.8vw, 108px);
+          bottom: 0;
+          z-index: 4;
+          width: min(48vw, 820px);
+          min-width: 560px;
           aspect-ratio: 1672 / 941;
-          opacity: 0.62;
+          opacity: calc(0.74 - var(--mk-hero-exit) * 0.62);
           pointer-events: none;
           perspective: 900px;
           transform: translate3d(0, var(--mk-altar-y), var(--mk-altar-z)) scale(var(--mk-altar-scale));
@@ -1796,12 +1803,13 @@ function renderManzokukyoTeaser(character) {
         .mk-hero-inner {
           position: relative;
           z-index: 6;
-          width: min(1180px, 100%);
+          width: min(1180px, calc(100vw - clamp(36px, 5vw, 96px)));
           margin: 0 auto;
-          padding: clamp(34px, 4.5vh, 56px) 0 clamp(24px, 3.8vh, 40px);
-          opacity: 0;
+          padding: clamp(56px, 8.4vh, 82px) 0 clamp(42px, 6vh, 64px);
+          opacity: var(--mk-copy-opacity);
           pointer-events: none;
           transform: translate3d(0, var(--mk-copy-y), var(--mk-copy-z));
+          transition: opacity 0.12s linear;
         }
 
         .mk-kicker {
@@ -1828,7 +1836,7 @@ function renderManzokukyoTeaser(character) {
           margin: 0;
           color: #fff7dc;
           font-family: var(--font-display);
-          font-size: clamp(4.6rem, 11.4vw, 9.2rem);
+          font-size: clamp(5.4rem, 14vw, 11.6rem);
           font-weight: 700;
           line-height: 0.82;
           letter-spacing: 0;
@@ -1863,26 +1871,26 @@ function renderManzokukyoTeaser(character) {
 
         .mk-subtitle {
           max-width: 640px;
-          margin: 18px 0 0;
+          margin: 26px 0 0;
           color: rgba(245, 234, 210, 0.86);
-          font-size: clamp(1.05rem, 2vw, 1.55rem);
+          font-size: clamp(1.1rem, 2.3vw, 1.75rem);
           font-weight: 900;
           line-height: 1.55;
         }
 
         .mk-copy {
           max-width: 580px;
-          margin: 12px 0 0;
+          margin: 18px 0 0;
           color: rgba(245, 234, 210, 0.68);
           font-size: 1rem;
-          line-height: 1.75;
+          line-height: 1.9;
         }
 
         .mk-actions {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
-          margin-top: 22px;
+          margin-top: 30px;
         }
 
         .mk-button {
@@ -2325,14 +2333,16 @@ function renderManzokukyoTeaser(character) {
           }
 
           .mk-key-visual {
-            top: 82px;
-            right: -8vw;
-            bottom: auto;
-            width: 74vw;
+            top: auto;
+            right: 50%;
+            left: auto;
+            bottom: clamp(230px, 34svh, 310px);
+            width: min(54vw, 260px);
             min-width: 0;
-            height: 42svh;
-            opacity: 0.42;
+            height: 28svh;
+            opacity: var(--mk-portrait-opacity);
             border-radius: 14px;
+            translate: 50% 0;
           }
 
           .mk-depth-prop {
@@ -2343,7 +2353,7 @@ function renderManzokukyoTeaser(character) {
             width: 100%;
             max-width: calc(100vw - 36px);
             min-width: 0;
-            padding-bottom: 28px;
+            padding-bottom: 38px;
           }
 
           .mk-orbit-scene {
@@ -2354,11 +2364,12 @@ function renderManzokukyoTeaser(character) {
           }
 
           .mk-black-mass {
-            right: -30vw;
+            right: -22vw;
+            left: auto;
             bottom: 0;
-            width: 116vw;
+            width: 102vw;
             min-width: 0;
-            opacity: 0.82;
+            opacity: calc(0.74 - var(--mk-hero-exit) * 0.62);
           }
 
           .mk-candles {
@@ -2515,7 +2526,7 @@ function renderManzokukyoTeaser(character) {
             <p class="mk-kicker">Satisfaction Cult / teaser transmission</p>
             <h1 class="mk-title" data-text="満足教">満足教</h1>
             <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
-            <p class="mk-copy">このページは仮設のティザーです。満足教の教義、儀式、開祖・残念院さんにまつわる断片を、公開前の暗号めいた告知として配置しています。</p>
+            <p class="mk-copy">残念院さんがひらく、甘くて不穏な小さな祭壇。満たされたと思った瞬間、次の満足がこちらを見つめている。</p>
             <div class="mk-actions">
               <a class="mk-button" href="#doctrine">教義を覗く</a>
               <a class="mk-button mk-button-secondary" href="../">公式設定へ戻る</a>
@@ -2643,21 +2654,26 @@ function renderManzokukyoTeaser(character) {
             ticking = false;
             const depth = virtualDepth;
             const sceneDepth = clamp(depth / maxDepth, 0, 1);
+            const heroExit = clamp(sceneDepth / 0.22, 0, 1);
+            const corridorIntro = clamp((sceneDepth - 0.08) / 0.2, 0, 1);
             page.style.setProperty("--mk-depth", sceneDepth.toFixed(3));
+            page.style.setProperty("--mk-hero-exit", heroExit.toFixed(3));
+            page.style.setProperty("--mk-corridor-opacity", (corridorIntro * 0.96).toFixed(3));
+            page.style.setProperty("--mk-banner-opacity", clamp(1 - heroExit * 0.78, 0.16, 1).toFixed(3));
             page.style.setProperty("--mk-road-shift", (depth * 620).toFixed(1) + "px");
             page.style.setProperty("--mk-wall-shift", (depth * 430).toFixed(1) + "px");
             page.style.setProperty("--mk-horizon-shift", (depth * 310).toFixed(1) + "px");
-            page.style.setProperty("--mk-copy-opacity", clamp(1 - sceneDepth * 2.4, 0, 1).toFixed(3));
+            page.style.setProperty("--mk-copy-opacity", clamp(1 - heroExit * 1.28, 0, 1).toFixed(3));
             page.style.setProperty("--mk-copy-y", "0px");
-            page.style.setProperty("--mk-copy-z", (180 + sceneDepth * 360).toFixed(1) + "px");
+            page.style.setProperty("--mk-copy-z", (180 + heroExit * 620).toFixed(1) + "px");
             page.style.setProperty("--mk-altar-y", "0px");
-            page.style.setProperty("--mk-altar-z", (60 + sceneDepth * 160).toFixed(1) + "px");
-            page.style.setProperty("--mk-altar-scale", (0.82 + sceneDepth * 0.16).toFixed(3));
+            page.style.setProperty("--mk-altar-z", (80 + heroExit * 520).toFixed(1) + "px");
+            page.style.setProperty("--mk-altar-scale", (1 + heroExit * 0.46).toFixed(3));
             page.style.setProperty("--mk-portrait-y", "0px");
-            page.style.setProperty("--mk-portrait-z", (-260 - sceneDepth * 300).toFixed(1) + "px");
-            page.style.setProperty("--mk-portrait-scale", (0.82 - sceneDepth * 0.18).toFixed(3));
-            page.style.setProperty("--mk-portrait-opacity", clamp(0.18 - sceneDepth * 0.08, 0.06, 0.18).toFixed(3));
-            page.style.setProperty("--mk-tunnel-opacity", clamp((sceneDepth - 0.02) / 0.22, 0, 0.78).toFixed(3));
+            page.style.setProperty("--mk-portrait-z", (-220 + heroExit * 520).toFixed(1) + "px");
+            page.style.setProperty("--mk-portrait-scale", (0.82 + heroExit * 0.22).toFixed(3));
+            page.style.setProperty("--mk-portrait-opacity", clamp(0.64 - heroExit * 0.56, 0.04, 0.64).toFixed(3));
+            page.style.setProperty("--mk-tunnel-opacity", clamp((sceneDepth - 0.08) / 0.2, 0, 0.78).toFixed(3));
             page.style.setProperty("--mk-tunnel-scale", (1.16 + sceneDepth * 0.42).toFixed(3));
             page.style.setProperty("--mk-footer-opacity", clamp((sceneDepth - 0.9) / 0.08, 0, 1).toFixed(3));
 
@@ -2785,14 +2801,18 @@ function renderManzokukyoTeaser(character) {
             [0.59, 0.67],
             [0.76, 0.88]
           ];
-          const altarSpace = { width: 1672, height: 941 };
-          // Coordinates are measured on the original altar image so the flames stay locked to the candle tips after resize.
-          const flames = [
-            { x: 160, y: 235, h: 72, w: 10, seed: 1.2 },
-            { x: 501, y: 260, h: 86, w: 12, seed: 2.1 },
-            { x: 788, y: 250, h: 108, w: 14, seed: 3.4 },
-            { x: 1077, y: 260, h: 86, w: 12, seed: 4.3 },
-            { x: 1417, y: 235, h: 72, w: 10, seed: 5.5 }
+          const altarSpace = {
+            // Top-left of the original altar cutout image is (0, 0).
+            source: "content/characters/zannenin/assets/manzokukyo/altar-cutout.png",
+            width: 1672,
+            height: 941
+          };
+          const candleTips = [
+            { id: "left-edge", x: 160, y: 235, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 1.2 },
+            { id: "left-center", x: 501, y: 260, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 2.1 },
+            { id: "center", x: 788, y: 250, flameHeightRatio: 108 / 941, flameWidthRatio: 14 / 1672, seed: 3.4 },
+            { id: "right-center", x: 1077, y: 260, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 4.3 },
+            { id: "right-edge", x: 1417, y: 235, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 5.5 }
           ];
           let width = 0;
           let height = 0;
@@ -2844,18 +2864,18 @@ function renderManzokukyoTeaser(character) {
             }
 
             const lit = alphas.reduce((sum, value) => sum + value, 0);
-            const extinguished = 1 - lit / flames.length;
+            const extinguished = 1 - lit / candleTips.length;
             const finalFade = Math.max(0, Math.min(1, (progress - 0.76) / 0.12));
             const blackoutPull = Math.max(0, Math.min(1, (progress - 0.86) / 0.03));
             return Math.min(0.96, 0.05 + extinguished * 0.62 + finalFade * 0.12 + blackoutPull * 0.24);
           }
 
-          function flameAnchor(flame) {
+          function flameAnchor(candleTip) {
             return {
-              x: altarOffsetX + flame.x * altarScale,
-              y: altarOffsetY + flame.y * altarScale,
-              h: flame.h * altarScale,
-              w: flame.w * altarScale
+              x: altarOffsetX + candleTip.x * altarScale,
+              y: altarOffsetY + candleTip.y * altarScale,
+              h: candleTip.flameHeightRatio * altarSpace.height * altarScale,
+              w: candleTip.flameWidthRatio * altarSpace.width * altarScale
             };
           }
 
@@ -2899,13 +2919,13 @@ function renderManzokukyoTeaser(character) {
             ctx.restore();
           }
 
-          function drawFlame(flame, index, time, alpha) {
-            const anchor = flameAnchor(flame);
+          function drawFlame(candleTip, index, time, alpha) {
+            const anchor = flameAnchor(candleTip);
             const baseX = anchor.x;
             const baseY = anchor.y;
             const flameH = anchor.h;
             const flameW = anchor.w;
-            const flicker = Math.sin(time * 0.006 + flame.seed) * 0.5 + Math.sin(time * 0.013 + flame.seed * 2) * 0.5;
+            const flicker = Math.sin(time * 0.006 + candleTip.seed) * 0.5 + Math.sin(time * 0.013 + candleTip.seed * 2) * 0.5;
             const lean = flicker * flameW * 0.08;
 
             ctx.save();
@@ -2958,7 +2978,7 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             for (let layer = 0; layer < 8; layer++) {
-              const t = time * (0.002 + layer * 0.0008) + flame.seed * (layer + 1);
+              const t = time * (0.002 + layer * 0.0008) + candleTip.seed * (layer + 1);
               const offset = Math.sin(t * 3.1) * flameW * (0.06 + layer * 0.025);
               const topX = baseX + lean + offset;
               const topY = baseY - flameH * (0.76 + layer * 0.046);
@@ -3013,7 +3033,7 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             for (let i = 0; i < 7; i++) {
-              const particleT = (time * 0.0015 + i * 0.19 + flame.seed) % 1;
+              const particleT = (time * 0.0015 + i * 0.19 + candleTip.seed) % 1;
               const px = baseX + Math.sin(i * 9.7 + time * 0.004) * flameW * 1.7;
               const py = baseY - particleT * flameH * 1.25;
               const pa = alpha * (1 - particleT) * 0.22;
@@ -3029,18 +3049,18 @@ function renderManzokukyoTeaser(character) {
           function draw(time) {
             ctx.clearRect(0, 0, width, height);
             const elapsed = time - startTime;
-            const alphas = flames.map((_flame, index) => flameAlpha(index, elapsed));
+            const alphas = candleTips.map((_candleTip, index) => flameAlpha(index, elapsed));
             page.style.setProperty("--mk-ritual-dim", ritualDim(elapsed, alphas).toFixed(3));
-            flames.forEach((flame, index) => {
+            candleTips.forEach((candleTip, index) => {
               const alpha = alphas[index];
               if (alpha > 0.01) {
-                drawCandleLight(flameAnchor(flame), alpha);
+                drawCandleLight(flameAnchor(candleTip), alpha);
               }
             });
-            flames.forEach((flame, index) => {
+            candleTips.forEach((candleTip, index) => {
               const alpha = alphas[index];
               if (alpha > 0.01) {
-                drawFlame(flame, index, time, alpha);
+                drawFlame(candleTip, index, time, alpha);
               }
             });
             raf = requestAnimationFrame(draw);
