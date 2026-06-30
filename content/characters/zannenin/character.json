@@ -98,6 +98,22 @@
       "url": "https://drive.google.com/drive/folders/1JiEWJgxa6w5T--V_8YlxrBjfnUMqbnpF?usp=sharing",
       "type": "reference",
       "displayUrl": "Google Drive"
+    },
+    {
+      "label": "デスクトップちる子",
+      "url": "./desktopchillko/",
+      "canonicalUrl": "zannenin/desktopchillko/",
+      "type": "app",
+      "displayUrl": "デスクトップアクセサリ",
+      "description": "PCのすみにちる子ちゃんがやってくる常駐マスコット"
+    },
+    {
+      "label": "満足教ティザー",
+      "url": "./manzokukyo/",
+      "canonicalUrl": "zannenin/manzokukyo/",
+      "type": "teaser",
+      "displayUrl": "満足教",
+      "description": "カルトでダークな満足教ティザーサイト"
     }
   ],
   "hiddenPages": [

@@ -1542,11 +1542,10 @@ function renderManzokukyoTeaser(character) {
 
         .mk-flame-canvas {
           position: absolute;
-          top: -24%;
-          right: 0;
-          bottom: 0;
-          left: 0;
+          inset: 0;
+          display: block;
           width: 100%;
+          height: 100%;
           opacity: 1;
           mix-blend-mode: normal;
           filter: saturate(0.86) contrast(1.18);
@@ -2504,7 +2503,7 @@ function renderManzokukyoTeaser(character) {
             <canvas class="mk-key-visual-noise" data-mk-portrait-noise aria-hidden="true"></canvas>
           </picture>
           <div class="mk-black-mass" aria-hidden="true">
-            <img class="mk-altar-prop" src="../assets/generated/manzokukyo/altar.webp" alt="" width="1280" height="720" loading="eager">
+            <img class="mk-altar-prop" src="../assets/generated/manzokukyo/altar.webp" alt="" width="1672" height="941" loading="eager">
             <div class="mk-candles">
               <canvas class="mk-flame-canvas" data-mk-flames aria-hidden="true"></canvas>
             </div>
@@ -2793,7 +2792,6 @@ function renderManzokukyoTeaser(character) {
 
           const ctx = canvas.getContext("2d");
           const cycleMs = 18000;
-          const flameCanvasBleedTop = 0.24;
           const fadeWindows = [
             [0.14, 0.19],
             [0.28, 0.34],
@@ -2802,17 +2800,17 @@ function renderManzokukyoTeaser(character) {
             [0.76, 0.88]
           ];
           const altarSpace = {
-            // Top-left of the original altar cutout image is (0, 0).
+            // Coordinates are measured from the top-left of the original altar cutout.
             source: "content/characters/zannenin/assets/manzokukyo/altar-cutout.png",
             width: 1672,
             height: 941
           };
           const candleTips = [
-            { id: "left-edge", x: 160, y: 235, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 1.2 },
-            { id: "left-center", x: 501, y: 260, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 2.1 },
-            { id: "center", x: 788, y: 250, flameHeightRatio: 108 / 941, flameWidthRatio: 14 / 1672, seed: 3.4 },
-            { id: "right-center", x: 1077, y: 260, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 4.3 },
-            { id: "right-edge", x: 1417, y: 235, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 5.5 }
+            { id: "left-edge", x: 365, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 1.2 },
+            { id: "left-center", x: 620, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 2.1 },
+            { id: "center", x: 835, y: 56, flameHeightRatio: 108 / 941, flameWidthRatio: 14 / 1672, seed: 3.4 },
+            { id: "right-center", x: 1051, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 4.3 },
+            { id: "right-edge", x: 1306, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 5.5 }
           ];
           let width = 0;
           let height = 0;
@@ -2832,11 +2830,9 @@ function renderManzokukyoTeaser(character) {
             canvas.style.width = width + "px";
             canvas.style.height = height + "px";
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            const altarViewportHeight = height / (1 + flameCanvasBleedTop);
-            const altarViewportTop = height - altarViewportHeight;
-            altarScale = Math.min(width / altarSpace.width, altarViewportHeight / altarSpace.height);
+            altarScale = Math.min(width / altarSpace.width, height / altarSpace.height);
             altarOffsetX = (width - altarSpace.width * altarScale) / 2;
-            altarOffsetY = altarViewportTop + (altarViewportHeight - altarSpace.height * altarScale) / 2;
+            altarOffsetY = (height - altarSpace.height * altarScale) / 2;
           }
 
           function flameAlpha(index, elapsed) {
@@ -2880,22 +2876,33 @@ function renderManzokukyoTeaser(character) {
           }
 
           function drawCandleLight(anchor, alpha) {
-            const lightR = anchor.h * 2.65;
+            const lightR = anchor.h * 3.45;
             const lightX = anchor.x;
             const lightY = anchor.y - anchor.h * 0.36;
 
             ctx.save();
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha;
+            ctx.globalAlpha = alpha * 1.18;
 
             const warmAura = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightR);
-            warmAura.addColorStop(0, "rgba(255, 218, 112, 0.42)");
-            warmAura.addColorStop(0.18, "rgba(210, 126, 43, 0.28)");
-            warmAura.addColorStop(0.46, "rgba(126, 48, 88, 0.14)");
+            warmAura.addColorStop(0, "rgba(255, 237, 154, 0.74)");
+            warmAura.addColorStop(0.14, "rgba(255, 177, 66, 0.52)");
+            warmAura.addColorStop(0.36, "rgba(210, 88, 34, 0.28)");
+            warmAura.addColorStop(0.68, "rgba(102, 38, 16, 0.12)");
             warmAura.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = warmAura;
             ctx.beginPath();
             ctx.arc(lightX, lightY, lightR, 0, Math.PI * 2);
+            ctx.fill();
+
+            const candleGlow = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, anchor.h * 1.34);
+            candleGlow.addColorStop(0, "rgba(255, 248, 194, 0.72)");
+            candleGlow.addColorStop(0.24, "rgba(255, 188, 76, 0.5)");
+            candleGlow.addColorStop(0.6, "rgba(164, 66, 28, 0.18)");
+            candleGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = candleGlow;
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, anchor.h * 1.34, 0, Math.PI * 2);
             ctx.fill();
 
             const violetCore = ctx.createRadialGradient(anchor.x, anchor.y - anchor.h * 0.12, 0, anchor.x, anchor.y - anchor.h * 0.12, anchor.h * 1.22);
@@ -2934,24 +2941,26 @@ function renderManzokukyoTeaser(character) {
 
             ctx.save();
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha;
-            const halo = ctx.createRadialGradient(baseX, baseY - flameH * 0.18, 0, baseX, baseY - flameH * 0.18, flameH * 1.18);
-            halo.addColorStop(0, "rgba(212, 94, 255, 0.44)");
-            halo.addColorStop(0.22, "rgba(128, 34, 176, 0.3)");
-            halo.addColorStop(0.55, "rgba(78, 12, 118, 0.16)");
+            ctx.globalAlpha = alpha * 1.05;
+            const halo = ctx.createRadialGradient(baseX, baseY - flameH * 0.18, 0, baseX, baseY - flameH * 0.18, flameH * 1.42);
+            halo.addColorStop(0, "rgba(255, 239, 166, 0.52)");
+            halo.addColorStop(0.16, "rgba(255, 152, 53, 0.38)");
+            halo.addColorStop(0.34, "rgba(154, 46, 154, 0.28)");
+            halo.addColorStop(0.62, "rgba(72, 10, 118, 0.14)");
             halo.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = halo;
             ctx.beginPath();
-            ctx.arc(baseX, baseY - flameH * 0.18, flameH * 1.18, 0, Math.PI * 2);
+            ctx.arc(baseX, baseY - flameH * 0.18, flameH * 1.42, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
 
             ctx.save();
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha * 0.7;
+            ctx.globalAlpha = alpha * 0.95;
             const tipLight = ctx.createRadialGradient(baseX, baseY, 0, baseX, baseY, flameH * 0.28);
-            tipLight.addColorStop(0, "rgba(230, 150, 255, 0.48)");
-            tipLight.addColorStop(0.38, "rgba(126, 28, 170, 0.3)");
+            tipLight.addColorStop(0, "rgba(255, 248, 196, 0.76)");
+            tipLight.addColorStop(0.34, "rgba(255, 147, 58, 0.48)");
+            tipLight.addColorStop(0.66, "rgba(140, 35, 170, 0.24)");
             tipLight.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = tipLight;
             ctx.beginPath();
@@ -4728,7 +4737,7 @@ function escapeScriptJson(value) {
 
 function characterStructuredData(character, urlPath) {
   const sameAs = [...(character.links ?? []), ...(character.contentLinks ?? [])]
-    .map((link) => link.url)
+    .map((link) => link.canonicalUrl ? absoluteUrl(link.canonicalUrl) : link.url)
     .filter(Boolean);
   const promptWorks = promptDocuments(character).map((prompt) => ({
     "@type": "CreativeWork",
