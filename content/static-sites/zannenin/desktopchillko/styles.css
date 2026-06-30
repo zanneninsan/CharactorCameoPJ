@@ -50,6 +50,7 @@ img {
 
 .hero,
 .section,
+.usage-note,
 .site-footer {
   width: min(1120px, calc(100% - 40px));
   margin-inline: auto;
@@ -277,6 +278,37 @@ h3 {
   border-radius: 18px;
 }
 
+.hero-creator-credit {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hero-creator-credit a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 11px;
+  border: 1px solid rgba(240, 127, 181, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #d96fa5;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.hero-creator-credit a:hover {
+  color: var(--ink);
+  background: var(--white);
+}
+
 .window-dots {
   position: absolute;
   top: 15px;
@@ -420,9 +452,38 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-.booth-visual img {
+.booth-visual img,
+.booth-visual video {
   display: block;
   width: 100%;
+}
+
+.booth-visual video {
+  height: auto;
+  background: #1f120f;
+  object-fit: contain;
+}
+
+.usage-note {
+  margin-top: -28px;
+  padding: 24px 0 8px;
+  border-top: 1px solid var(--line);
+}
+
+.usage-note-title {
+  margin-bottom: 4px;
+  color: #e985b5;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.usage-note p:last-child {
+  max-width: 760px;
+  margin-bottom: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.9;
 }
 
 .site-footer {
@@ -439,6 +500,32 @@ h3 {
 
 .site-footer p {
   margin: 0;
+}
+
+.creator-credit {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.creator-credit a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid rgba(240, 127, 181, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #d96fa5;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(220, 133, 178, 0.12);
+}
+
+.creator-credit a:hover {
+  color: var(--ink);
+  background: var(--white);
 }
 
 @media (max-width: 980px) {
@@ -472,6 +559,7 @@ h3 {
 @media (max-width: 620px) {
   .hero,
   .section,
+  .usage-note,
   .site-footer {
     width: min(100% - 28px, 1120px);
   }
