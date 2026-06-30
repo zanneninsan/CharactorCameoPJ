@@ -2436,6 +2436,15 @@ function renderManzokukyoTeaser(character) {
         }
 
         @media (prefers-reduced-motion: reduce) {
+          html,
+          body {
+            height: auto;
+            min-height: 100%;
+            overflow: auto;
+            scrollbar-width: auto;
+            -ms-overflow-style: auto;
+          }
+
           .mk-sigil,
           .mk-altar,
           .mk-eye,
@@ -2454,6 +2463,112 @@ function renderManzokukyoTeaser(character) {
           .mk-wake-overlay::after,
           .mk-hero::before {
             animation: none;
+          }
+
+          .mk-page {
+            --mk-copy-opacity: 1;
+            --mk-copy-y: 0px;
+            --mk-copy-z: 0px;
+            --mk-altar-y: 0px;
+            --mk-altar-z: 0px;
+            --mk-altar-scale: 1;
+            --mk-portrait-y: 0px;
+            --mk-portrait-z: 0px;
+            --mk-portrait-scale: 1;
+            --mk-portrait-opacity: 0.72;
+            --mk-corridor-opacity: 0;
+            --mk-hero-exit: 0;
+            --mk-banner-opacity: 0.48;
+            --mk-tunnel-opacity: 0;
+            --mk-tunnel-scale: 1;
+            --mk-footer-opacity: 1;
+            height: auto;
+            min-height: 100svh;
+            overflow: visible;
+            perspective: none;
+            touch-action: auto;
+            user-select: auto;
+          }
+
+          .mk-abyss-canvas,
+          .mk-perspective-corridor,
+          .mk-corridor-props,
+          .mk-flame-canvas,
+          .mk-ritual-dim,
+          .mk-wake-overlay,
+          .mk-wake-overlay::before,
+          .mk-wake-overlay::after,
+          .mk-key-visual-glitch,
+          .mk-key-visual-noise,
+          .mk-ritual-replay {
+            display: none;
+          }
+
+          .mk-hero {
+            position: relative;
+            min-height: 100svh;
+            height: auto;
+            align-items: center;
+            overflow: hidden;
+            transform-style: flat;
+          }
+
+          .mk-banner {
+            transform: none;
+          }
+
+          .mk-key-visual {
+            position: relative;
+            inset: auto;
+            width: min(430px, 100%);
+            min-width: 0;
+            height: auto;
+            aspect-ratio: 1;
+            margin: 26px 0 0 auto;
+            transform: none;
+            will-change: auto;
+          }
+
+          .mk-key-visual img {
+            height: 100%;
+            transform: none;
+          }
+
+          .mk-black-mass {
+            display: none;
+          }
+
+          .mk-depth-journey {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            gap: 24px;
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0 54px;
+            overflow: visible;
+          }
+
+          .mk-depth-journey::before {
+            display: none;
+          }
+
+          .mk-section {
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 100%;
+            min-height: auto;
+            margin: 0;
+            opacity: 1;
+            transform: none;
+            pointer-events: auto;
+            transition: none;
+            will-change: auto;
+          }
+
+          .mk-footer {
+            opacity: 1;
           }
 
           .mk-wake-overlay {
@@ -7904,6 +8019,19 @@ body[data-design="modern"] .timeline li {
 
   .timeline-media img {
     max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .retro-marquee span {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
