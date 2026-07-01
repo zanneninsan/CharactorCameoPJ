@@ -2107,6 +2107,32 @@ function renderManzokukyoTeaser(character) {
           line-height: 1.9;
         }
 
+        .mk-scroll-cue {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 22px;
+          color: rgba(255, 247, 220, 0.74);
+          font-family: var(--font-ui);
+          font-size: 0.78rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .mk-scroll-cue::before {
+          content: "";
+          width: 34px;
+          height: 1px;
+          background: linear-gradient(90deg, var(--cult-gold), transparent);
+        }
+
+        .mk-scroll-cue::after {
+          content: "↓";
+          color: var(--cult-gold);
+          animation: mk-click-pulse 1.1s steps(2, end) infinite;
+        }
+
         .mk-actions {
           display: flex;
           flex-wrap: wrap;
@@ -2794,6 +2820,7 @@ function renderManzokukyoTeaser(character) {
           .mk-whisper span,
           .mk-title::before,
           .mk-title::after,
+          .mk-scroll-cue::after,
           .mk-key-visual,
           .mk-key-visual img,
           .mk-key-visual::before,
@@ -2986,6 +3013,7 @@ function renderManzokukyoTeaser(character) {
             <h1 class="mk-title" data-text="満足教">満足教</h1>
             <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
             <p class="mk-copy">残念院さんがひらく、甘くて不穏な小さな祭壇。満たされたと思った瞬間、次の満足がこちらを見つめている。</p>
+            <p class="mk-scroll-cue">スクロールで奥へ進む / 戻る</p>
             <div class="mk-actions">
               <a class="mk-button" href="#doctrine">教義を覗く</a>
               <a class="mk-button mk-button-secondary" href="../">公式設定へ戻る</a>
@@ -3222,7 +3250,7 @@ function renderManzokukyoTeaser(character) {
           updateDepth();
           window.addEventListener("wheel", (event) => {
             event.preventDefault();
-            setDepth(virtualDepth + event.deltaY / 1900);
+            setDepth(virtualDepth + event.deltaY / 1250);
           }, { passive: false });
           window.addEventListener("touchstart", (event) => {
             lastTouchY = event.touches[0]?.clientY ?? null;
@@ -3231,7 +3259,7 @@ function renderManzokukyoTeaser(character) {
             const currentY = event.touches[0]?.clientY;
             if (lastTouchY == null || currentY == null) return;
             event.preventDefault();
-            setDepth(virtualDepth + (lastTouchY - currentY) / 1300);
+            setDepth(virtualDepth + (lastTouchY - currentY) / 900);
             lastTouchY = currentY;
           }, { passive: false });
           window.addEventListener("touchend", () => {
