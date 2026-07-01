@@ -13,6 +13,7 @@ const buildLockDir = path.join(rootDir, ".build-lock");
 const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
 const sourceRepoUrl = normalizeRepoUrl(process.env.SOURCE_REPO_URL ?? "https://github.com/zanneninsan/CharactorCameoPJ");
 const sitemapLastmod = process.env.SITEMAP_LASTMOD ?? new Date().toISOString().slice(0, 10);
+const guestbookApiUrl = "https://script.google.com/macros/s/AKfycbwzBF_HTRBnv4JgcGitGN9zU9ZjfvmmtKr_nJ2RNwuwemWKeexbJiEZQ2DvQVwFc-hP/exec";
 const isCheck = process.argv.includes("--check");
 const isWatch = process.argv.includes("--watch");
 const shouldDownloadDriveVideos =
@@ -62,6 +63,7 @@ async function build() {
 
       await writeFile(path.join(distDir, "index.html"), renderIndex(characters), "utf8");
       await writeFile(path.join(distDir, "styles.css"), renderCss(), "utf8");
+      await copySharedAssets();
 
       for (const character of characters) {
         const characterDir = path.join(distDir, character.id);
@@ -181,6 +183,20 @@ async function copyStaticSite(character, characterDir, slug) {
   }
 
   await cp(sourceDir, path.join(characterDir, slug), { recursive: true });
+}
+
+async function copySharedAssets() {
+  const guestbookDir = path.join(sharedContentDir, "guestbook");
+
+  try {
+    const guestbookStat = await stat(guestbookDir);
+    if (!guestbookStat.isDirectory()) return;
+  } catch {
+    return;
+  }
+
+  await mkdir(path.join(distDir, "assets"), { recursive: true });
+  await cp(guestbookDir, path.join(distDir, "assets", "guestbook"), { recursive: true });
 }
 
 async function copyPublishedDocs() {
@@ -693,9 +709,47 @@ function renderCharacterCardMedia(character) {
   `;
 }
 
+function shouldRenderGuestbook(character) {
+  return character.id === "zannenin";
+}
+
+function renderGuestbookHead(assetPrefix) {
+  return `
+    <link rel="stylesheet" href="${escapeHtml(assetPrefix)}assets/guestbook/guestbook.css">
+    <script src="${escapeHtml(assetPrefix)}assets/guestbook/guestbook.js" defer></script>
+  `;
+}
+
+function renderGuestbookWidget({
+  scope,
+  title,
+  description,
+  buttonLabel = "あしあと帳",
+  defaultName = "満足教徒",
+  image = "",
+  maxLength = 80,
+  direct = true
+}) {
+  return `
+    <div
+      data-guestbook-widget
+      data-guestbook-api="${escapeHtml(guestbookApiUrl)}"
+      data-guestbook-scope="${escapeHtml(scope)}"
+      data-guestbook-title="${escapeHtml(title)}"
+      data-guestbook-description="${escapeHtml(description)}"
+      data-guestbook-button-label="${escapeHtml(buttonLabel)}"
+      data-guestbook-default-name="${escapeHtml(defaultName)}"
+      data-guestbook-max-length="${escapeHtml(String(maxLength))}"
+      data-guestbook-direct="${direct ? "true" : "false"}"
+      ${image ? `data-guestbook-image="${escapeHtml(image)}"` : ""}
+    ></div>
+  `;
+}
+
 function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
+  const includeGuestbook = shouldRenderGuestbook(character);
 
   return htmlPage({
     title: character.displayName,
@@ -704,7 +758,7 @@ function renderCharacter(character) {
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
-    headExtra: renderAiPromptHeadMetadata(character),
+    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}`,
     theme: character.theme,
     body: `
       <main>
@@ -775,6 +829,12 @@ function renderCharacter(character) {
           </section>
           ${renderRightsSection(character)}
           ${renderHiddenEntrances(character)}
+          ${includeGuestbook ? renderGuestbookWidget({
+            scope: `${character.id}:profile`,
+            title: `${character.displayName}のあしあと帳`,
+            description: "公式プロフィールを見に来た記念に、ひとこと残していけます。",
+            buttonLabel: "あしあと帳"
+          }) : ""}
           ${renderSourceCallout({
             eyebrow: "Source",
             title: "このサイトのソース",
@@ -1018,6 +1078,7 @@ function renderManzokukyoTeaser(character) {
     type: "website",
     theme: character.theme,
     stylesheetHref: "../../styles.css",
+    headExtra: renderGuestbookHead("../../"),
     structuredData: {
       "@context": "https://schema.org",
       "@type": "WebPage",
@@ -3077,6 +3138,12 @@ function renderManzokukyoTeaser(character) {
           <p>このページは満足教ティザーのデザイン試作です。文章は仮置きであり、公式設定として確定する場合は character.json へ反映してください。</p>
         </footer>
         </div>
+        ${renderGuestbookWidget({
+          scope: `${character.id}:manzokukyo`,
+          title: "満足教のあしあと帳",
+          description: "満足教ティザーを見た記念に、ひとことだけ残していけます。",
+          buttonLabel: "満足あしあと"
+        })}
       </main>
       <script>
         (() => {
