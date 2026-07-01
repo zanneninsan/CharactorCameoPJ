@@ -830,7 +830,7 @@ function renderCharacter(character) {
           ${renderRightsSection(character)}
           ${renderHiddenEntrances(character)}
           ${includeGuestbook ? renderGuestbookWidget({
-            scope: `${character.id}:profile`,
+            scope: `${character.id}:guestbook`,
             title: `${character.displayName}のあしあと帳`,
             description: "公式プロフィールを見に来た記念に、ひとこと残していけます。",
             buttonLabel: "あしあと帳"
@@ -3139,7 +3139,7 @@ function renderManzokukyoTeaser(character) {
         </footer>
         </div>
         ${renderGuestbookWidget({
-          scope: `${character.id}:manzokukyo`,
+          scope: `${character.id}:guestbook`,
           title: "満足教のあしあと帳",
           description: "満足教ティザーを見た記念に、ひとことだけ残していけます。",
           buttonLabel: "満足あしあと"
