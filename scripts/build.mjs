@@ -762,7 +762,6 @@ function renderCharacter(character) {
     theme: character.theme,
     body: `
       <main>
-        ${renderDesignSwitcher()}
         <section class="character-hero">
           ${renderBrandBanner(character)}
           <div class="shell">
@@ -5405,6 +5404,8 @@ function renderClientScript() {
   return `
 <script>
 (() => {
+  document.body.dataset.design = "classic";
+
   const designSwitcher = document.querySelector("[data-design-switcher]");
   if (designSwitcher) {
     const storageKey = "character-canon-design";
