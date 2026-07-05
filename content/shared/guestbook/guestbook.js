@@ -55,6 +55,13 @@
       return;
     }
 
+    const keepModalScrollInside = (event) => {
+      event.stopPropagation();
+    };
+
+    modal.addEventListener("wheel", keepModalScrollInside, { passive: true });
+    modal.addEventListener("touchmove", keepModalScrollInside, { passive: true });
+
     const openModal = () => {
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");

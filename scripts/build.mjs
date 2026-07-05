@@ -1952,6 +1952,16 @@ function renderManzokukyoTeaser(character) {
           transform: translateY(0);
         }
 
+        .mk-page .guestbook-launch {
+          right: clamp(22px, 4vw, 72px);
+          bottom: calc(clamp(22px, 4vw, 58px) + 66px);
+          z-index: 81;
+          min-height: 52px;
+          padding: 12px 20px;
+          font-size: 0.9rem;
+          letter-spacing: 0.08em;
+        }
+
         .mk-sigil {
           position: absolute;
           top: 50%;
@@ -2168,16 +2178,30 @@ function renderManzokukyoTeaser(character) {
         }
 
         .mk-scroll-cue {
+          position: fixed;
+          top: clamp(92px, 14vh, 150px);
+          right: clamp(24px, 5vw, 88px);
+          z-index: 12;
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          margin-top: 22px;
-          color: rgba(255, 247, 220, 0.74);
+          border: 1px solid rgba(215, 180, 81, 0.48);
+          border-radius: 999px;
+          padding: 12px 16px;
+          background:
+            radial-gradient(circle at 85% 50%, rgba(215, 180, 81, 0.18), transparent 46%),
+            rgba(8, 7, 11, 0.68);
+          color: rgba(255, 247, 220, 0.88);
           font-family: var(--font-ui);
           font-size: 0.78rem;
           font-weight: 900;
           letter-spacing: 0.18em;
+          opacity: var(--mk-copy-opacity);
+          pointer-events: none;
           text-transform: uppercase;
+          box-shadow:
+            0 0 28px rgba(215, 180, 81, 0.18),
+            0 18px 52px rgba(0, 0, 0, 0.36);
         }
 
         .mk-scroll-cue::before {
@@ -2833,6 +2857,14 @@ function renderManzokukyoTeaser(character) {
             word-break: break-all;
           }
 
+          .mk-scroll-cue {
+            top: 82px;
+            right: 18px;
+            padding: 10px 12px;
+            font-size: 0.66rem;
+            letter-spacing: 0.12em;
+          }
+
           .mk-actions {
             flex-direction: column;
           }
@@ -3073,12 +3105,8 @@ function renderManzokukyoTeaser(character) {
             <h1 class="mk-title" data-text="満足教">満足教</h1>
             <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
             <p class="mk-copy">残念院さんがひらく、甘くて不穏な小さな祭壇。満たされたと思った瞬間、次の満足がこちらを見つめている。</p>
-            <p class="mk-scroll-cue">スクロールで奥へ進む / 戻る</p>
-            <div class="mk-actions">
-              <a class="mk-button" href="#doctrine">教義を覗く</a>
-              <a class="mk-button mk-button-secondary" href="../">公式設定へ戻る</a>
-            </div>
           </div>
+          <p class="mk-scroll-cue">スクロールで奥へ進む / 戻る</p>
         </section>
         <div class="mk-ritual-dim" aria-hidden="true"></div>
         <div class="mk-wake-overlay" aria-hidden="true"></div>
