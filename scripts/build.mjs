@@ -3416,11 +3416,11 @@ function renderManzokukyoTeaser(character) {
             flameBleedTopRatio: 0.42
           };
           const candleTips = [
-            { id: "left-edge", x: 365, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 1.2 },
-            { id: "left-center", x: 620, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 2.1 },
-            { id: "center", x: 835, y: 56, flameHeightRatio: 108 / 941, flameWidthRatio: 14 / 1672, seed: 3.4 },
-            { id: "right-center", x: 1051, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 12 / 1672, seed: 4.3 },
-            { id: "right-edge", x: 1306, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 10 / 1672, seed: 5.5 }
+            { id: "left-edge", x: 365, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 16 / 1672, seed: 1.2 },
+            { id: "left-center", x: 620, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 19 / 1672, seed: 2.1 },
+            { id: "center", x: 835, y: 56, flameHeightRatio: 108 / 941, flameWidthRatio: 23 / 1672, seed: 3.4 },
+            { id: "right-center", x: 1051, y: 94, flameHeightRatio: 86 / 941, flameWidthRatio: 19 / 1672, seed: 4.3 },
+            { id: "right-edge", x: 1306, y: 84, flameHeightRatio: 72 / 941, flameWidthRatio: 16 / 1672, seed: 5.5 }
           ];
           let width = 0;
           let height = 0;
@@ -3503,10 +3503,10 @@ function renderManzokukyoTeaser(character) {
             ctx.globalAlpha = alpha * 1.18;
 
             const warmAura = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightR);
-            warmAura.addColorStop(0, "rgba(255, 237, 154, 0.74)");
-            warmAura.addColorStop(0.14, "rgba(255, 177, 66, 0.52)");
-            warmAura.addColorStop(0.36, "rgba(210, 88, 34, 0.28)");
-            warmAura.addColorStop(0.68, "rgba(102, 38, 16, 0.12)");
+            warmAura.addColorStop(0, "rgba(255, 236, 176, 0.62)");
+            warmAura.addColorStop(0.16, "rgba(232, 154, 64, 0.42)");
+            warmAura.addColorStop(0.4, "rgba(132, 72, 38, 0.2)");
+            warmAura.addColorStop(0.72, "rgba(54, 30, 20, 0.09)");
             warmAura.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = warmAura;
             ctx.beginPath();
@@ -3514,9 +3514,9 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             const candleGlow = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, anchor.h * 1.34);
-            candleGlow.addColorStop(0, "rgba(255, 248, 194, 0.72)");
-            candleGlow.addColorStop(0.24, "rgba(255, 188, 76, 0.5)");
-            candleGlow.addColorStop(0.6, "rgba(164, 66, 28, 0.18)");
+            candleGlow.addColorStop(0, "rgba(255, 245, 204, 0.7)");
+            candleGlow.addColorStop(0.24, "rgba(226, 156, 78, 0.42)");
+            candleGlow.addColorStop(0.64, "rgba(96, 50, 31, 0.14)");
             candleGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = candleGlow;
             ctx.beginPath();
@@ -3524,8 +3524,8 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             const violetCore = ctx.createRadialGradient(anchor.x, anchor.y - anchor.h * 0.12, 0, anchor.x, anchor.y - anchor.h * 0.12, anchor.h * 1.22);
-            violetCore.addColorStop(0, "rgba(220, 116, 255, 0.42)");
-            violetCore.addColorStop(0.28, "rgba(116, 34, 178, 0.26)");
+            violetCore.addColorStop(0, "rgba(154, 104, 170, 0.22)");
+            violetCore.addColorStop(0.32, "rgba(62, 34, 78, 0.16)");
             violetCore.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = violetCore;
             ctx.beginPath();
@@ -3533,8 +3533,8 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             const wickBloom = ctx.createRadialGradient(anchor.x, anchor.y, 0, anchor.x, anchor.y, anchor.h * 0.46);
-            wickBloom.addColorStop(0, "rgba(255, 230, 172, 0.42)");
-            wickBloom.addColorStop(0.36, "rgba(190, 96, 36, 0.18)");
+            wickBloom.addColorStop(0, "rgba(255, 231, 184, 0.38)");
+            wickBloom.addColorStop(0.38, "rgba(120, 68, 42, 0.14)");
             wickBloom.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = wickBloom;
             ctx.beginPath();
@@ -3542,6 +3542,57 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             ctx.restore();
+          }
+
+          function flameNoise(value, seed) {
+            return (
+              Math.sin(value * 1.73 + seed) +
+              Math.sin(value * 4.11 + seed * 2.37) * 0.52 +
+              Math.sin(value * 8.29 + seed * 0.71) * 0.26
+            ) / 1.78;
+          }
+
+          function flameLobePath(ctx, baseX, baseY, flameH, flameW, lean, time, seed, widthScale, heightScale, swayScale) {
+            const left = [];
+            const right = [];
+            const steps = 9;
+            const h = flameH * heightScale;
+            const w = flameW * widthScale;
+            const t = time * 0.0024;
+
+            for (let i = 0; i <= steps; i++) {
+              const p = i / steps;
+              const taper = Math.pow(Math.sin(p * Math.PI), 0.58) * (1 - p * 0.18);
+              const neck = 1 - Math.pow(p, 2.6) * 0.62;
+              const radius = w * (0.34 + taper * 1.08) * neck;
+              const sway = flameNoise(t + p * 2.6, seed) * w * swayScale * (0.18 + p * 0.92);
+              const center = baseX + lean * p + sway;
+              const y = baseY - h * p;
+              left.push({
+                x: center - radius * (0.76 + flameNoise(t + p * 3.3, seed + 8) * 0.16),
+                y
+              });
+              right.push({
+                x: center + radius * (0.76 + flameNoise(t + p * 3.1, seed + 14) * 0.16),
+                y
+              });
+            }
+
+            const tipX = baseX + lean + flameNoise(t + 3.8, seed + 22) * w * 0.68;
+            const tipY = baseY - h * (0.98 + flameNoise(t + 5.4, seed + 3) * 0.035);
+            ctx.beginPath();
+            ctx.moveTo(left[0].x, left[0].y);
+            for (let i = 1; i < left.length - 1; i++) {
+              const next = left[i + 1];
+              ctx.quadraticCurveTo(left[i].x, left[i].y, (left[i].x + next.x) / 2, (left[i].y + next.y) / 2);
+            }
+            ctx.quadraticCurveTo(left[left.length - 1].x, left[left.length - 1].y, tipX, tipY);
+            for (let i = right.length - 1; i > 0; i--) {
+              const prev = right[i - 1];
+              ctx.quadraticCurveTo(right[i].x, right[i].y, (right[i].x + prev.x) / 2, (right[i].y + prev.y) / 2);
+            }
+            ctx.quadraticCurveTo(right[0].x, right[0].y, left[0].x, left[0].y);
+            ctx.closePath();
           }
 
           function drawFlame(candleTip, index, time, alpha) {
@@ -3559,12 +3610,12 @@ function renderManzokukyoTeaser(character) {
 
             ctx.save();
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha * 1.05;
-            const halo = ctx.createRadialGradient(baseX, baseY - flameH * 0.18, 0, baseX, baseY - flameH * 0.18, flameH * 1.42);
-            halo.addColorStop(0, "rgba(255, 239, 166, 0.52)");
-            halo.addColorStop(0.16, "rgba(255, 152, 53, 0.38)");
-            halo.addColorStop(0.34, "rgba(154, 46, 154, 0.28)");
-            halo.addColorStop(0.62, "rgba(72, 10, 118, 0.14)");
+            ctx.globalAlpha = alpha * 0.84;
+            const halo = ctx.createRadialGradient(baseX, baseY - flameH * 0.18, 0, baseX, baseY - flameH * 0.18, flameH * 1.22);
+            halo.addColorStop(0, "rgba(255, 240, 193, 0.44)");
+            halo.addColorStop(0.18, "rgba(218, 139, 65, 0.3)");
+            halo.addColorStop(0.38, "rgba(82, 48, 62, 0.2)");
+            halo.addColorStop(0.66, "rgba(28, 18, 38, 0.1)");
             halo.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = halo;
             ctx.beginPath();
@@ -3574,11 +3625,11 @@ function renderManzokukyoTeaser(character) {
 
             ctx.save();
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha * 0.95;
+            ctx.globalAlpha = alpha * 0.9;
             const tipLight = ctx.createRadialGradient(baseX, baseY, 0, baseX, baseY, flameH * 0.28);
-            tipLight.addColorStop(0, "rgba(255, 248, 196, 0.76)");
-            tipLight.addColorStop(0.34, "rgba(255, 147, 58, 0.48)");
-            tipLight.addColorStop(0.66, "rgba(140, 35, 170, 0.24)");
+            tipLight.addColorStop(0, "rgba(255, 249, 213, 0.82)");
+            tipLight.addColorStop(0.32, "rgba(224, 151, 75, 0.36)");
+            tipLight.addColorStop(0.68, "rgba(70, 42, 76, 0.16)");
             tipLight.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = tipLight;
             ctx.beginPath();
@@ -3587,8 +3638,8 @@ function renderManzokukyoTeaser(character) {
             ctx.restore();
 
             const glow = ctx.createRadialGradient(baseX, baseY - flameH * 0.34, 0, baseX, baseY - flameH * 0.34, flameH * 0.94);
-            glow.addColorStop(0, "rgba(58, 8, 68, 0.5)");
-            glow.addColorStop(0.36, "rgba(28, 2, 42, 0.36)");
+            glow.addColorStop(0, "rgba(36, 20, 42, 0.42)");
+            glow.addColorStop(0.38, "rgba(16, 10, 24, 0.3)");
             glow.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = glow;
             ctx.beginPath();
@@ -3596,49 +3647,92 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             const smoke = ctx.createRadialGradient(baseX + lean * 0.22, baseY - flameH * 0.72, 0, baseX + lean * 0.22, baseY - flameH * 0.72, flameH * 0.72);
-            smoke.addColorStop(0, "rgba(4, 0, 9, 0.72)");
-            smoke.addColorStop(0.44, "rgba(22, 2, 32, 0.38)");
+            smoke.addColorStop(0, "rgba(5, 4, 8, 0.66)");
+            smoke.addColorStop(0.46, "rgba(18, 12, 24, 0.34)");
             smoke.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = smoke;
             ctx.beginPath();
             ctx.ellipse(baseX + lean * 0.12, baseY - flameH * 0.68, flameW * 2.2, flameH * 0.58, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            for (let layer = 0; layer < 8; layer++) {
-              const t = time * (0.002 + layer * 0.0008) + candleTip.seed * (layer + 1);
-              const offset = Math.sin(t * 3.1) * flameW * (0.06 + layer * 0.025);
-              const topX = baseX + lean + offset;
-              const topY = baseY - flameH * (0.76 + layer * 0.046);
-              const cp1x = baseX - flameW * (0.6 + layer * 0.04) + Math.sin(t) * flameW * 0.18;
-              const cp1y = baseY - flameH * (0.2 + layer * 0.03);
-              const cp2x = baseX + flameW * (0.54 + layer * 0.035) + Math.cos(t * 1.7) * flameW * 0.16;
-              const cp2y = baseY - flameH * (0.46 + layer * 0.035);
-              const strokeAlpha = alpha * (0.26 - layer * 0.018);
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha * 0.82;
+            const warmShell = ctx.createLinearGradient(baseX, baseY, baseX + lean, baseY - flameH * 0.98);
+            warmShell.addColorStop(0, "rgba(255, 248, 220, 0.74)");
+            warmShell.addColorStop(0.16, "rgba(226, 162, 82, 0.5)");
+            warmShell.addColorStop(0.38, "rgba(154, 77, 56, 0.3)");
+            warmShell.addColorStop(0.66, "rgba(58, 35, 66, 0.18)");
+            warmShell.addColorStop(0.88, "rgba(12, 8, 18, 0.1)");
+            warmShell.addColorStop(1, "rgba(0, 0, 0, 0)");
+            flameLobePath(ctx, baseX, baseY, flameH, flameW, lean, time + 40, candleTip.seed + 2, 1.56, 1.03, 1.04);
+            ctx.fillStyle = warmShell;
+            ctx.fill();
+            ctx.restore();
 
+            const outerCore = ctx.createLinearGradient(baseX, baseY, baseX + lean, baseY - flameH * 1.02);
+            outerCore.addColorStop(0, "rgba(32, 18, 42, 0.44)");
+            outerCore.addColorStop(0.18, "rgba(72, 38, 86, 0.34)");
+            outerCore.addColorStop(0.46, "rgba(24, 14, 34, 0.46)");
+            outerCore.addColorStop(0.74, "rgba(6, 5, 10, 0.28)");
+            outerCore.addColorStop(1, "rgba(0, 0, 0, 0)");
+            flameLobePath(ctx, baseX, baseY, flameH, flameW, lean, time, candleTip.seed, 0.92, 0.98, 0.8);
+            ctx.fillStyle = outerCore;
+            ctx.fill();
+
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = alpha * 0.56;
+            const edgeLight = ctx.createLinearGradient(baseX - flameW, baseY, baseX + lean, baseY - flameH);
+            edgeLight.addColorStop(0, "rgba(255, 232, 171, 0.18)");
+            edgeLight.addColorStop(0.32, "rgba(205, 125, 66, 0.15)");
+            edgeLight.addColorStop(0.58, "rgba(92, 64, 110, 0.12)");
+            edgeLight.addColorStop(1, "rgba(0, 0, 0, 0)");
+            flameLobePath(ctx, baseX, baseY, flameH, flameW, lean, time + 120, candleTip.seed + 4, 1.38, 0.98, 1.12);
+            ctx.fillStyle = edgeLight;
+            ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            flameLobePath(ctx, baseX, baseY, flameH, flameW, lean, time, candleTip.seed + 12, 0.9, 0.94, 0.66);
+            ctx.clip();
+            for (let layer = 0; layer < 13; layer++) {
+              const p = layer / 12;
+              const t = time * (0.0028 + layer * 0.00028) + candleTip.seed * (layer + 1);
+              const startX = baseX + flameNoise(t, candleTip.seed + layer) * flameW * 0.42;
+              const endX = baseX + lean * (0.56 + p * 0.36) + flameNoise(t + 2.2, candleTip.seed + layer * 3) * flameW * 0.72;
+              const endY = baseY - flameH * (0.28 + p * 0.68);
               ctx.beginPath();
-              ctx.moveTo(baseX + Math.sin(t) * flameW * 0.08, baseY);
-              ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, topX, topY);
-              ctx.lineWidth = Math.max(1, flameW * (0.9 - layer * 0.055));
-              ctx.strokeStyle = "rgba(" + (26 + layer * 5) + ", " + (0 + layer * 2) + ", " + (42 + layer * 10) + ", " + strokeAlpha + ")";
+              ctx.moveTo(startX, baseY - flameH * 0.02);
+              ctx.bezierCurveTo(
+                baseX + flameNoise(t + 0.8, candleTip.seed) * flameW * 0.7,
+                baseY - flameH * (0.16 + p * 0.18),
+                endX - flameNoise(t + 1.6, candleTip.seed) * flameW * 0.38,
+                baseY - flameH * (0.42 + p * 0.28),
+                endX,
+                endY
+              );
+              ctx.lineWidth = Math.max(0.65, flameW * (0.38 - p * 0.18));
+              const warm = layer % 3 === 0;
+              ctx.strokeStyle = warm
+                ? "rgba(232, " + (156 + layer * 2) + ", " + (88 + layer) + ", " + (alpha * (0.1 + (1 - p) * 0.1)) + ")"
+                : "rgba(" + (58 + layer * 2) + ", " + (38 + layer) + ", " + (70 + layer * 3) + ", " + (alpha * (0.12 + (1 - p) * 0.09)) + ")";
               ctx.stroke();
             }
+            ctx.restore();
 
-            const core = ctx.createLinearGradient(baseX, baseY, baseX + lean, baseY - flameH * 0.9);
-            core.addColorStop(0, "rgba(12, 0, 18, 0.88)");
-            core.addColorStop(0.16, "rgba(102, 18, 142, 0.82)");
-            core.addColorStop(0.58, "rgba(38, 0, 62, 0.88)");
-            core.addColorStop(1, "rgba(2, 0, 5, 0)");
-            ctx.beginPath();
-            ctx.moveTo(baseX - flameW * 0.28, baseY);
-            ctx.bezierCurveTo(baseX - flameW * 0.9, baseY - flameH * 0.34, baseX + lean - flameW * 0.4, baseY - flameH * 0.7, baseX + lean, baseY - flameH);
-            ctx.bezierCurveTo(baseX + lean + flameW * 0.38, baseY - flameH * 0.66, baseX + flameW * 0.82, baseY - flameH * 0.28, baseX + flameW * 0.28, baseY);
-            ctx.closePath();
-            ctx.fillStyle = core;
+            const innerCore = ctx.createLinearGradient(baseX, baseY, baseX + lean * 0.72, baseY - flameH * 0.7);
+            innerCore.addColorStop(0, "rgba(12, 9, 14, 0.9)");
+            innerCore.addColorStop(0.2, "rgba(48, 28, 66, 0.62)");
+            innerCore.addColorStop(0.58, "rgba(8, 6, 12, 0.78)");
+            innerCore.addColorStop(1, "rgba(0, 0, 0, 0)");
+            flameLobePath(ctx, baseX, baseY, flameH, flameW, lean * 0.72, time + 70, candleTip.seed + 18, 0.32, 0.72, 0.58);
+            ctx.fillStyle = innerCore;
             ctx.fill();
 
             const foot = ctx.createRadialGradient(baseX, baseY - flameH * 0.08, 0, baseX, baseY - flameH * 0.08, flameH * 0.24);
-            foot.addColorStop(0, "rgba(158, 38, 218, 0.72)");
-            foot.addColorStop(0.36, "rgba(66, 4, 94, 0.44)");
+            foot.addColorStop(0, "rgba(102, 72, 118, 0.46)");
+            foot.addColorStop(0.38, "rgba(36, 22, 46, 0.3)");
             foot.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = foot;
             ctx.beginPath();
@@ -3646,10 +3740,10 @@ function renderManzokukyoTeaser(character) {
             ctx.fill();
 
             ctx.globalCompositeOperation = "lighter";
-            ctx.globalAlpha = alpha * 0.68;
+            ctx.globalAlpha = alpha * 0.54;
             const ember = ctx.createLinearGradient(baseX, baseY, baseX, baseY - flameH * 0.56);
-            ember.addColorStop(0, "rgba(122, 35, 176, 0.4)");
-            ember.addColorStop(0.52, "rgba(86, 12, 132, 0.34)");
+            ember.addColorStop(0, "rgba(92, 58, 108, 0.28)");
+            ember.addColorStop(0.52, "rgba(44, 28, 58, 0.24)");
             ember.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = ember;
             ctx.beginPath();
@@ -3664,7 +3758,7 @@ function renderManzokukyoTeaser(character) {
               const px = baseX + Math.sin(i * 9.7 + time * 0.004) * flameW * 1.7;
               const py = baseY - particleT * flameH * 1.25;
               const pa = alpha * (1 - particleT) * 0.22;
-              ctx.fillStyle = "rgba(72, 10, 108, " + pa + ")";
+              ctx.fillStyle = "rgba(52, 36, 66, " + pa + ")";
               ctx.beginPath();
               ctx.arc(px, py, Math.max(0.7, flameW * 0.12), 0, Math.PI * 2);
               ctx.fill();
