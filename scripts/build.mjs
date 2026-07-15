@@ -88,10 +88,13 @@ async function build() {
         if (character.id === "zannenin") {
           const manzokukyoDir = path.join(characterDir, "manzokukyo");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
+          const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
           await mkdir(manzokukyoDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
+          await mkdir(manzokukyoRedHouseDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
+          await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
         }
         for (const page of hiddenPages(character)) {
@@ -979,14 +982,26 @@ function renderManzokukyoTruth(character) {
         }
 
         .truth-card h1 {
+          display: inline-block;
           margin: 0;
+          border: 1px solid rgba(215, 180, 81, 0.72);
+          padding: 0.12em 0.18em 0.18em;
+          background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.94), rgba(35, 12, 42, 0.9)),
+            #000000;
+          color: #fff2b8;
           font-family: var(--font-display);
           font-size: clamp(3.2rem, 12vw, 8rem);
           line-height: 0.9;
           text-shadow:
+            0 2px 0 #000000,
             3px 0 rgba(255, 51, 92, 0.34),
             -3px 0 rgba(88, 246, 255, 0.28),
-            0 0 38px rgba(255, 210, 92, 0.22);
+            0 0 28px rgba(255, 210, 92, 0.48);
+          box-shadow:
+            0 0 0 4px rgba(255, 51, 92, 0.18),
+            0 0 34px rgba(88, 246, 255, 0.18),
+            inset 0 0 30px rgba(0, 0, 0, 0.72);
         }
 
         .truth-lead {
@@ -1017,6 +1032,93 @@ function renderManzokukyoTruth(character) {
           text-transform: uppercase;
         }
 
+        .truth-passphrase {
+          display: grid;
+          gap: 12px;
+          width: min(100%, 520px);
+          margin: 34px auto 0;
+          border: 1px solid rgba(215, 180, 81, 0.25);
+          padding: 18px;
+          background: rgba(0, 0, 0, 0.34);
+        }
+
+        .truth-passphrase label {
+          color: rgba(215, 180, 81, 0.9);
+          font-family: var(--font-ui);
+          font-size: 0.82rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .truth-passphrase-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+
+        .truth-passphrase input {
+          min-height: 46px;
+          border: 1px solid rgba(215, 180, 81, 0.42);
+          border-radius: 999px;
+          padding: 10px 16px;
+          background: rgba(255, 247, 220, 0.08);
+          color: var(--truth-ink);
+          font: 900 1rem/1.2 var(--font-sans);
+          outline: none;
+        }
+
+        .truth-passphrase input:focus {
+          border-color: rgba(88, 246, 255, 0.82);
+          box-shadow: 0 0 0 4px rgba(88, 246, 255, 0.12);
+        }
+
+        .truth-passphrase button {
+          min-height: 46px;
+          border: 1px solid rgba(215, 180, 81, 0.62);
+          border-radius: 999px;
+          padding: 10px 18px;
+          background: rgba(215, 180, 81, 0.9);
+          color: #120d10;
+          font: 900 0.92rem/1.2 var(--font-sans);
+          cursor: pointer;
+        }
+
+        .truth-message {
+          min-height: 1.7em;
+          margin: 0;
+          color: rgba(245, 234, 210, 0.74);
+          font-weight: 900;
+        }
+
+        .truth-page.truth-denied::after {
+          z-index: 20;
+          background:
+            radial-gradient(circle at 50% 40%, transparent 0 28%, rgba(255, 0, 0, 0.4) 68%, rgba(0, 0, 0, 0.82) 100%),
+            repeating-linear-gradient(0deg, rgba(255, 0, 0, 0.16) 0 1px, transparent 1px 5px);
+          animation: truth-flash 1.15s steps(5, end);
+          mix-blend-mode: normal;
+        }
+
+        .truth-page.truth-denied .truth-card {
+          animation: truth-shake 0.46s steps(2, end);
+        }
+
+        .truth-page.truth-denied .truth-passphrase input {
+          border-color: rgba(255, 51, 92, 0.95);
+          background: rgba(35, 0, 8, 0.88);
+          color: #ffd6df;
+        }
+
+        .truth-page.truth-denied .truth-message {
+          color: #ff9aae;
+          animation: truth-text-flicker 0.8s steps(2, end);
+        }
+
+        .truth-page.truth-accepted .truth-card {
+          filter: brightness(1.08) saturate(1.12);
+        }
+
         .truth-actions {
           display: flex;
           flex-wrap: wrap;
@@ -1042,6 +1144,37 @@ function renderManzokukyoTruth(character) {
           background: rgba(215, 180, 81, 0.9);
           color: #120d10;
         }
+
+        @keyframes truth-flash {
+          0%, 100% { opacity: 0; }
+          18%, 52% { opacity: 1; }
+          34%, 72% { opacity: 0.42; }
+        }
+
+        @keyframes truth-shake {
+          0%, 100% { transform: translate(0, 0); }
+          15% { transform: translate(-7px, 3px); }
+          30% { transform: translate(6px, -2px); }
+          45% { transform: translate(-4px, -4px); }
+          60% { transform: translate(5px, 2px); }
+          75% { transform: translate(-2px, 4px); }
+        }
+
+        @keyframes truth-text-flicker {
+          0%, 100% { opacity: 1; }
+          20%, 60% { opacity: 0.2; }
+          40%, 80% { opacity: 0.78; }
+        }
+
+        @media (max-width: 640px) {
+          .truth-passphrase-row {
+            grid-template-columns: 1fr;
+          }
+
+          .truth-passphrase button {
+            width: 100%;
+          }
+        }
       </style>
       <main class="truth-page">
         <section class="truth-card" aria-labelledby="truth-title">
@@ -1051,15 +1184,210 @@ function renderManzokukyoTruth(character) {
             扉は開いた。けれど、ここにあるのは答えではなく、次の問いである。
             満たされたと思った瞬間、満足はこちらを見つめている。
           </p>
-          <div class="truth-clue" aria-label="最初の手がかり">
-            <small>first clue</small>
-            <span>合言葉は、まだ空白。</span>
-          </div>
+          <form class="truth-passphrase" data-truth-gate data-answers="満足|まんぞく" data-next-url="./red-house/">
+            <label for="truth-passphrase">passphrase</label>
+            <div class="truth-passphrase-row">
+              <input id="truth-passphrase" name="passphrase" type="text" autocomplete="off" inputmode="text" aria-describedby="truth-message">
+              <button type="submit">開く</button>
+            </div>
+            <p class="truth-message" id="truth-message" aria-live="polite">扉は黙っている。</p>
+          </form>
           <div class="truth-actions">
             <a href="../">入口へ戻る</a>
             <a href="../../">残念院さん公式設定へ戻る</a>
           </div>
         </section>
+      </main>
+      <script>
+      (() => {
+        const form = document.querySelector("[data-truth-gate]");
+        if (!form) return;
+
+        const page = document.querySelector(".truth-page");
+        const input = form.querySelector("input[name='passphrase']");
+        const message = form.querySelector(".truth-message");
+        const answers = (form.dataset.answers || "").split("|").map((item) => item.trim()).filter(Boolean);
+        const nextUrl = form.dataset.nextUrl || "./red-house/";
+        const badMessages = [
+          "扉の向こうで、何かが爪を立てました。",
+          "違います。けれど、今の声は覚えられました。",
+          "満たされていません。もう一度。",
+          "赤い家の窓が、ひとつ増えました。"
+        ];
+        let timer = 0;
+
+        const normalize = (value) => value.replace(/[\\u3000\\s]+/g, "").trim();
+
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const value = normalize(input.value);
+
+          if (answers.some((answer) => normalize(answer) === value)) {
+            message.textContent = "扉が、満足そうに開きました。";
+            page.classList.remove("truth-denied");
+            page.classList.add("truth-accepted");
+            window.setTimeout(() => {
+              window.location.href = nextUrl;
+            }, 520);
+            return;
+          }
+
+          window.clearTimeout(timer);
+          message.textContent = badMessages[Math.floor(Math.random() * badMessages.length)];
+          page.classList.remove("truth-denied");
+          void page.offsetWidth;
+          page.classList.add("truth-denied");
+          input.select();
+          timer = window.setTimeout(() => {
+            page.classList.remove("truth-denied");
+          }, 1200);
+        });
+      })();
+      </script>
+    `
+  });
+}
+
+function renderManzokukyoRedHouse(character) {
+  const title = "赤い家";
+  const description = "真理の扉の先にある、仮置きの少し怖いページです。";
+
+  return htmlPage({
+    title: `${title} | 満足教`,
+    description,
+    urlPath: `${character.id}/manzokukyo/truth/red-house/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "website",
+    theme: character.theme,
+    stylesheetHref: "../../../../styles.css",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `${title} | 満足教`,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      },
+      about: {
+        "@type": "Thing",
+        name: "満足教",
+        description
+      }
+    },
+    body: `
+      <style>
+        html,
+        body {
+          min-height: 100%;
+          margin: 0;
+          background: #050000;
+        }
+
+        .red-house-page {
+          display: grid;
+          min-height: 100svh;
+          place-items: center;
+          overflow: hidden;
+          padding: clamp(18px, 5vw, 56px);
+          background:
+            radial-gradient(circle at 50% 38%, rgba(255, 0, 0, 0.18), transparent 28%),
+            linear-gradient(180deg, #170000 0%, #050000 100%);
+          color: #f5e8e8;
+          font-family: var(--font-sans);
+        }
+
+        .red-house {
+          width: min(680px, 100%);
+          border: 1px solid #8b0000;
+          padding: clamp(22px, 5vw, 42px);
+          background:
+            linear-gradient(180deg, rgba(86, 0, 0, 0.92), rgba(19, 0, 0, 0.96));
+          box-shadow:
+            0 0 0 6px rgba(255, 0, 0, 0.08),
+            0 0 48px rgba(255, 0, 0, 0.24);
+          text-align: center;
+        }
+
+        .red-house-small {
+          margin: 0 0 8px;
+          color: #ffb3b3;
+          font-size: 0.82rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .red-house h1 {
+          margin: 0 0 18px;
+          color: #ffdddd;
+          font-family: var(--font-display);
+          font-size: clamp(2.8rem, 12vw, 6rem);
+          line-height: 0.95;
+          text-shadow:
+            0 0 8px #ff0000,
+            3px 3px 0 #000000;
+        }
+
+        .red-house p {
+          color: #f5e8e8;
+          font-weight: 800;
+          line-height: 1.8;
+        }
+
+        .red-house-window {
+          display: grid;
+          grid-template-columns: repeat(2, 64px);
+          gap: 8px;
+          justify-content: center;
+          margin: 16px auto 20px;
+        }
+
+        .red-house-window span {
+          display: block;
+          height: 48px;
+          border: 2px solid #1a0000;
+          background:
+            radial-gradient(circle at 50% 65%, rgba(255, 230, 230, 0.75), transparent 14%),
+            linear-gradient(180deg, #ff0000, #510000);
+          box-shadow: inset 0 0 18px #1a0000;
+        }
+
+        .red-house-links {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .red-house-links a {
+          border: 1px solid #ff8a8a;
+          border-radius: 999px;
+          padding: 9px 13px;
+          background: #120000;
+          color: #ffd6d6;
+          font-weight: 900;
+          text-decoration: none;
+        }
+      </style>
+      <main class="red-house-page">
+        <div class="red-house">
+          <p class="red-house-small">temporary page</p>
+          <h1>赤い家</h1>
+          <div class="red-house-window" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <p>ここは、まだ作りかけの家です。</p>
+          <p>なのに、窓の数だけは毎回合っている気がします。</p>
+          <nav class="red-house-links" aria-label="赤い家メニュー">
+            <a href="../">真理の扉へ戻る</a>
+            <a href="../../../">残念院さん公式設定へ戻る</a>
+          </nav>
+        </div>
       </main>
     `
   });
@@ -5505,6 +5833,7 @@ function renderSitemap(characters) {
       ...(character.id === "zannenin" ? [
         { loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/`), priority: "0.6" },
+        { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
       ] : []),
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
