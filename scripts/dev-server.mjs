@@ -157,7 +157,8 @@ function contentType(filePath) {
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
-    ".webp": "image/webp"
+    ".webp": "image/webp",
+    ".m4a": "audio/mp4"
   };
 
   return types[path.extname(filePath)] ?? "application/octet-stream";

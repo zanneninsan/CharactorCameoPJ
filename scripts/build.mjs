@@ -236,6 +236,7 @@ async function generateTimelinePlaceholderAsset(characterDir) {
 async function generateManzokukyoAssets(characterDir) {
   const sourcePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "key-visual.png");
   const altarPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "altar-cutout.png");
+  const bgmPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "satisfaction-bgm.m4a");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -255,6 +256,10 @@ async function generateManzokukyoAssets(characterDir) {
   }
 
   await mkdir(outputDir, { recursive: true });
+  if (await fileExists(bgmPath)) {
+    await cp(bgmPath, path.join(outputDir, "satisfaction-bgm.m4a"));
+  }
+
   await sharp(sourcePath)
     .resize({ width: 1480, withoutEnlargement: true })
     .avif({ quality: 50, effort: 6 })
@@ -2745,6 +2750,44 @@ function renderManzokukyoTeaser(character) {
           transform: translateY(0);
         }
 
+        .mk-bgm-toggle {
+          position: fixed;
+          left: clamp(22px, 4vw, 72px);
+          bottom: clamp(22px, 4vw, 58px);
+          z-index: 82;
+          display: inline-flex;
+          min-height: 52px;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(88, 246, 255, 0.56);
+          border-radius: 999px;
+          padding: 12px 20px;
+          background:
+            radial-gradient(circle at 28% 18%, rgba(88, 246, 255, 0.22), transparent 42%),
+            rgba(8, 7, 11, 0.78);
+          color: #fff7dc;
+          font: inherit;
+          font-size: 0.9rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          box-shadow:
+            0 0 34px rgba(88, 246, 255, 0.18),
+            0 20px 60px rgba(0, 0, 0, 0.54);
+          cursor: pointer;
+          transition: border-color 0.28s ease, box-shadow 0.28s ease, color 0.28s ease;
+        }
+
+        .mk-bgm-toggle:hover,
+        .mk-bgm-toggle:focus-visible,
+        .mk-bgm-toggle[aria-pressed="true"] {
+          border-color: rgba(215, 180, 81, 0.82);
+          color: #fff0b8;
+          box-shadow:
+            0 0 42px rgba(215, 180, 81, 0.3),
+            0 22px 64px rgba(0, 0, 0, 0.62);
+        }
+
         .mk-page .guestbook-launch {
           right: clamp(22px, 4vw, 72px);
           bottom: calc(clamp(22px, 4vw, 58px) + 66px);
@@ -3896,7 +3939,7 @@ function renderManzokukyoTeaser(character) {
           <div class="mk-hero-inner">
             <p class="mk-kicker">Satisfaction Cult / teaser transmission</p>
             <h1 class="mk-title" data-text="満足教">満足教</h1>
-            <p class="mk-subtitle">小さな満足に跪け。救済は、ラーメン一杯ぶんの熱から始まる。</p>
+            <p class="mk-subtitle">あなたの満足、私たちがお手伝いします。</p>
             <p class="mk-copy">残念院さんがひらく、甘くて不穏な小さな祭壇。満たされたと思った瞬間、次の満足がこちらを見つめている。</p>
           </div>
           <p class="mk-scroll-cue">スクロールで奥へ進む / 戻る</p>
@@ -3908,6 +3951,8 @@ function renderManzokukyoTeaser(character) {
           <strong>真理の扉を開く</strong>
           <small>click / tap to enter</small>
         </a>
+        <audio data-mk-bgm src="../assets/generated/manzokukyo/satisfaction-bgm.m4a" preload="metadata" loop></audio>
+        <button class="mk-bgm-toggle" type="button" data-mk-bgm-toggle aria-pressed="false" aria-label="BGMを再生">BGM OFF</button>
         <button class="mk-ritual-replay" type="button" data-mk-ritual-replay aria-label="黒ミサ演出をリプレイ">Replay Ritual</button>
         <div class="mk-depth-journey" data-mk-depth-journey>
         <section class="mk-section" id="doctrine">
@@ -3966,6 +4011,40 @@ function renderManzokukyoTeaser(character) {
         })}
       </main>
       <script>
+        (() => {
+          const audio = document.querySelector("[data-mk-bgm]");
+          const toggle = document.querySelector("[data-mk-bgm-toggle]");
+          if (!audio || !toggle) {
+            return;
+          }
+
+          audio.volume = 0.42;
+
+          function setState(isPlaying) {
+            toggle.setAttribute("aria-pressed", isPlaying ? "true" : "false");
+            toggle.setAttribute("aria-label", isPlaying ? "BGMを停止" : "BGMを再生");
+            toggle.textContent = isPlaying ? "BGM ON" : "BGM OFF";
+          }
+
+          toggle.addEventListener("click", async () => {
+            if (audio.paused) {
+              try {
+                await audio.play();
+                setState(true);
+              } catch {
+                setState(false);
+              }
+            } else {
+              audio.pause();
+              setState(false);
+            }
+          });
+
+          audio.addEventListener("pause", () => setState(false));
+          audio.addEventListener("play", () => setState(true));
+          window.addEventListener("pagehide", () => audio.pause(), { once: true });
+          setState(false);
+        })();
         (() => {
           const page = document.querySelector(".mk-page");
           const replay = document.querySelector("[data-mk-ritual-replay]");
