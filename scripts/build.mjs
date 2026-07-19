@@ -237,6 +237,9 @@ async function generateManzokukyoAssets(characterDir) {
   const sourcePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "key-visual.png");
   const altarPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "altar-cutout.png");
   const bgmPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "satisfaction-bgm.m4a");
+  const corridorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "corridor-v2.png");
+  const doorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "door-v2.png");
+  const truthChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "truth-chamber.png");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -258,6 +261,22 @@ async function generateManzokukyoAssets(characterDir) {
   await mkdir(outputDir, { recursive: true });
   if (await fileExists(bgmPath)) {
     await cp(bgmPath, path.join(outputDir, "satisfaction-bgm.m4a"));
+  }
+
+  for (const [source, basename] of [
+    [corridorScenePath, "corridor-v2"],
+    [doorScenePath, "door-v2"],
+    [truthChamberPath, "truth-chamber"],
+  ]) {
+    if (!await fileExists(source)) continue;
+    await sharp(source)
+      .resize({ width: 1920, withoutEnlargement: true })
+      .avif({ quality: 54, effort: 6 })
+      .toFile(path.join(outputDir, `${basename}.avif`));
+    await sharp(source)
+      .resize({ width: 1920, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(path.join(outputDir, `${basename}.webp`));
   }
 
   await sharp(sourcePath)
@@ -755,6 +774,10 @@ function renderGuestbookWidget({
 }
 
 function renderCharacter(character) {
+  if (character.id === "zannenin") {
+    return renderZanneninCharacter(character);
+  }
+
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
   const includeGuestbook = shouldRenderGuestbook(character);
@@ -860,6 +883,806 @@ function renderCharacter(character) {
 }
 
 function renderManzokukyoTruth(character) {
+  const title = "真理の扉";
+  const description = "満足教の奥へ進んだ者だけが辿りつく、次の謎解きエリアです。";
+
+  return htmlPage({
+    title: `${title} | 満足教`,
+    description,
+    urlPath: `${character.id}/manzokukyo/truth/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "website",
+    theme: character.theme,
+    stylesheetHref: "../../../styles.css",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `${title} | 満足教`,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/truth/`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      },
+      about: {
+        "@type": "Thing",
+        name: "満足教",
+        description
+      }
+    },
+    body: `
+      <style>
+        :root {
+          --truth-black: #050408;
+          --truth-ink: #fff7dc;
+          --truth-gold: #d7b451;
+          --truth-red: #ff335c;
+          --truth-cyan: #58f6ff;
+          --truth-violet: #9b72ff;
+        }
+
+        html,
+        body {
+          min-height: 100%;
+          margin: 0;
+          overflow: hidden;
+          color: var(--truth-ink);
+          background: var(--truth-black);
+        }
+
+        .truth-page {
+          position: relative;
+          min-height: 100svh;
+          overflow: hidden;
+          isolation: isolate;
+          font-family: var(--font-sans);
+          background: #050408;
+        }
+
+        .truth-chamber,
+        .truth-chamber img,
+        .truth-atmosphere,
+        .truth-scanlines,
+        .truth-shock,
+        .truth-transition {
+          position: absolute;
+          inset: 0;
+        }
+
+        .truth-chamber {
+          z-index: -5;
+          overflow: hidden;
+        }
+
+        .truth-chamber img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: 50% 50%;
+          filter: brightness(0.68) contrast(1.08) saturate(0.82);
+          transform: scale(1.07);
+          animation: truth-chamber-enter 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .truth-atmosphere {
+          z-index: -4;
+          pointer-events: none;
+          background:
+            linear-gradient(90deg, rgba(0, 0, 0, 0.68), transparent 23% 77%, rgba(0, 0, 0, 0.68)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.58), transparent 28% 68%, rgba(0, 0, 0, 0.82)),
+            radial-gradient(ellipse at 50% 47%, rgba(126, 60, 255, 0.12), transparent 34%);
+        }
+
+        .truth-scanlines {
+          z-index: 30;
+          pointer-events: none;
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 48%, rgba(0, 0, 0, 0.54) 82%, rgba(0, 0, 0, 0.88) 100%);
+          background-size: 100% 4px, auto;
+          opacity: 0.72;
+          mix-blend-mode: screen;
+        }
+
+        .truth-topbar {
+          position: absolute;
+          top: 0;
+          right: 0;
+          left: 0;
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 64px;
+          border-bottom: 1px solid rgba(215, 180, 81, 0.22);
+          padding: 0 clamp(18px, 4vw, 64px);
+          background: linear-gradient(180deg, rgba(2, 2, 4, 0.78), transparent);
+          font-family: var(--font-ui);
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .truth-area {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: rgba(255, 247, 220, 0.76);
+        }
+
+        .truth-area::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          border: 1px solid var(--truth-gold);
+          transform: rotate(45deg);
+          box-shadow: 0 0 12px rgba(215, 180, 81, 0.58);
+        }
+
+        .truth-nav {
+          display: flex;
+          gap: 22px;
+        }
+
+        .truth-nav a {
+          color: rgba(255, 247, 220, 0.64);
+          text-decoration: none;
+          transition: color 0.2s ease;
+        }
+
+        .truth-nav a:hover,
+        .truth-nav a:focus-visible {
+          color: var(--truth-ink);
+        }
+
+        .truth-heading {
+          position: absolute;
+          top: clamp(84px, 13vh, 126px);
+          left: clamp(22px, 6vw, 92px);
+          z-index: 10;
+          width: min(48rem, calc(100% - 44px));
+          text-shadow: 0 4px 22px #000, 0 0 48px rgba(0, 0, 0, 0.92);
+          animation: truth-copy-enter 1.1s 1.3s both;
+        }
+
+        .truth-kicker {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 0 0 12px;
+          color: rgba(215, 180, 81, 0.92);
+          font-family: var(--font-ui);
+          font-size: clamp(0.68rem, 1.2vw, 0.82rem);
+          font-weight: 900;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+        }
+
+        .truth-kicker::before {
+          content: "";
+          width: 34px;
+          height: 1px;
+          background: var(--truth-gold);
+        }
+
+        .truth-heading h1 {
+          margin: 0;
+          color: #fff2bd;
+          font-family: var(--font-display);
+          font-size: clamp(3rem, 8vw, 6.8rem);
+          line-height: 0.92;
+          letter-spacing: 0;
+          text-shadow:
+            0 3px 0 #000,
+            2px 0 rgba(255, 51, 92, 0.34),
+            -2px 0 rgba(88, 246, 255, 0.28),
+            0 0 30px rgba(255, 221, 126, 0.24);
+        }
+
+        .truth-lead {
+          max-width: 38em;
+          margin: 18px 0 0;
+          color: rgba(245, 234, 210, 0.72);
+          font-size: clamp(0.86rem, 1.5vw, 1rem);
+          font-weight: 700;
+          line-height: 1.8;
+        }
+
+        .truth-oracle {
+          position: absolute;
+          top: 46%;
+          left: 50%;
+          z-index: 5;
+          width: clamp(128px, 15vw, 210px);
+          aspect-ratio: 1;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+          opacity: 0.68;
+        }
+
+        .truth-oracle-ring,
+        .truth-oracle-ring::before,
+        .truth-oracle-ring::after {
+          position: absolute;
+          inset: 0;
+          border: 1px solid rgba(215, 180, 81, 0.42);
+          border-radius: 50%;
+          content: "";
+        }
+
+        .truth-oracle-ring {
+          background: repeating-conic-gradient(from 0deg, rgba(215, 180, 81, 0.46) 0 1deg, transparent 1deg 16deg);
+          mask-image: radial-gradient(circle, transparent 0 60%, #000 61% 63%, transparent 64%);
+          animation: truth-orbit 28s linear infinite;
+        }
+
+        .truth-oracle-ring::before {
+          inset: 17%;
+          border-color: rgba(155, 114, 255, 0.46);
+          animation: truth-orbit 18s linear reverse infinite;
+        }
+
+        .truth-oracle-ring::after {
+          inset: 35%;
+          border-color: rgba(88, 246, 255, 0.3);
+        }
+
+        .truth-oracle-eye {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 38%;
+          height: 17%;
+          overflow: hidden;
+          border: 1px solid rgba(255, 240, 182, 0.64);
+          border-radius: 100% 0 100% 0;
+          background: rgba(4, 3, 7, 0.88);
+          box-shadow: 0 0 28px rgba(155, 114, 255, 0.36);
+          transform: translate(-50%, -50%) rotate(-45deg) scaleY(0.18);
+          transition: transform 0.42s ease, border-color 0.2s ease;
+        }
+
+        .truth-oracle-eye::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 40%;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          background: radial-gradient(circle, #050408 0 18%, #fff0a9 20% 34%, var(--truth-violet) 38% 64%, #08040d 68%);
+          transform: translate(-50%, -50%);
+        }
+
+        .truth-page[data-truth-state="listening"] .truth-oracle-eye,
+        .truth-page[data-truth-state="denied"] .truth-oracle-eye {
+          transform: translate(-50%, -50%) rotate(-45deg) scaleY(1);
+        }
+
+        .truth-console {
+          position: absolute;
+          right: 50%;
+          bottom: clamp(24px, 6vh, 62px);
+          z-index: 12;
+          display: grid;
+          gap: 14px;
+          width: min(680px, calc(100% - 36px));
+          border: 1px solid rgba(215, 180, 81, 0.42);
+          padding: 18px;
+          background: linear-gradient(180deg, rgba(12, 8, 16, 0.76), rgba(0, 0, 0, 0.9));
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72), inset 0 0 46px rgba(126, 60, 255, 0.08);
+          transform: translateX(50%);
+          backdrop-filter: blur(12px);
+          animation: truth-console-enter 1s 1.65s both;
+        }
+
+        .truth-console-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          color: rgba(215, 180, 81, 0.84);
+          font-family: var(--font-ui);
+          font-size: 0.7rem;
+          font-weight: 900;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+        }
+
+        .truth-console-head output {
+          color: rgba(255, 247, 220, 0.46);
+          letter-spacing: 0.12em;
+        }
+
+        .truth-passphrase-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+
+        .truth-console label {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          white-space: nowrap;
+        }
+
+        .truth-console input {
+          min-width: 0;
+          min-height: 52px;
+          border: 1px solid rgba(255, 247, 220, 0.28);
+          border-radius: 2px;
+          padding: 10px 16px;
+          background: rgba(255, 247, 220, 0.055);
+          color: var(--truth-ink);
+          font: 800 1rem/1.2 var(--font-sans);
+          outline: none;
+          caret-color: var(--truth-gold);
+          transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .truth-console input::placeholder {
+          color: rgba(255, 247, 220, 0.34);
+        }
+
+        .truth-console input:focus {
+          border-color: rgba(215, 180, 81, 0.82);
+          background: rgba(8, 5, 12, 0.88);
+          box-shadow: 0 0 0 1px rgba(215, 180, 81, 0.2), 0 0 34px rgba(126, 60, 255, 0.16);
+        }
+
+        .truth-console button {
+          display: inline-flex;
+          min-width: 126px;
+          min-height: 52px;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          border: 1px solid var(--truth-gold);
+          border-radius: 2px;
+          padding: 10px 18px;
+          background: rgba(215, 180, 81, 0.9);
+          color: #100c10;
+          font: 900 0.88rem/1 var(--font-sans);
+          cursor: pointer;
+          transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .truth-console button:hover,
+        .truth-console button:focus-visible {
+          background: #fff0b0;
+          transform: translateY(-1px);
+        }
+
+        .truth-console button span {
+          font-family: var(--font-ui);
+          font-size: 1rem;
+        }
+
+        .truth-message {
+          min-height: 1.5em;
+          margin: 0;
+          color: rgba(245, 234, 210, 0.68);
+          font-size: 0.82rem;
+          font-weight: 800;
+          line-height: 1.5;
+        }
+
+        .truth-clue {
+          color: rgba(255, 247, 220, 0.42);
+          font-family: var(--font-ui);
+          font-size: 0.66rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .truth-particles {
+          position: absolute;
+          inset: 0;
+          z-index: 4;
+          overflow: hidden;
+          pointer-events: none;
+        }
+
+        .truth-particles i {
+          position: absolute;
+          bottom: -10%;
+          left: calc(var(--x) * 1%);
+          width: 2px;
+          height: 2px;
+          border-radius: 50%;
+          background: rgba(255, 228, 152, 0.72);
+          box-shadow: 0 0 8px rgba(255, 208, 93, 0.56);
+          animation: truth-dust calc(8s + var(--i) * 0.4s) calc(var(--delay) * -1s) linear infinite;
+        }
+
+        .truth-door {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          z-index: 50;
+          width: 50.15%;
+          pointer-events: none;
+          background-image: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.34)), url("../../assets/generated/manzokukyo/door-v2.webp");
+          background-repeat: no-repeat;
+          background-size: 200% 100%;
+          box-shadow: 0 0 90px rgba(0, 0, 0, 0.92);
+        }
+
+        .truth-door-left {
+          left: 0;
+          background-position: left center;
+          animation: truth-door-left 1.6s 0.24s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+        }
+
+        .truth-door-right {
+          right: 0;
+          background-position: right center;
+          animation: truth-door-right 1.6s 0.24s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+        }
+
+        .truth-door-glow {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 50%;
+          z-index: 51;
+          width: 3px;
+          pointer-events: none;
+          background: #eee1ff;
+          box-shadow: 0 0 18px #c2a8ff, 0 0 60px rgba(126, 60, 255, 0.82), 0 0 140px rgba(255, 238, 174, 0.3);
+          transform: translateX(-50%);
+          animation: truth-slit 1.9s ease forwards;
+        }
+
+        .truth-presence {
+          position: absolute;
+          top: 18%;
+          right: 5%;
+          z-index: 8;
+          width: clamp(80px, 11vw, 160px);
+          aspect-ratio: 1;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at center, #fff5c8 0 3%, #ff335c 4% 7%, #050408 8% 18%, rgba(255, 51, 92, 0.3) 19%, transparent 48%);
+          filter: blur(1px) drop-shadow(0 0 22px rgba(255, 0, 48, 0.46));
+          opacity: 0;
+          pointer-events: none;
+          transform: scaleY(0.05);
+        }
+
+        .truth-page[data-denials="2"] .truth-presence,
+        .truth-page[data-denials="3"] .truth-presence {
+          opacity: 0.68;
+          transform: scaleY(1);
+          transition: opacity 0.14s steps(2, end), transform 0.18s steps(2, end);
+        }
+
+        .truth-shock,
+        .truth-transition {
+          z-index: 40;
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .truth-page.truth-denied .truth-shock {
+          background:
+            repeating-linear-gradient(0deg, rgba(255, 0, 42, 0.14) 0 1px, transparent 1px 5px),
+            radial-gradient(circle at 50% 45%, transparent 0 28%, rgba(120, 0, 24, 0.48) 64%, rgba(0, 0, 0, 0.92) 100%);
+          animation: truth-shock 1.25s steps(6, end);
+        }
+
+        .truth-page.truth-denied .truth-console {
+          animation: truth-console-shake 0.5s steps(2, end);
+        }
+
+        .truth-page.truth-denied .truth-console input {
+          border-color: rgba(255, 51, 92, 0.9);
+          background: rgba(38, 0, 9, 0.84);
+          color: #ffd5df;
+        }
+
+        .truth-page.truth-denied .truth-message {
+          color: #ff9aae;
+          animation: truth-message-flicker 0.72s steps(2, end);
+        }
+
+        .truth-page.truth-denied .truth-chamber img {
+          animation: truth-room-jolt 0.56s steps(2, end);
+        }
+
+        .truth-page.truth-accepted .truth-transition {
+          background: radial-gradient(circle at 50% 48%, #ffffff 0, #e8ddff 12%, rgba(126, 60, 255, 0.9) 28%, #050408 72%);
+          animation: truth-accepted 1.2s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        .truth-page.truth-accepted .truth-oracle-eye {
+          border-color: #fff4c8;
+          transform: translate(-50%, -50%) rotate(-45deg) scale(2.2);
+          box-shadow: 0 0 80px #fff, 0 0 160px rgba(126, 60, 255, 0.9);
+        }
+
+        @keyframes truth-door-left {
+          0% { transform: translateX(0); }
+          72% { opacity: 1; }
+          100% { opacity: 0; transform: translateX(-102%); }
+        }
+
+        @keyframes truth-door-right {
+          0% { transform: translateX(0); }
+          72% { opacity: 1; }
+          100% { opacity: 0; transform: translateX(102%); }
+        }
+
+        @keyframes truth-slit {
+          0% { opacity: 0.4; transform: translateX(-50%) scaleX(0.5); }
+          42% { opacity: 1; transform: translateX(-50%) scaleX(3); }
+          100% { opacity: 0; transform: translateX(-50%) scaleX(34); }
+        }
+
+        @keyframes truth-chamber-enter {
+          from { filter: brightness(1.08) contrast(1.16) saturate(0.7); transform: scale(1.16); }
+          to { filter: brightness(0.68) contrast(1.08) saturate(0.82); transform: scale(1.07); }
+        }
+
+        @keyframes truth-copy-enter {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes truth-console-enter {
+          from { opacity: 0; transform: translate(50%, 22px); }
+          to { opacity: 1; transform: translate(50%, 0); }
+        }
+
+        @keyframes truth-orbit {
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes truth-dust {
+          0% { opacity: 0; transform: translate3d(0, 0, 0); }
+          15% { opacity: 0.8; }
+          100% { opacity: 0; transform: translate3d(calc((var(--i) - 7) * 3px), -110svh, 0); }
+        }
+
+        @keyframes truth-shock {
+          0%, 100% { opacity: 0; }
+          12%, 34%, 66% { opacity: 1; }
+          22%, 48%, 82% { opacity: 0.18; }
+        }
+
+        @keyframes truth-console-shake {
+          0%, 100% { transform: translate(50%, 0); }
+          18% { transform: translate(calc(50% - 8px), 3px); }
+          36% { transform: translate(calc(50% + 6px), -2px); }
+          54% { transform: translate(calc(50% - 4px), -4px); }
+          72% { transform: translate(calc(50% + 5px), 2px); }
+        }
+
+        @keyframes truth-message-flicker {
+          0%, 100% { opacity: 1; }
+          20%, 62% { opacity: 0.18; }
+          42%, 82% { opacity: 0.76; }
+        }
+
+        @keyframes truth-room-jolt {
+          0%, 100% { transform: scale(1.07); filter: brightness(0.68) contrast(1.08) saturate(0.82); }
+          28% { transform: scale(1.085) translateX(-5px); filter: brightness(0.36) contrast(1.4) saturate(0.2); }
+          58% { transform: scale(1.075) translateX(4px); filter: brightness(0.9) contrast(1.24) saturate(0.7); }
+        }
+
+        @keyframes truth-accepted {
+          0% { opacity: 0; transform: scale(0.08); }
+          28% { opacity: 1; }
+          100% { opacity: 1; transform: scale(2.4); }
+        }
+
+        @media (max-width: 720px) {
+          .truth-topbar {
+            min-height: 54px;
+          }
+
+          .truth-nav a:last-child {
+            display: none;
+          }
+
+          .truth-heading {
+            top: 74px;
+            left: 18px;
+            width: calc(100% - 36px);
+          }
+
+          .truth-heading h1 {
+            font-size: clamp(2.8rem, 17vw, 4.8rem);
+          }
+
+          .truth-lead {
+            max-width: 26em;
+            margin-top: 12px;
+            font-size: 0.82rem;
+            line-height: 1.65;
+          }
+
+          .truth-oracle {
+            top: 50%;
+            width: 118px;
+          }
+
+          .truth-console {
+            bottom: max(16px, env(safe-area-inset-bottom));
+            width: calc(100% - 24px);
+            gap: 10px;
+            padding: 14px;
+          }
+
+          .truth-passphrase-row {
+            grid-template-columns: 1fr;
+          }
+
+          .truth-console button {
+            min-height: 46px;
+          }
+
+          .truth-clue {
+            display: none;
+          }
+
+          .truth-chamber img {
+            object-position: 50% center;
+          }
+
+          .truth-presence {
+            top: 36%;
+            right: 2%;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .truth-door,
+          .truth-door-glow {
+            display: none;
+          }
+
+          .truth-chamber img,
+          .truth-heading,
+          .truth-console,
+          .truth-oracle-ring,
+          .truth-oracle-ring::before,
+          .truth-particles i {
+            animation: none;
+          }
+        }
+      </style>
+      <main class="truth-page" data-truth-state="waiting" data-denials="0">
+        <picture class="truth-chamber" aria-hidden="true">
+          <source srcset="../../assets/generated/manzokukyo/truth-chamber.avif" type="image/avif">
+          <source srcset="../../assets/generated/manzokukyo/truth-chamber.webp" type="image/webp">
+          <img src="../../assets/manzokukyo/truth-chamber.png" alt="">
+        </picture>
+        <div class="truth-atmosphere" aria-hidden="true"></div>
+        <div class="truth-particles" aria-hidden="true">
+          ${Array.from({ length: 16 }, (_, index) => `<i style="--i:${index};--x:${8 + ((index * 37) % 84)};--delay:${(index * 0.73).toFixed(2)}"></i>`).join("")}
+        </div>
+        <div class="truth-scanlines" aria-hidden="true"></div>
+
+        <header class="truth-topbar">
+          <span class="truth-area">Satisfaction Cult / Area 01</span>
+          <nav class="truth-nav" aria-label="真理の扉メニュー">
+            <a href="../">← 回廊</a>
+            <a href="../../">残念院さん公式設定</a>
+          </nav>
+        </header>
+
+        <section class="truth-heading" aria-labelledby="truth-title">
+          <p class="truth-kicker">The chamber is listening</p>
+          <h1 id="truth-title">真理の扉</h1>
+          <p class="truth-lead">扉は開いた。答えはまだない。ここでは、あなたが満たされたものだけが言葉になる。</p>
+        </section>
+
+        <div class="truth-oracle" aria-hidden="true">
+          <div class="truth-oracle-ring"></div>
+          <div class="truth-oracle-eye"></div>
+        </div>
+        <div class="truth-presence" aria-hidden="true"></div>
+
+        <form class="truth-console" data-truth-gate data-answers="満足|まんぞく" data-next-url="./red-house/">
+          <div class="truth-console-head">
+            <span>Offering terminal</span>
+            <output data-denial-meter>00 / 03</output>
+          </div>
+          <label for="truth-passphrase">合言葉</label>
+          <div class="truth-passphrase-row">
+            <input id="truth-passphrase" name="passphrase" type="text" autocomplete="off" inputmode="text" aria-describedby="truth-message" placeholder="合言葉を捧げる">
+            <button type="submit">捧げる <span aria-hidden="true">→</span></button>
+          </div>
+          <p class="truth-message" id="truth-message" aria-live="polite">祭壇は、あなたの言葉を待っている。</p>
+          <small class="truth-clue">hint / 満たすべきものを、一語で</small>
+        </form>
+
+        <div class="truth-door truth-door-left" aria-hidden="true"></div>
+        <div class="truth-door truth-door-right" aria-hidden="true"></div>
+        <div class="truth-door-glow" aria-hidden="true"></div>
+        <div class="truth-shock" aria-hidden="true"></div>
+        <div class="truth-transition" aria-hidden="true"></div>
+      </main>
+      <script>
+      (() => {
+        const form = document.querySelector("[data-truth-gate]");
+        const page = document.querySelector(".truth-page");
+        if (!form || !page) return;
+
+        const input = form.querySelector("input[name='passphrase']");
+        const message = form.querySelector(".truth-message");
+        const meter = form.querySelector("[data-denial-meter]");
+        const answers = (form.dataset.answers || "").split("|").map((item) => item.trim()).filter(Boolean);
+        const nextUrl = form.dataset.nextUrl || "./red-house/";
+        const badMessages = [
+          "違う。いまの声は、奥の誰かに届いた。",
+          "祭壇の下で、爪が石をなぞっている。",
+          "その言葉では満たされない。もう一度。",
+          "右奥の暗がりが、ひとつ近づいた。",
+          "あなたの声を覚えた。次は間違えないで。"
+        ];
+        let timer = 0;
+        let denials = 0;
+
+        const normalize = (value) => value.replace(/[\u3000\s]+/g, "").trim();
+        const setListening = () => {
+          if (!page.classList.contains("truth-accepted")) page.dataset.truthState = "listening";
+        };
+
+        input.addEventListener("focus", setListening);
+        input.addEventListener("input", setListening);
+        input.addEventListener("blur", () => {
+          if (!page.classList.contains("truth-denied") && !page.classList.contains("truth-accepted")) {
+            page.dataset.truthState = "waiting";
+          }
+        });
+
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const value = normalize(input.value);
+
+          if (answers.some((answer) => normalize(answer) === value)) {
+            window.clearTimeout(timer);
+            page.dataset.truthState = "accepted";
+            page.classList.remove("truth-denied");
+            page.classList.add("truth-accepted");
+            message.textContent = "受理しました。次の部屋が、あなたを待っています。";
+            input.disabled = true;
+            form.querySelector("button").disabled = true;
+            window.setTimeout(() => {
+              window.location.href = nextUrl;
+            }, 1120);
+            return;
+          }
+
+          window.clearTimeout(timer);
+          denials = Math.min(3, denials + 1);
+          page.dataset.denials = String(denials);
+          page.dataset.truthState = "denied";
+          meter.textContent = String(denials).padStart(2, "0") + " / 03";
+          message.textContent = badMessages[Math.floor(Math.random() * badMessages.length)];
+          page.classList.remove("truth-denied");
+          void page.offsetWidth;
+          page.classList.add("truth-denied");
+          input.select();
+          timer = window.setTimeout(() => {
+            page.classList.remove("truth-denied");
+            page.dataset.truthState = "listening";
+          }, 1280);
+        });
+      })();
+      </script>
+    `
+  });
+}
+
+function renderManzokukyoTruthLegacy(character) {
   const title = "真理の扉";
   const description = "満足教の奥へ進んだ者だけが辿りつく、次の謎解きエリアです。";
 
@@ -1249,6 +2072,189 @@ function renderManzokukyoTruth(character) {
         });
       })();
       </script>
+    `
+  });
+}
+
+function renderZanneninCharacter(character) {
+  const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
+  const hasMusicVideos = Boolean(character.musicVideoPlayer);
+  const includeGuestbook = shouldRenderGuestbook(character);
+  const profileFacts = [
+    ["AGE", character.profile?.["年齢"]],
+    ["HEIGHT", character.profile?.["身長"]],
+    ["FROM", character.profile?.["出身"]],
+    ["ROLE", "満足教 開祖・教祖"]
+  ].filter(([, value]) => value && value !== "未定義");
+
+  return htmlPage({
+    title: character.displayName,
+    description: character.summary,
+    urlPath: `${character.id}/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "profile",
+    structuredData: characterStructuredData(character, `${character.id}/`),
+    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}
+      <link rel="stylesheet" href="./assets/site/home.css?v=20260720-4">
+      <script src="./assets/site/home.js?v=20260720-4" defer></script>`,
+    theme: character.theme,
+    bodyClass: "zannenin-home",
+    body: `
+      <main class="zn-page" data-zn-page data-satisfaction="17">
+        <div class="zn-progress" aria-hidden="true"><span data-zn-progress></span></div>
+
+        <header class="zn-hero" id="top">
+          <img class="zn-hero-image" src="./assets/brand/banner-source.png" alt="${escapeHtml(character.brandAssets?.banner?.alt ?? `${character.displayName} キービジュアル`)}" fetchpriority="high">
+          <div class="zn-hero-shade" aria-hidden="true"></div>
+          <nav class="zn-topbar" aria-label="サイト上部メニュー">
+            <a class="zn-wordmark" href="#top" aria-label="${escapeHtml(character.displayName)} ページ上部へ">
+              <img src="./assets/generated/brand/logo-320.webp" alt="${escapeHtml(character.displayName)}">
+            </a>
+            <div class="zn-toplinks">
+              <a href="../">CHARACTER CANON</a>
+              <a href="#links">OFFICIAL LINKS</a>
+            </div>
+          </nav>
+
+          <div class="zn-hero-copy">
+            <p class="zn-serial">SUBJECT 0714 / SATISFACTION OBSERVATION</p>
+            <h1>${escapeHtml(character.displayName)}</h1>
+            <p class="zn-hero-catch">${escapeHtml(character.catchphrase)}</p>
+            <p class="zn-hero-lead">${escapeHtml(character.summary)}</p>
+            <div class="zn-hero-actions">
+              <a class="zn-primary-action" href="#profile">教祖を知る</a>
+              <a class="zn-secondary-action" href="./manzokukyo/">満足教へ</a>
+            </div>
+          </div>
+
+          <aside class="zn-observer" aria-label="満足度観測装置">
+            <div class="zn-observer-head">
+              <span>LIVE OBSERVATION</span>
+              <i aria-hidden="true"></i>
+            </div>
+            <p class="zn-observer-value"><strong data-zn-value>17</strong><span>%</span></p>
+            <div class="zn-observer-meter" aria-hidden="true"><span data-zn-meter></span></div>
+            <p class="zn-oracle" data-zn-oracle aria-live="polite">満足度は自己申告制です。</p>
+            <button type="button" data-zn-satisfaction>満足を観測</button>
+          </aside>
+
+          <a class="zn-scroll-cue" href="#intro"><span>SCROLL</span><i aria-hidden="true"></i></a>
+        </header>
+
+        <div class="zn-ticker" aria-hidden="true">
+          <div>
+            <span>RAMEN</span><b>◆</b><span>NEO SAITAMA</span><b>◆</b><span>MYSTERY</span><b>◆</b><span>COMEDY RELIGION</span><b>◆</b><span>SHIMOKITAZAWA</span><b>◆</b><span>SATISFACTION</span><b>◆</b>
+            <span>RAMEN</span><b>◆</b><span>NEO SAITAMA</span><b>◆</b><span>MYSTERY</span><b>◆</b><span>COMEDY RELIGION</span><b>◆</b><span>SHIMOKITAZAWA</span><b>◆</b><span>SATISFACTION</span><b>◆</b>
+          </div>
+        </div>
+
+        <section class="zn-intro zn-reveal" id="intro">
+          <div class="zn-shell zn-intro-grid">
+            <div class="zn-intro-title">
+              <p>WHO IS SHE?</p>
+              <h2>気品と悪戯が、<br>同じ顔をしている。</h2>
+            </div>
+            <div class="zn-intro-copy">
+              <p>${escapeHtml(character.summary)}</p>
+              <dl class="zn-quick-facts">
+                ${profileFacts.map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        ${renderPageMenu(character)}
+
+        <div class="zn-content">
+          <div class="zn-band zn-band-ink zn-reveal">
+            <div class="zn-shell">${renderOfficialLinks(character)}</div>
+          </div>
+
+          <div class="zn-band zn-band-paper zn-reveal">
+            <div class="zn-shell">${renderVisualReferences(character)}</div>
+          </div>
+
+          ${hasMusicVideos || hasRandomVideos ? `
+            <div class="zn-band zn-band-signal zn-reveal">
+              <div class="zn-shell">
+                ${renderMusicVideoPlayer(character.musicVideoPlayer)}
+                ${renderOfficialRandomDriveVideoPlayer(character.randomVideoPlayer)}
+              </div>
+            </div>
+          ` : ""}
+
+          <div class="zn-band zn-band-paper zn-reveal">
+            <div class="zn-shell zn-feature-grid">
+              ${renderFanworkGuidelinesCard(character)}
+              ${renderAiPrompts(character)}
+            </div>
+          </div>
+
+          <div class="zn-band zn-band-profile zn-reveal">
+            <div class="zn-shell zn-profile-grid">
+              <section class="panel" id="profile">
+                ${renderSectionHeading("profile")}
+                <dl class="profile-list">
+                  ${Object.entries(character.profile).map(([key, value]) => `
+                    <div><dt>${escapeHtml(key)}</dt><dd>${renderProfileValue(value)}</dd></div>
+                  `).join("")}
+                </dl>
+              </section>
+              <div class="zn-profile-side">
+                <section class="panel" id="glossary">
+                  ${renderSectionHeading("glossary")}
+                  <div class="stack">
+                    ${character.glossary.map((item) => `<article><h3>${escapeHtml(item.term)}</h3><p>${escapeHtml(item.definition)}</p></article>`).join("")}
+                  </div>
+                </section>
+                ${renderSideFlavors(character)}
+              </div>
+            </div>
+          </div>
+
+          <div class="zn-band zn-band-ink zn-reveal">
+            <div class="zn-shell">
+              <section class="panel detail-settings" id="settings">
+                ${renderSectionHeading("settings")}
+                <div class="stack zn-settings-grid">
+                  ${character.settings.map((item) => `<article><p class="status">${escapeHtml(item.status ?? "official")}</p><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></article>`).join("")}
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="zn-band zn-band-paper zn-reveal">
+            <div class="zn-shell">
+              <section class="panel" id="timeline">${renderSectionHeading("timeline")}${renderTimelineGroups(character)}</section>
+            </div>
+          </div>
+
+          <div class="zn-band zn-band-footer zn-reveal">
+            <div class="zn-shell zn-footer-grid">
+              ${renderRightsSection(character)}
+              ${renderSourceCallout({
+                eyebrow: "Source",
+                title: "このサイトのソース",
+                description: `${character.displayName} の公式設定データは GitHub 上の JSON で管理しています。追記・修正の協力や、設定追加の提案を歓迎します。`,
+                links: [
+                  { label: "このキャラの設定JSON", href: sourceFileUrl(`content/characters/${character.id}/character.json`) },
+                  { label: "GitHubリポジトリ", href: sourceRepoUrl }
+                ]
+              })}
+            </div>
+            <div class="zn-endmark" aria-hidden="true"><span>SATISFIED?</span><b>残念院さん</b></div>
+          </div>
+
+          ${renderHiddenEntrances(character)}
+          ${includeGuestbook ? renderGuestbookWidget({
+            scope: `${character.id}:guestbook`,
+            title: `${character.displayName}のあしあと帳`,
+            description: "公式プロフィールを見に来た記念に、ひとこと残していけます。",
+            buttonLabel: "あしあと帳"
+          }) : ""}
+        </div>
+        ${hasRandomVideos || hasMusicVideos ? renderRandomDriveVideoScript() : ""}
+      </main>
     `
   });
 }
@@ -1952,6 +2958,17 @@ function renderManzokukyoTeaser(character) {
           --mk-gate-opacity: 0;
           --mk-gate-scale: 0.78;
           --mk-gate-z: -760px;
+          --mk-walk-opacity: 0;
+          --mk-walk-scale: 1.02;
+          --mk-walk-x: 0px;
+          --mk-walk-y: 0px;
+          --mk-walk-blur: 0px;
+          --mk-door-scene-opacity: 0;
+          --mk-door-scene-scale: 0.84;
+          --mk-floor-shift: 0px;
+          --mk-hud-opacity: 0;
+          --mk-threshold-glow: 0;
+          --mk-ornament-opacity: 1;
           height: 100svh;
           min-height: 100svh;
           max-width: 100vw;
@@ -2554,7 +3571,7 @@ function renderManzokukyoTeaser(character) {
           width: min(48vw, 820px);
           min-width: 560px;
           aspect-ratio: 1672 / 941;
-          opacity: calc(0.74 - var(--mk-hero-exit) * 0.62);
+          opacity: calc(0.74 * var(--mk-ornament-opacity));
           pointer-events: none;
           perspective: 900px;
           transform: translate3d(0, var(--mk-altar-y), var(--mk-altar-z)) scale(var(--mk-altar-scale));
@@ -2807,7 +3824,7 @@ function renderManzokukyoTeaser(character) {
           transform: translate(-50%, -50%);
           border: 1px solid rgba(215, 180, 81, 0.5);
           border-radius: 50%;
-          opacity: 0.52;
+          opacity: calc(0.52 * var(--mk-ornament-opacity));
           box-shadow:
             inset 0 0 0 1px rgba(255, 255, 255, 0.08),
             0 0 80px rgba(215, 180, 81, 0.18);
@@ -2839,6 +3856,7 @@ function renderManzokukyoTeaser(character) {
           transform: translateY(-50%);
           perspective: 900px;
           pointer-events: none;
+          opacity: var(--mk-ornament-opacity);
         }
 
         .mk-altar {
@@ -3613,6 +4631,268 @@ function renderManzokukyoTeaser(character) {
           }
         }
 
+        .mk-walk-scene {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          overflow: hidden;
+          background: #050407;
+          opacity: var(--mk-walk-opacity);
+          pointer-events: none;
+          transform: translate3d(0, var(--mk-walk-y), 0);
+          transition: opacity 0.18s linear;
+        }
+
+        .mk-walk-scene::before,
+        .mk-walk-scene::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 8;
+          pointer-events: none;
+        }
+
+        .mk-walk-scene::before {
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+            radial-gradient(ellipse at 50% 48%, transparent 0 42%, rgba(0, 0, 0, 0.3) 72%, rgba(0, 0, 0, 0.9) 100%);
+          background-size: 100% 4px, auto;
+        }
+
+        .mk-walk-scene::after {
+          background:
+            linear-gradient(90deg, rgba(0, 0, 0, 0.46), transparent 18% 82%, rgba(0, 0, 0, 0.46)),
+            radial-gradient(ellipse at 50% 48%, rgba(215, 180, 81, calc(0.04 + var(--mk-threshold-glow) * 0.1)), transparent 34%);
+          mix-blend-mode: screen;
+        }
+
+        .mk-walk-corridor,
+        .mk-final-door-scene {
+          position: absolute;
+          inset: -5%;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
+          will-change: transform, opacity, filter;
+        }
+
+        .mk-walk-corridor {
+          z-index: 1;
+          background-image: url("../assets/generated/manzokukyo/corridor-v2.webp");
+          opacity: calc(1 - var(--mk-door-scene-opacity) * 0.82);
+          transform:
+            translate3d(var(--mk-walk-x), var(--mk-walk-y), 0)
+            scale(var(--mk-walk-scale));
+          transform-origin: 50% 54%;
+          filter:
+            blur(var(--mk-walk-blur))
+            brightness(calc(0.78 + var(--mk-depth) * 0.14))
+            contrast(1.08)
+            saturate(0.88);
+        }
+
+        .mk-final-door-scene {
+          z-index: 5;
+          background-image: url("../assets/generated/manzokukyo/door-v2.webp");
+          opacity: var(--mk-door-scene-opacity);
+          transform:
+            translate3d(calc(var(--mk-walk-x) * -0.16), calc(var(--mk-walk-y) * 0.34), 0)
+            scale(var(--mk-door-scene-scale));
+          transform-origin: 50% 51%;
+          filter:
+            brightness(calc(0.78 + var(--mk-threshold-glow) * 0.18))
+            contrast(1.08)
+            saturate(0.92);
+          transition: filter 0.22s ease;
+        }
+
+        .mk-passage-ribs {
+          position: absolute;
+          inset: 0;
+          z-index: 3;
+          overflow: hidden;
+          perspective: 1100px;
+          transform-style: preserve-3d;
+        }
+
+        .mk-passage-rib {
+          --rib-scale: 0.3;
+          --rib-opacity: 0;
+          position: absolute;
+          top: 49%;
+          left: 50%;
+          width: min(84vw, 1460px);
+          height: min(92vh, 920px);
+          border: clamp(18px, 3.2vw, 58px) solid rgba(3, 3, 5, 0.92);
+          border-bottom-width: clamp(12px, 2vw, 34px);
+          border-radius: 46% 46% 3% 3% / 28% 28% 3% 3%;
+          opacity: var(--rib-opacity);
+          transform: translate(-50%, -50%) scale(var(--rib-scale));
+          transform-origin: 50% 54%;
+          box-shadow:
+            inset 0 0 0 1px rgba(215, 180, 81, 0.16),
+            inset 0 0 48px rgba(0, 0, 0, 0.72),
+            0 0 30px rgba(0, 0, 0, 0.82);
+          will-change: transform, opacity;
+        }
+
+        .mk-passage-rib::before {
+          content: "";
+          position: absolute;
+          inset: calc(clamp(18px, 3.2vw, 58px) * -0.72);
+          border: 1px solid rgba(215, 180, 81, 0.18);
+          border-radius: inherit;
+        }
+
+        .mk-walk-floor-lines {
+          position: absolute;
+          inset: 0;
+          z-index: 4;
+          clip-path: polygon(0 100%, 100% 100%, 58% 56%, 42% 56%);
+          background:
+            repeating-linear-gradient(0deg, rgba(215, 180, 81, 0.16) 0 1px, transparent 1px 11vh),
+            linear-gradient(90deg, transparent 0 44%, rgba(215, 180, 81, 0.12) 44.3% 44.5%, transparent 44.8% 55.2%, rgba(215, 180, 81, 0.12) 55.5% 55.7%, transparent 56%);
+          background-position: center var(--mk-floor-shift), center;
+          opacity: calc(0.22 * (1 - var(--mk-door-scene-opacity)));
+          filter: drop-shadow(0 0 12px rgba(215, 180, 81, 0.18));
+        }
+
+        .mk-walk-fog {
+          position: absolute;
+          inset: 42% -20% -24%;
+          z-index: 6;
+          background:
+            radial-gradient(ellipse at 22% 72%, rgba(126, 60, 255, 0.16), transparent 34%),
+            radial-gradient(ellipse at 76% 62%, rgba(245, 234, 210, 0.1), transparent 32%),
+            radial-gradient(ellipse at 50% 86%, rgba(58, 34, 72, 0.2), transparent 48%);
+          opacity: calc(0.36 + var(--mk-depth) * 0.24);
+          filter: blur(18px);
+          transform: translate3d(calc(var(--mk-walk-x) * -2), calc(var(--mk-walk-y) * -1), 0);
+          animation: mk-walk-fog-drift 12s ease-in-out infinite alternate;
+        }
+
+        .mk-depth-hud {
+          position: fixed;
+          top: clamp(16px, 3vh, 32px);
+          left: 50%;
+          z-index: 30;
+          display: grid;
+          width: min(520px, calc(100% - 180px));
+          grid-template-columns: auto minmax(90px, 1fr) auto;
+          align-items: center;
+          gap: 12px;
+          color: rgba(245, 234, 210, 0.72);
+          opacity: var(--mk-hud-opacity);
+          transform: translateX(-50%);
+          pointer-events: none;
+          transition: opacity 0.2s linear;
+        }
+
+        .mk-depth-hud span {
+          font: 900 0.62rem/1 var(--font-ui);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+        }
+
+        .mk-depth-hud i {
+          position: relative;
+          height: 1px;
+          overflow: visible;
+          background: rgba(245, 234, 210, 0.2);
+        }
+
+        .mk-depth-hud i::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: calc(var(--mk-depth) * 100%);
+          width: 7px;
+          height: 7px;
+          border: 1px solid var(--cult-gold);
+          background: #08070b;
+          transform: translate(-50%, -50%) rotate(45deg);
+          box-shadow: 0 0 12px rgba(215, 180, 81, 0.48);
+        }
+
+        .mk-truth-gate {
+          width: min(38vw, 520px);
+          min-height: min(78vh, 740px);
+          border: 0;
+          padding: 0;
+          background: transparent;
+          transform:
+            translate(-50%, -49%)
+            perspective(1200px)
+            translateZ(var(--mk-gate-z))
+            scale(var(--mk-gate-scale));
+          filter: drop-shadow(0 0 46px rgba(126, 60, 255, calc(var(--mk-gate-opacity) * 0.2)));
+        }
+
+        .mk-truth-gate::before {
+          inset: 2% 7% 12%;
+          border: 1px solid rgba(215, 180, 81, calc(0.16 + var(--mk-threshold-glow) * 0.26));
+          background: transparent;
+          clip-path: polygon(20% 0, 80% 0, 100% 18%, 100% 100%, 0 100%, 0 18%);
+          box-shadow:
+            inset 0 0 52px rgba(126, 60, 255, calc(var(--mk-threshold-glow) * 0.12)),
+            0 0 48px rgba(215, 180, 81, calc(var(--mk-threshold-glow) * 0.12));
+        }
+
+        .mk-truth-gate::after {
+          display: none;
+        }
+
+        .mk-truth-gate span {
+          position: absolute;
+          top: 4%;
+          left: 50%;
+          width: max-content;
+          transform: translateX(-50%);
+        }
+
+        .mk-truth-gate strong {
+          position: absolute;
+          bottom: 8%;
+          left: 50%;
+          width: max-content;
+          margin: 0;
+          border: 1px solid rgba(215, 180, 81, 0.56);
+          padding: 11px 18px 13px;
+          background: rgba(5, 4, 8, 0.78);
+          font-size: clamp(1.45rem, 3.4vw, 2.5rem);
+          line-height: 1;
+          transform: translateX(-50%);
+          backdrop-filter: blur(8px);
+        }
+
+        .mk-truth-gate small {
+          position: absolute;
+          bottom: 2.5%;
+          left: 50%;
+          width: max-content;
+          margin: 0;
+          transform: translateX(-50%);
+        }
+
+        .mk-page[data-entering-truth="true"] .mk-final-door-scene {
+          opacity: 1;
+          transform: scale(1.12);
+          filter: brightness(1.7) contrast(1.02) saturate(0.72);
+          transition: transform 0.62s cubic-bezier(0.22, 1, 0.36, 1), filter 0.62s ease;
+        }
+
+        .mk-page[data-entering-truth="true"] .mk-truth-gate strong,
+        .mk-page[data-entering-truth="true"] .mk-truth-gate small,
+        .mk-page[data-entering-truth="true"] .mk-truth-gate span {
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        @keyframes mk-walk-fog-drift {
+          from { translate: -2% 0; }
+          to { translate: 2% -3%; }
+        }
+
         @media (max-width: 820px) {
           .mk-hero {
             min-height: 100svh;
@@ -3637,6 +4917,27 @@ function renderManzokukyoTeaser(character) {
             width: var(--prop-mobile-width, var(--prop-width));
           }
 
+          .mk-depth-hud {
+            top: 14px;
+            width: calc(100% - 32px);
+          }
+
+          .mk-walk-corridor,
+          .mk-final-door-scene {
+            inset: -3%;
+            background-position: 50% center;
+          }
+
+          .mk-passage-rib {
+            width: 118vw;
+            height: 88svh;
+          }
+
+          .mk-truth-gate {
+            width: min(78vw, 430px);
+            min-height: min(72svh, 620px);
+          }
+
           .mk-hero-inner {
             width: 100%;
             max-width: calc(100vw - 36px);
@@ -3648,7 +4949,7 @@ function renderManzokukyoTeaser(character) {
             top: 42%;
             right: -22vw;
             width: 104vw;
-            opacity: 0.78;
+            opacity: calc(0.78 * var(--mk-ornament-opacity));
           }
 
           .mk-black-mass {
@@ -3657,7 +4958,7 @@ function renderManzokukyoTeaser(character) {
             bottom: 0;
             width: 102vw;
             min-width: 0;
-            opacity: calc(0.74 - var(--mk-hero-exit) * 0.62);
+            opacity: calc(0.74 * var(--mk-ornament-opacity));
           }
 
           .mk-candles {
@@ -3793,6 +5094,8 @@ function renderManzokukyoTeaser(character) {
           .mk-abyss-canvas,
           .mk-perspective-corridor,
           .mk-corridor-props,
+          .mk-walk-scene,
+          .mk-depth-hud,
           .mk-flame-canvas,
           .mk-ritual-dim,
           .mk-wake-overlay,
@@ -3880,36 +5183,14 @@ function renderManzokukyoTeaser(character) {
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <section class="mk-hero">
           <div class="mk-banner" aria-hidden="true"></div>
-          <div class="mk-perspective-corridor" aria-hidden="true">
-            <div class="mk-loop-tunnel">
-              <div class="mk-loop-surface mk-loop-ceiling"></div>
-              <div class="mk-loop-surface mk-loop-floor"></div>
-              <div class="mk-loop-surface mk-loop-wall-left"></div>
-              <div class="mk-loop-surface mk-loop-wall-right"></div>
-              <div class="mk-loop-road-core"></div>
-              <div class="mk-loop-horizon"></div>
-              <svg class="mk-tunnel-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M0 0 L37 34 M100 0 L63 34 M0 100 L37 66 M100 100 L63 66"></path>
-                <rect x="37" y="34" width="26" height="32"></rect>
-                <path class="mk-edge-secondary" d="M18 100 L42 66 M82 100 L58 66 M18 0 L42 34 M82 0 L58 34"></path>
-              </svg>
+          <div class="mk-walk-scene" aria-hidden="true">
+            <div class="mk-walk-corridor"></div>
+            <div class="mk-passage-ribs">
+              ${Array.from({ length: 10 }, (_, index) => `<div class="mk-passage-rib" data-mk-rib="${index}"></div>`).join("")}
             </div>
-            <div class="mk-corridor-plane mk-corridor-plane-top"></div>
-            <div class="mk-corridor-plane mk-corridor-plane-bottom"></div>
-            <div class="mk-corridor-plane mk-corridor-plane-left"></div>
-            <div class="mk-corridor-plane mk-corridor-plane-right"></div>
-            ${Array.from({ length: 28 }, (_, index) => `<div class="mk-corridor-frame" data-mk-corridor-frame="${index}"></div>`).join("")}
-            <div class="mk-corridor-vortex"></div>
-          </div>
-          <div class="mk-corridor-props" aria-hidden="true">
-            <img class="mk-depth-prop" data-mk-prop="door-far" src="../assets/generated/manzokukyo/prop-door.webp" alt="" width="980" height="653" loading="eager" style="--prop-width: min(24vw, 430px); --prop-mobile-width: 72vw;">
-            <img class="mk-depth-prop" data-mk-prop="mirror-far" src="../assets/generated/manzokukyo/prop-mirror.webp" alt="" width="760" height="1140" loading="eager" style="--prop-width: min(15vw, 270px); --prop-mobile-width: 48vw;">
-            <img class="mk-depth-prop" data-mk-prop="painting-far" src="../assets/generated/manzokukyo/prop-painting.webp" alt="" width="780" height="1170" loading="eager" style="--prop-width: min(16vw, 290px); --prop-mobile-width: 50vw;">
-            <img class="mk-depth-prop" data-mk-prop="coffin-far" src="../assets/generated/manzokukyo/prop-coffin.webp" alt="" width="760" height="507" loading="eager" style="--prop-width: min(15vw, 260px); --prop-mobile-width: 46vw;">
-            <img class="mk-depth-prop" data-mk-prop="door" src="../assets/generated/manzokukyo/prop-door.webp" alt="" width="980" height="653" loading="eager" style="--prop-width: min(36vw, 620px); --prop-mobile-width: 86vw;">
-            <img class="mk-depth-prop" data-mk-prop="mirror" src="../assets/generated/manzokukyo/prop-mirror.webp" alt="" width="760" height="1140" loading="eager" style="--prop-width: min(24vw, 410px); --prop-mobile-width: 66vw;">
-            <img class="mk-depth-prop" data-mk-prop="coffin" src="../assets/generated/manzokukyo/prop-coffin.webp" alt="" width="760" height="507" loading="eager" style="--prop-width: min(20vw, 340px); --prop-mobile-width: 58vw;">
-            <img class="mk-depth-prop" data-mk-prop="painting" src="../assets/generated/manzokukyo/prop-painting.webp" alt="" width="780" height="1170" loading="eager" style="--prop-width: min(25vw, 430px); --prop-mobile-width: 68vw;">
+            <div class="mk-walk-floor-lines"></div>
+            <div class="mk-final-door-scene"></div>
+            <div class="mk-walk-fog"></div>
           </div>
           <picture class="mk-key-visual">
             <source srcset="../assets/generated/manzokukyo/key-visual-hero.avif" type="image/avif">
@@ -3942,15 +5223,20 @@ function renderManzokukyoTeaser(character) {
             <p class="mk-subtitle">あなたの満足、私たちがお手伝いします。</p>
             <p class="mk-copy">残念院さんがひらく、甘くて不穏な小さな祭壇。満たされたと思った瞬間、次の満足がこちらを見つめている。</p>
           </div>
-          <p class="mk-scroll-cue">スクロールで奥へ進む / 戻る</p>
+          <p class="mk-scroll-cue" data-mk-scroll-cue>スクロールで回廊へ進む / 戻る</p>
         </section>
         <div class="mk-ritual-dim" aria-hidden="true"></div>
         <div class="mk-wake-overlay" aria-hidden="true"></div>
         <a class="mk-truth-gate" href="./truth/" data-mk-truth-gate aria-hidden="true">
-          <span>Depth limit reached</span>
-          <strong>真理の扉を開く</strong>
-          <small>click / tap to enter</small>
+          <span>Threshold reached</span>
+          <strong>扉に触れる</strong>
+          <small>click / tap</small>
         </a>
+        <div class="mk-depth-hud" aria-hidden="true">
+          <span>ENTRY</span>
+          <i></i>
+          <span data-mk-depth-label>参道</span>
+        </div>
         <audio data-mk-bgm src="../assets/generated/manzokukyo/satisfaction-bgm.m4a" preload="metadata" loop></audio>
         <button class="mk-bgm-toggle" type="button" data-mk-bgm-toggle aria-pressed="false" aria-label="BGMを再生">BGM OFF</button>
         <button class="mk-ritual-replay" type="button" data-mk-ritual-replay aria-label="黒ミサ演出をリプレイ">Replay Ritual</button>
@@ -4081,11 +5367,11 @@ function renderManzokukyoTeaser(character) {
         })();
         (() => {
           const page = document.querySelector(".mk-page");
-          const panels = Array.from(document.querySelectorAll(".mk-depth-journey > .mk-section"));
-          const props = Array.from(document.querySelectorAll("[data-mk-prop]"));
-          const corridorFrames = Array.from(document.querySelectorAll("[data-mk-corridor-frame]"));
+          const ribs = Array.from(document.querySelectorAll("[data-mk-rib]"));
           const truthGate = document.querySelector("[data-mk-truth-gate]");
-          if (!page || !panels.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          const depthLabel = document.querySelector("[data-mk-depth-label]");
+          const scrollCue = document.querySelector("[data-mk-scroll-cue]");
+          if (!page || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
           }
 
@@ -4093,35 +5379,31 @@ function renderManzokukyoTeaser(character) {
           let virtualDepth = 0;
           let lastTouchY = null;
           const maxDepth = 6.8;
-          const panelSlots = [0.34, 0.58, 0.82];
-          const propRoutes = {
-            "door-far": { offset: 0.0, cycle: 1.9, side: -1, lane: 5, pass: 86, scale: 1.65, opacity: 0.5, tilt: 28 },
-            "mirror-far": { offset: 0.28, cycle: 2.0, side: 1, lane: 8, pass: 92, scale: 1.9, opacity: 0.54, tilt: -34 },
-            "painting-far": { offset: 0.56, cycle: 2.05, side: -1, lane: 13, pass: 98, scale: 2.05, opacity: 0.52, tilt: 30 },
-            "coffin-far": { offset: 0.86, cycle: 2.1, side: 1, lane: 11, pass: 92, scale: 2.0, opacity: 0.56, tilt: -32 },
-            door: { offset: 1.24, cycle: 2.15, side: -1, lane: 2, pass: 124, scale: 3.15, opacity: 0.76, tilt: 42 },
-            mirror: { offset: 1.54, cycle: 2.2, side: 1, lane: 5, pass: 126, scale: 2.85, opacity: 0.78, tilt: -48 },
-            coffin: { offset: 1.88, cycle: 2.18, side: -1, lane: 7, pass: 132, scale: 3.1, opacity: 0.82, tilt: 46 },
-            painting: { offset: 2.2, cycle: 2.24, side: 1, lane: 4, pass: 128, scale: 2.95, opacity: 0.78, tilt: -44 },
-          };
 
           function clamp(value, min, max) {
             return Math.min(max, Math.max(min, value));
+          }
+
+          function smoothstep(value) {
+            const t = clamp(value, 0, 1);
+            return t * t * (3 - 2 * t);
           }
 
           function updateDepth() {
             ticking = false;
             const depth = virtualDepth;
             const sceneDepth = clamp(depth / maxDepth, 0, 1);
-            const heroExit = clamp(sceneDepth / 0.22, 0, 1);
-            const corridorIntro = clamp((sceneDepth - 0.08) / 0.2, 0, 1);
+            const heroExit = smoothstep(sceneDepth / 0.2);
+            const walkIntro = smoothstep((sceneDepth - 0.07) / 0.14);
+            const travel = smoothstep((sceneDepth - 0.1) / 0.68);
+            const doorApproach = smoothstep((sceneDepth - 0.68) / 0.2);
+            const gateReveal = smoothstep((sceneDepth - 0.9) / 0.075);
+            const cameraBob = walkIntro * (1 - doorApproach) * Math.sin(depth * 5.4) * 3.2;
+            const cameraSway = walkIntro * (1 - doorApproach) * Math.sin(depth * 1.38) * 5.2;
             page.style.setProperty("--mk-depth", sceneDepth.toFixed(3));
             page.style.setProperty("--mk-hero-exit", heroExit.toFixed(3));
-            page.style.setProperty("--mk-corridor-opacity", (corridorIntro * 0.96).toFixed(3));
-            page.style.setProperty("--mk-banner-opacity", clamp(1 - heroExit * 0.78, 0.16, 1).toFixed(3));
-            page.style.setProperty("--mk-road-shift", (depth * 620).toFixed(1) + "px");
-            page.style.setProperty("--mk-wall-shift", (depth * 430).toFixed(1) + "px");
-            page.style.setProperty("--mk-horizon-shift", (depth * 310).toFixed(1) + "px");
+            page.style.setProperty("--mk-corridor-opacity", "0");
+            page.style.setProperty("--mk-banner-opacity", clamp(1 - heroExit * 0.94, 0.03, 1).toFixed(3));
             page.style.setProperty("--mk-copy-opacity", clamp(1 - heroExit * 1.28, 0, 1).toFixed(3));
             page.style.setProperty("--mk-copy-y", "0px");
             page.style.setProperty("--mk-copy-z", (180 + heroExit * 620).toFixed(1) + "px");
@@ -4132,74 +5414,47 @@ function renderManzokukyoTeaser(character) {
             page.style.setProperty("--mk-portrait-z", (-220 + heroExit * 520).toFixed(1) + "px");
             page.style.setProperty("--mk-portrait-scale", (0.82 + heroExit * 0.22).toFixed(3));
             page.style.setProperty("--mk-portrait-opacity", clamp(0.64 - heroExit * 0.56, 0.04, 0.64).toFixed(3));
-            page.style.setProperty("--mk-tunnel-opacity", clamp((sceneDepth - 0.08) / 0.2, 0, 0.78).toFixed(3));
-            page.style.setProperty("--mk-tunnel-scale", (1.16 + sceneDepth * 0.42).toFixed(3));
+            page.style.setProperty("--mk-ornament-opacity", clamp(1 - heroExit * 1.08, 0, 1).toFixed(3));
+            page.style.setProperty("--mk-tunnel-opacity", "0");
+            page.style.setProperty("--mk-walk-opacity", walkIntro.toFixed(3));
+            page.style.setProperty("--mk-walk-scale", (1.02 + travel * 1.56).toFixed(3));
+            page.style.setProperty("--mk-walk-x", cameraSway.toFixed(2) + "px");
+            page.style.setProperty("--mk-walk-y", cameraBob.toFixed(2) + "px");
+            page.style.setProperty("--mk-walk-blur", (doorApproach * 1.4).toFixed(2) + "px");
+            page.style.setProperty("--mk-door-scene-opacity", doorApproach.toFixed(3));
+            page.style.setProperty("--mk-door-scene-scale", (0.84 + doorApproach * 0.18).toFixed(3));
+            page.style.setProperty("--mk-floor-shift", (depth * 760).toFixed(1) + "px");
+            page.style.setProperty("--mk-hud-opacity", (walkIntro * clamp((1 - sceneDepth) / 0.04, 0, 1)).toFixed(3));
+            page.style.setProperty("--mk-threshold-glow", gateReveal.toFixed(3));
             page.style.setProperty("--mk-footer-opacity", clamp((sceneDepth - 0.9) / 0.08, 0, 1).toFixed(3));
-            const gateReveal = clamp((sceneDepth - 0.92) / 0.07, 0, 1);
             page.style.setProperty("--mk-gate-opacity", gateReveal.toFixed(3));
-            page.style.setProperty("--mk-gate-scale", (0.78 + gateReveal * 0.24).toFixed(3));
-            page.style.setProperty("--mk-gate-z", (-760 + gateReveal * 860).toFixed(1) + "px");
+            page.style.setProperty("--mk-gate-scale", (0.94 + gateReveal * 0.06).toFixed(3));
+            page.style.setProperty("--mk-gate-z", (-260 + gateReveal * 260).toFixed(1) + "px");
             page.dataset.depthEnd = gateReveal > 0.96 ? "true" : "false";
+            page.dataset.walkStage = sceneDepth < 0.1 ? "entry" : sceneDepth < 0.68 ? "corridor" : sceneDepth < 0.9 ? "threshold" : "door";
             if (truthGate) {
               truthGate.setAttribute("aria-hidden", gateReveal > 0.24 ? "false" : "true");
             }
 
-            panels.forEach((panel, index) => {
-              const slot = panelSlots[index] ?? (0.34 + index * 0.24);
-              const presence = clamp(1 - Math.abs(depth - slot) / 0.17, 0, 1);
-              const z = -820 + presence * 860;
-              const lift = 0;
-              const tilt = 14 - presence * 14;
-              const opacity = presence * 0.94;
-              panel.style.setProperty("--mk-panel-z", z.toFixed(1));
-              panel.style.setProperty("--mk-panel-lift", lift.toFixed(1));
-              panel.style.setProperty("--mk-panel-tilt", tilt.toFixed(2));
-              panel.style.setProperty("--mk-panel-scale", (0.86 + presence * 0.16).toFixed(3));
-              panel.style.setProperty("--mk-panel-opacity", opacity.toFixed(3));
+            ribs.forEach((rib, index) => {
+              const lane = ((index / Math.max(1, ribs.length)) + travel * 2.25) % 1;
+              const nearFade = clamp((1 - lane) / 0.14, 0, 1);
+              const scale = 0.3 + Math.pow(lane, 2.1) * 3.15;
+              const opacity = Math.sin(lane * Math.PI) * 0.28 * nearFade * walkIntro * (1 - doorApproach);
+              rib.style.setProperty("--rib-scale", scale.toFixed(3));
+              rib.style.setProperty("--rib-opacity", opacity.toFixed(3));
             });
 
-            corridorFrames.forEach((frame, index) => {
-              const lane = ((index / corridorFrames.length) + depth * 0.24) % 1;
-              const progress = lane;
-              const fisheye = Math.pow(progress, 2.35);
-              const z = -1680 + fisheye * 2050;
-              const scale = 0.08 + Math.pow(progress, 1.78) * 2.45;
-              const farGlow = clamp((0.38 - progress) / 0.38, 0, 1);
-              const nearFade = clamp((1 - progress) / 0.18, 0, 1);
-              const opacity = (0.06 + farGlow * 0.18 + progress * 0.1) * nearFade;
-              frame.style.setProperty("--frame-z", z.toFixed(1) + "px");
-              frame.style.setProperty("--frame-scale", scale.toFixed(3));
-              frame.style.setProperty("--frame-opacity", opacity.toFixed(3));
-            });
-
-            props.forEach((prop) => {
-              const route = propRoutes[prop.dataset.mkProp];
-              if (!route) return;
-              const cycle = route.cycle ?? 2;
-              const raw = depth < route.offset
-                ? -1
-                : ((depth - route.offset) % cycle + cycle) % cycle;
-              const progress = raw < 0 ? 0 : clamp(raw / cycle, 0, 1);
-              const isActive = raw >= 0 ? 1 : 0;
-              const enter = clamp(progress / 0.16, 0, 1);
-              const exit = clamp((1 - progress) / 0.18, 0, 1);
-              const presence = enter * exit * isActive;
-              const eased = progress * progress * (3 - 2 * progress);
-              const fisheye = Math.pow(progress, 2.42);
-              const x = route.side * (route.lane + fisheye * route.pass);
-              const z = -1120 + eased * 1510;
-              const scale = 0.06 + Math.pow(progress, 2.16) * route.scale;
-              const blur = (1 - presence) * 9.5 + progress * 0.5;
-              const rotateY = route.tilt * (0.16 + progress * 0.84);
-              const rotateZ = route.side * -1 * progress * 3.5;
-              prop.style.setProperty("--prop-x", x.toFixed(2) + "vw");
-              prop.style.setProperty("--prop-z", z.toFixed(1) + "px");
-              prop.style.setProperty("--prop-scale", scale.toFixed(3));
-              prop.style.setProperty("--prop-opacity", (presence * route.opacity).toFixed(3));
-              prop.style.setProperty("--prop-blur", blur.toFixed(2) + "px");
-              prop.style.setProperty("--prop-ry", rotateY.toFixed(2) + "deg");
-              prop.style.setProperty("--prop-rz", rotateZ.toFixed(2) + "deg");
-            });
+            if (depthLabel) {
+              depthLabel.textContent = sceneDepth < 0.28 ? "参道" : sceneDepth < 0.68 ? "回廊" : sceneDepth < 0.9 ? "扉前" : "到達";
+            }
+            if (scrollCue) {
+              scrollCue.textContent = sceneDepth < 0.1
+                ? "スクロールで回廊へ進む / 戻る"
+                : sceneDepth < 0.9
+                  ? "歩みを進める / 戻る"
+                  : "扉はすぐそこにある";
+            }
           }
 
           function setDepth(nextDepth) {
@@ -4216,7 +5471,7 @@ function renderManzokukyoTeaser(character) {
           updateDepth();
           window.addEventListener("wheel", (event) => {
             event.preventDefault();
-            setDepth(virtualDepth + event.deltaY / 1250);
+            setDepth(virtualDepth + event.deltaY / 1120);
           }, { passive: false });
           window.addEventListener("touchstart", (event) => {
             lastTouchY = event.touches[0]?.clientY ?? null;
@@ -4225,7 +5480,7 @@ function renderManzokukyoTeaser(character) {
             const currentY = event.touches[0]?.clientY;
             if (lastTouchY == null || currentY == null) return;
             event.preventDefault();
-            setDepth(virtualDepth + (lastTouchY - currentY) / 900);
+            setDepth(virtualDepth + (lastTouchY - currentY) / 760);
             lastTouchY = currentY;
           }, { passive: false });
           window.addEventListener("touchend", () => {
@@ -4239,15 +5494,6 @@ function renderManzokukyoTeaser(character) {
               const direction = forwardKeys.includes(event.key) ? 1 : -1;
               setDepth(event.key === "End" ? maxDepth : event.key === "Home" ? 0 : virtualDepth + direction * 0.42);
             }
-          });
-          document.querySelectorAll(".mk-actions a[href^='#']").forEach((link) => {
-            link.addEventListener("click", (event) => {
-              const targetId = link.getAttribute("href").slice(1);
-              const targetIndex = panels.findIndex((panel) => panel.id === targetId);
-              if (targetIndex === -1) return;
-              event.preventDefault();
-              setDepth((panelSlots[targetIndex] ?? 0.34) * maxDepth);
-            });
           });
           truthGate?.addEventListener("click", (event) => {
             if (page.dataset.depthEnd !== "true") {
@@ -6253,7 +7499,7 @@ function outfitChangeGuidance(character) {
 - 年齢は自称17歳（成人済）として扱い、キャラクター性に反する性的な衣装・演出へ寄せない。${reference}`;
 }
 
-function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData, headExtra = "", stylesheetHref }) {
+function htmlPage({ title, body, theme, description, urlPath = "", imagePath, type = "website", structuredData, headExtra = "", stylesheetHref, bodyClass = "" }) {
   const canonicalUrl = absoluteUrl(urlPath);
   const seoDescription = normalizeDescription(description ?? title);
   const absoluteImageUrl = imagePath ? absoluteUrl(imagePath) : null;
@@ -6297,7 +7543,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     ${headExtra}
     ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
-  <body${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
+  <body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
     ${renderClientScript()}
   </body>
