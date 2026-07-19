@@ -184,6 +184,9 @@
 
       log.append(createPager());
       pageEntries.forEach((entry) => log.append(createEntry(entry)));
+      if (guestbookEntries.length > MAX_VISIBLE_ENTRIES) {
+        log.append(createPager());
+      }
     };
 
     const loadEntries = () => {

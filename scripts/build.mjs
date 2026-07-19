@@ -1212,7 +1212,7 @@ function renderManzokukyoTruth(character) {
           "扉の向こうで、何かが爪を立てました。",
           "違います。けれど、今の声は覚えられました。",
           "満たされていません。もう一度。",
-          "赤い家の窓が、ひとつ増えました。"
+          "赤い懺悔室の灯りが、ひとつ増えました。"
         ];
         let timer = 0;
 
@@ -1249,8 +1249,8 @@ function renderManzokukyoTruth(character) {
 }
 
 function renderManzokukyoRedHouse(character) {
-  const title = "赤い家";
-  const description = "真理の扉の先にある、仮置きの少し怖いページです。";
+  const title = "赤い懺悔室";
+  const description = "真理の扉の先にある、赤い灯りと懺悔のギミックで遊ぶ少し怖いページです。";
 
   return htmlPage({
     title: `${title} | 満足教`,
@@ -1284,111 +1284,576 @@ function renderManzokukyoRedHouse(character) {
         body {
           min-height: 100%;
           margin: 0;
-          background: #050000;
+          background: #060102;
         }
 
-        .red-house-page {
-          display: grid;
+        .red-confession-page,
+        .red-confession-page *,
+        .red-confession-page *::before,
+        .red-confession-page *::after {
+          box-sizing: border-box;
+        }
+
+        .red-confession-page {
+          --mouse-x: 50%;
+          --mouse-y: 48%;
+          --sin-level: 0;
+          --lamp-alpha: 0.32;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
           min-height: 100svh;
-          place-items: center;
           overflow: hidden;
           padding: clamp(18px, 5vw, 56px);
           background:
-            radial-gradient(circle at 50% 38%, rgba(255, 0, 0, 0.18), transparent 28%),
-            linear-gradient(180deg, #170000 0%, #050000 100%);
-          color: #f5e8e8;
+            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 68, 68, calc(0.12 + var(--lamp-alpha) * 0.18)), transparent 18%),
+            repeating-linear-gradient(90deg, rgba(255, 45, 45, 0.04) 0 1px, transparent 1px 44px),
+            linear-gradient(180deg, #210305 0%, #080102 58%, #020000 100%);
+          color: #ffe7df;
           font-family: var(--font-sans);
+          isolation: isolate;
+          transition: background 0.28s ease;
         }
 
-        .red-house {
-          width: min(680px, 100%);
-          border: 1px solid #8b0000;
-          padding: clamp(22px, 5vw, 42px);
+        .red-confession-page::before,
+        .red-confession-page::after {
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          content: "";
+          pointer-events: none;
+        }
+
+        .red-confession-page::before {
           background:
-            linear-gradient(180deg, rgba(86, 0, 0, 0.92), rgba(19, 0, 0, 0.96));
-          box-shadow:
-            0 0 0 6px rgba(255, 0, 0, 0.08),
-            0 0 48px rgba(255, 0, 0, 0.24);
-          text-align: center;
+            linear-gradient(90deg, rgba(12, 0, 0, 0.86), transparent 18% 82%, rgba(12, 0, 0, 0.86)),
+            repeating-linear-gradient(0deg, transparent 0 16px, rgba(255, 195, 168, 0.035) 17px 18px);
+          opacity: 0.86;
         }
 
-        .red-house-small {
+        .red-confession-page::after {
+          background:
+            radial-gradient(circle at 50% 47%, transparent 0 34%, rgba(0, 0, 0, 0.72) 74%),
+            linear-gradient(rgba(255, 0, 0, 0.08), rgba(255, 0, 0, 0.02));
+          mix-blend-mode: multiply;
+        }
+
+        .red-confession-room {
+          min-width: 0;
+          width: 100%;
+          max-width: 1040px;
+          border: 1px solid rgba(255, 109, 86, 0.62);
+          padding: clamp(18px, 4vw, 34px);
+          background:
+            linear-gradient(135deg, rgba(104, 7, 10, 0.88), rgba(18, 2, 3, 0.98) 58%),
+            repeating-linear-gradient(90deg, rgba(255, 221, 190, 0.04) 0 2px, transparent 2px 18px);
+          box-shadow:
+            inset 0 0 0 1px rgba(0, 0, 0, 0.86),
+            0 0 0 8px rgba(255, 0, 0, 0.06),
+            0 22px 80px rgba(0, 0, 0, 0.74),
+            0 0 62px rgba(255, 0, 0, calc(0.16 + var(--lamp-alpha) * 0.24));
+          backdrop-filter: blur(10px);
+        }
+
+        .red-confession-small {
           margin: 0 0 8px;
-          color: #ffb3b3;
+          color: #ffc7ac;
           font-size: 0.82rem;
           font-weight: 900;
           letter-spacing: 0.18em;
           text-transform: uppercase;
         }
 
-        .red-house h1 {
-          margin: 0 0 18px;
-          color: #ffdddd;
+        .red-confession-header {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: clamp(16px, 4vw, 34px);
+          align-items: start;
+          margin-bottom: clamp(18px, 4vw, 30px);
+        }
+
+        .red-confession-header > div {
+          min-width: 0;
+        }
+
+        .red-confession-header h1 {
+          margin: 0;
+          color: #fff3e8;
           font-family: var(--font-display);
-          font-size: clamp(2.8rem, 12vw, 6rem);
+          font-size: 6.4rem;
           line-height: 0.95;
           text-shadow:
-            0 0 8px #ff0000,
-            3px 3px 0 #000000;
+            0 0 10px rgba(255, 45, 45, 0.9),
+            3px 3px 0 #100000,
+            -1px -1px 0 rgba(255, 216, 179, 0.34);
+          overflow-wrap: anywhere;
         }
 
-        .red-house p {
-          color: #f5e8e8;
-          font-weight: 800;
+        .red-confession-lead {
+          max-width: 58ch;
+          margin: 14px 0 0;
+          color: #ffd7c5;
+          font-weight: 850;
           line-height: 1.8;
+          overflow-wrap: anywhere;
         }
 
-        .red-house-window {
+        .red-confession-eye {
+          position: relative;
           display: grid;
-          grid-template-columns: repeat(2, 64px);
-          gap: 8px;
-          justify-content: center;
-          margin: 16px auto 20px;
-        }
-
-        .red-house-window span {
-          display: block;
-          height: 48px;
-          border: 2px solid #1a0000;
+          width: clamp(118px, 17vw, 170px);
+          aspect-ratio: 1;
+          place-items: center;
+          border: 1px solid rgba(255, 199, 172, 0.55);
+          border-radius: 50%;
           background:
-            radial-gradient(circle at 50% 65%, rgba(255, 230, 230, 0.75), transparent 14%),
-            linear-gradient(180deg, #ff0000, #510000);
-          box-shadow: inset 0 0 18px #1a0000;
+            radial-gradient(circle at var(--mouse-x) var(--mouse-y), #fff7df 0 9%, #d11224 10% 22%, #260004 23% 48%, #070001 49% 100%);
+          box-shadow:
+            inset 0 0 34px rgba(0, 0, 0, 0.92),
+            0 0 42px rgba(255, 0, 0, 0.34);
+          overflow: hidden;
         }
 
-        .red-house-links {
+        .red-confession-eye::after {
+          width: 54%;
+          height: 16%;
+          border-radius: 999px;
+          background: rgba(0, 0, 0, 0.72);
+          box-shadow: 0 0 18px rgba(0, 0, 0, 0.9);
+          content: "";
+          transform: rotate(-4deg);
+        }
+
+        .red-confession-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+          gap: clamp(16px, 3vw, 28px);
+          align-items: stretch;
+          min-width: 0;
+        }
+
+        .confession-booth,
+        .confession-panel {
+          min-width: 0;
+          border: 1px solid rgba(255, 170, 132, 0.32);
+          background: rgba(12, 0, 2, 0.72);
+          box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.62);
+        }
+
+        .confession-booth {
+          display: grid;
+          gap: 14px;
+          padding: clamp(16px, 3vw, 24px);
+        }
+
+        .confession-booth label,
+        .confession-panel h2 {
+          margin: 0;
+          color: #ffe0cf;
+          font-size: 0.92rem;
+          font-weight: 950;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+
+        .confession-booth textarea {
+          width: 100%;
+          min-width: 0;
+          min-height: 178px;
+          resize: vertical;
+          border: 1px solid rgba(255, 172, 132, 0.44);
+          border-radius: 0;
+          padding: 14px 15px;
+          background:
+            linear-gradient(rgba(50, 0, 4, 0.74), rgba(16, 0, 2, 0.92)),
+            repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 120, 90, 0.12) 32px 33px);
+          color: #fff2e8;
+          font: inherit;
+          font-weight: 800;
+          line-height: 1.75;
+          outline: none;
+          box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.56);
+        }
+
+        .confession-booth textarea:focus {
+          border-color: #ffd0b8;
+          box-shadow:
+            inset 0 0 22px rgba(0, 0, 0, 0.56),
+            0 0 0 3px rgba(255, 116, 84, 0.22);
+        }
+
+        .confession-meter {
+          height: 12px;
+          border: 1px solid rgba(255, 184, 145, 0.42);
+          background: #130002;
+          overflow: hidden;
+        }
+
+        .confession-meter span {
+          display: block;
+          width: calc(var(--sin-level) * 100%);
+          height: 100%;
+          background:
+            linear-gradient(90deg, #ffddb8, #ff4c4c 55%, #910010);
+          box-shadow: 0 0 18px rgba(255, 61, 61, 0.82);
+          transition: width 0.22s ease;
+        }
+
+        .confession-output {
+          min-height: 4.2em;
+          margin: 0;
+          color: #ffd8c7;
+          font-weight: 850;
+          line-height: 1.7;
+          overflow-wrap: anywhere;
+        }
+
+        .confession-actions,
+        .confession-switches,
+        .red-confession-links {
           display: flex;
           flex-wrap: wrap;
-          justify-content: center;
           gap: 10px;
-          margin-top: 20px;
         }
 
-        .red-house-links a {
-          border: 1px solid #ff8a8a;
-          border-radius: 999px;
-          padding: 9px 13px;
-          background: #120000;
-          color: #ffd6d6;
-          font-weight: 900;
+        .confession-actions button,
+        .confession-switches button,
+        .red-confession-links a {
+          max-width: 100%;
+          border: 1px solid rgba(255, 206, 178, 0.54);
+          border-radius: 0;
+          min-height: 44px;
+          padding: 10px 13px;
+          background: #150003;
+          color: #ffe2d2;
+          font: inherit;
+          font-weight: 950;
           text-decoration: none;
+          box-shadow: inset 0 -2px 0 rgba(255, 74, 74, 0.24);
+          cursor: pointer;
         }
+
+        .confession-actions button:hover,
+        .confession-switches button:hover,
+        .red-confession-links a:hover {
+          border-color: #ffe5d7;
+          background: #340006;
+        }
+
+        .confession-actions button:first-child {
+          background: linear-gradient(180deg, #9a0712, #350004);
+        }
+
+        .confession-panel {
+          display: grid;
+          gap: 16px;
+          padding: clamp(16px, 3vw, 24px);
+        }
+
+        .confession-sigil {
+          position: relative;
+          display: grid;
+          min-height: 220px;
+          place-items: center;
+          border: 1px solid rgba(255, 178, 140, 0.22);
+          background:
+            radial-gradient(circle at center, rgba(255, 70, 70, calc(0.1 + var(--lamp-alpha) * 0.24)), transparent 35%),
+            repeating-conic-gradient(from 4deg, rgba(255, 193, 146, 0.08) 0 8deg, transparent 8deg 18deg),
+            #090001;
+          overflow: hidden;
+        }
+
+        .confession-sigil::before,
+        .confession-sigil::after {
+          position: absolute;
+          border: 1px solid rgba(255, 214, 187, 0.38);
+          content: "";
+        }
+
+        .confession-sigil::before {
+          width: 62%;
+          aspect-ratio: 1;
+          transform: rotate(45deg);
+        }
+
+        .confession-sigil::after {
+          width: 34%;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          box-shadow: 0 0 28px rgba(255, 0, 0, 0.38);
+        }
+
+        .confession-sigil strong {
+          position: relative;
+          z-index: 1;
+          color: #fff0dc;
+          font-family: var(--font-display);
+          font-size: 4.2rem;
+          line-height: 1;
+          text-shadow: 0 0 14px rgba(255, 0, 0, 0.86), 2px 2px 0 #000;
+        }
+
+        .confession-switches button[aria-pressed="true"] {
+          border-color: #fff1dd;
+          background: #6f000b;
+          color: #fff7ed;
+          box-shadow:
+            inset 0 0 18px rgba(255, 201, 173, 0.12),
+            0 0 18px rgba(255, 29, 29, 0.32);
+        }
+
+        .confession-log {
+          min-height: 4.6em;
+          margin: 0;
+          color: #ffcdb7;
+          font-weight: 850;
+          line-height: 1.7;
+          overflow-wrap: anywhere;
+        }
+
+        .red-confession-links {
+          margin-top: clamp(16px, 3vw, 26px);
+          justify-content: center;
+        }
+
+        .red-confession-page.is-judging .red-confession-room {
+          animation: confession-shudder 0.42s steps(2, end);
+        }
+
+        .red-confession-page.is-absolved .red-confession-eye {
+          background:
+            radial-gradient(circle at center, #fff8e3 0 18%, #ffcf8f 19% 31%, #310005 32% 100%);
+        }
+
+        .red-confession-page.is-absolved .confession-sigil strong {
+          color: #fff7df;
+        }
+
+        @keyframes confession-shudder {
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          25% {
+            transform: translate(-6px, 4px);
+          }
+
+          50% {
+            transform: translate(5px, -3px);
+          }
+
+          75% {
+            transform: translate(-3px, -2px);
+          }
+        }
+
+        @media (max-width: 780px) {
+          .red-confession-header,
+          .red-confession-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .red-confession-header h1 {
+            font-size: 3.6rem;
+          }
+
+          .red-confession-eye {
+            justify-self: start;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .red-confession-page {
+            padding: 16px;
+          }
+
+          .red-confession-room {
+            width: 100%;
+            max-width: calc(100vw - 32px);
+          }
+
+          .red-confession-header h1 {
+            font-size: 2.7rem;
+          }
+
+          .confession-sigil strong {
+            font-size: 3.1rem;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.001ms !important;
+            scroll-behavior: auto !important;
+            transition-duration: 0.001ms !important;
+          }
+        }
+
       </style>
-      <main class="red-house-page">
-        <div class="red-house">
-          <p class="red-house-small">temporary page</p>
-          <h1>赤い家</h1>
-          <div class="red-house-window" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
+      <main class="red-confession-page" data-confession-page>
+        <section class="red-confession-room" aria-labelledby="red-confession-title">
+          <header class="red-confession-header">
+            <div>
+              <p class="red-confession-small">red confession room / area 02</p>
+              <h1 id="red-confession-title">赤い懺悔室</h1>
+              <p class="red-confession-lead">赤い灯りの下で、満足していないことをひとつだけ置いていく。扉は裁かない。ただ、少しだけ覚えている。</p>
+            </div>
+            <div class="red-confession-eye" aria-hidden="true"></div>
+          </header>
+
+          <div class="red-confession-grid">
+            <form class="confession-booth" data-confession-form>
+              <label for="confession-text">懺悔欄</label>
+              <textarea id="confession-text" name="confession" maxlength="180" autocomplete="off" placeholder="例: 今日はまだ満足していない"></textarea>
+              <div class="confession-meter" aria-hidden="true"><span data-confession-meter></span></div>
+              <p class="confession-output" data-confession-output aria-live="polite">赤い帳の向こうで、誰かが返事を待っている。</p>
+              <div class="confession-actions">
+                <button type="submit">懺悔する</button>
+                <button type="button" data-random-confession>代筆させる</button>
+                <button type="button" data-clear-confession>忘れる</button>
+              </div>
+            </form>
+
+            <aside class="confession-panel" aria-label="懺悔室の仕掛け">
+              <h2>三つの灯り</h2>
+              <div class="confession-sigil" aria-hidden="true"><strong data-sigil-word>未</strong></div>
+              <div class="confession-switches" data-confession-switches>
+                <button type="button" data-lamp="silence" aria-pressed="false">沈黙</button>
+                <button type="button" data-lamp="memory" aria-pressed="false">記憶</button>
+                <button type="button" data-lamp="satisfaction" aria-pressed="false">満足</button>
+              </div>
+              <p class="confession-log" data-confession-log aria-live="polite">灯りを選ぶと、部屋の機嫌が変わる。</p>
+            </aside>
           </div>
-          <p>ここは、まだ作りかけの家です。</p>
-          <p>なのに、窓の数だけは毎回合っている気がします。</p>
-          <nav class="red-house-links" aria-label="赤い家メニュー">
+
+          <nav class="red-confession-links" aria-label="赤い懺悔室メニュー">
             <a href="../">真理の扉へ戻る</a>
             <a href="../../../">残念院さん公式設定へ戻る</a>
           </nav>
-        </div>
+        </section>
       </main>
+      <script>
+        (() => {
+          const page = document.querySelector("[data-confession-page]");
+          const form = document.querySelector("[data-confession-form]");
+          const textarea = document.querySelector("#confession-text");
+          const meter = document.querySelector("[data-confession-meter]");
+          const output = document.querySelector("[data-confession-output]");
+          const log = document.querySelector("[data-confession-log]");
+          const sigil = document.querySelector("[data-sigil-word]");
+          const randomButton = document.querySelector("[data-random-confession]");
+          const clearButton = document.querySelector("[data-clear-confession]");
+          const lampButtons = Array.from(document.querySelectorAll("[data-lamp]"));
+
+          if (!page || !form || !textarea || !meter || !output || !log || !sigil) {
+            return;
+          }
+
+          const sampleConfessions = [
+            "カップ麺の待ち時間を一分だけごまかしました。",
+            "満足したふりをして、まだ次の満足を探しています。",
+            "赤い部屋の戻るリンクを確認してから怖がっています。",
+            "今日はなにもしていないのに、少しだけ誇らしいです。"
+          ];
+          const lampTexts = {
+            silence: "沈黙の灯りが点いた。文字数だけが、やけに正直だ。",
+            memory: "記憶の灯りが点いた。前に来た気配だけが、ほんの少し濃くなる。",
+            satisfaction: "満足の灯りが点いた。部屋の赤が、少しだけやさしい赤になる。"
+          };
+          const verdicts = [
+            "帳は閉じた。まだ赤い。",
+            "懺悔は受理された。満足には、少し届かない。",
+            "壁の向こうで小さな拍手がした。誰のものかは、考えない方がいい。",
+            "赤い灯りが一度だけ瞬いた。今の言葉は、しばらく残る。"
+          ];
+
+          const setLevel = () => {
+            const text = textarea.value.trim();
+            const level = Math.min(1, text.length / 90);
+            page.style.setProperty("--sin-level", level.toFixed(2));
+            page.style.setProperty("--lamp-alpha", (0.24 + level * 0.48).toFixed(2));
+            meter.style.width = "";
+            sigil.textContent = text.includes("満足") || text.includes("まんぞく") ? "満" : text.length > 54 ? "罪" : "未";
+          };
+
+          const judge = () => {
+            const text = textarea.value.trim();
+            page.classList.remove("is-absolved");
+            page.classList.add("is-judging");
+            window.setTimeout(() => page.classList.remove("is-judging"), 460);
+
+            if (!text) {
+              output.textContent = "空白は懺悔ではない。けれど、空白にも温度はある。";
+              sigil.textContent = "空";
+              return;
+            }
+
+            if (text.includes("満足") || text.includes("まんぞく")) {
+              output.textContent = "赤い懺悔室は満足した。今日だけ、あなたの罪は軽い。";
+              log.textContent = "奥の扉が半分だけ開いた気がする。まだ先は作りかけだ。";
+              sigil.textContent = "赦";
+              page.classList.add("is-absolved");
+              return;
+            }
+
+            const index = (text.length + Array.from(text).reduce((sum, char) => sum + char.charCodeAt(0), 0)) % verdicts.length;
+            output.textContent = verdicts[index];
+            log.textContent = "三つの灯りは、まだ答えを選びきれていない。";
+          };
+
+          textarea.addEventListener("input", setLevel);
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            judge();
+          });
+
+          randomButton?.addEventListener("click", () => {
+            const next = sampleConfessions[Math.floor(Math.random() * sampleConfessions.length)];
+            textarea.value = next;
+            setLevel();
+            output.textContent = "代筆された懺悔が、赤い紙に滲んだ。";
+            textarea.focus();
+          });
+
+          clearButton?.addEventListener("click", () => {
+            textarea.value = "";
+            page.classList.remove("is-absolved");
+            setLevel();
+            output.textContent = "忘れたことだけが、きれいに残った。";
+            log.textContent = "灯りを選ぶと、部屋の機嫌が変わる。";
+            textarea.focus();
+          });
+
+          lampButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+              const active = button.getAttribute("aria-pressed") !== "true";
+              lampButtons.forEach((item) => item.setAttribute("aria-pressed", "false"));
+              button.setAttribute("aria-pressed", active ? "true" : "false");
+              const lamp = button.dataset.lamp || "silence";
+              log.textContent = active ? lampTexts[lamp] : "灯りが消えた。赤だけが残った。";
+              page.style.setProperty("--lamp-alpha", active ? "0.84" : "0.32");
+              if (active && lamp === "satisfaction") {
+                sigil.textContent = "満";
+              } else {
+                setLevel();
+              }
+            });
+          });
+
+          page.addEventListener("pointermove", (event) => {
+            const rect = page.getBoundingClientRect();
+            page.style.setProperty("--mouse-x", ((event.clientX - rect.left) / rect.width * 100).toFixed(2) + "%");
+            page.style.setProperty("--mouse-y", ((event.clientY - rect.top) / rect.height * 100).toFixed(2) + "%");
+          });
+
+          setLevel();
+        })();
+      </script>
     `
   });
 }
