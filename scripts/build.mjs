@@ -240,6 +240,7 @@ async function generateManzokukyoAssets(characterDir) {
   const corridorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "corridor-v2.png");
   const doorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "door-v2.png");
   const truthChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "truth-chamber.png");
+  const redConfessionChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "red-confession-chamber.png");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -267,6 +268,7 @@ async function generateManzokukyoAssets(characterDir) {
     [corridorScenePath, "corridor-v2"],
     [doorScenePath, "door-v2"],
     [truthChamberPath, "truth-chamber"],
+    [redConfessionChamberPath, "red-confession-chamber"],
   ]) {
     if (!await fileExists(source)) continue;
     await sharp(source)
@@ -1236,6 +1238,67 @@ function renderManzokukyoTruth(character) {
           box-shadow: 0 0 0 1px rgba(215, 180, 81, 0.2), 0 0 34px rgba(126, 60, 255, 0.16);
         }
 
+        .truth-mobile-runes {
+          display: none;
+        }
+
+        .truth-mobile-runes > p {
+          margin: 0;
+          color: rgba(245, 234, 210, 0.58);
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-align: center;
+        }
+
+        .truth-rune-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+          gap: 9px;
+          align-items: center;
+        }
+
+        .truth-console .truth-rune-button {
+          display: grid;
+          min-width: 0;
+          min-height: 82px;
+          place-items: center;
+          gap: 2px;
+          border-color: rgba(215, 180, 81, 0.42);
+          padding: 8px;
+          background:
+            radial-gradient(circle at 50% 44%, rgba(126, 60, 255, 0.16), transparent 55%),
+            rgba(5, 3, 8, 0.94);
+          color: var(--truth-ink);
+          box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.7);
+        }
+
+        .truth-rune-button small {
+          color: rgba(215, 180, 81, 0.56);
+          font-family: var(--font-ui);
+          font-size: 0.54rem;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+
+        .truth-rune-button strong {
+          font-family: var(--font-display);
+          font-size: 2.55rem;
+          line-height: 0.9;
+          text-shadow: 0 0 18px rgba(155, 114, 255, 0.42);
+        }
+
+        .truth-rune-join {
+          color: rgba(215, 180, 81, 0.62);
+          font-family: var(--font-ui);
+          font-size: 1rem;
+        }
+
+        .truth-console .truth-rune-button:active {
+          border-color: #fff0ad;
+          background: rgba(67, 34, 92, 0.74);
+          transform: scale(0.97);
+        }
+
         .truth-console button {
           display: inline-flex;
           min-width: 126px;
@@ -1523,6 +1586,15 @@ function renderManzokukyoTruth(character) {
             grid-template-columns: 1fr;
           }
 
+          .truth-console input {
+            display: none;
+          }
+
+          .truth-mobile-runes {
+            display: grid;
+            gap: 8px;
+          }
+
           .truth-console button {
             min-height: 46px;
           }
@@ -1595,6 +1667,14 @@ function renderManzokukyoTruth(character) {
             <output data-denial-meter>00 / 03</output>
           </div>
           <label for="truth-passphrase">合言葉</label>
+          <div class="truth-mobile-runes" data-truth-mobile-runes aria-label="二つの合言葉の印">
+            <p>二つの印をタップして、言葉を合わせる。</p>
+            <div class="truth-rune-grid">
+              <button class="truth-rune-button" type="button" data-truth-rune="0" aria-label="第一の印、現在は未"><small>First seal</small><strong data-truth-rune-label>未</strong></button>
+              <span class="truth-rune-join" aria-hidden="true">＋</span>
+              <button class="truth-rune-button" type="button" data-truth-rune="1" aria-label="第二の印、現在は定"><small>Second seal</small><strong data-truth-rune-label>定</strong></button>
+            </div>
+          </div>
           <div class="truth-passphrase-row">
             <input id="truth-passphrase" name="passphrase" type="text" autocomplete="off" inputmode="text" aria-describedby="truth-message" placeholder="合言葉を捧げる">
             <button type="submit">捧げる <span aria-hidden="true">→</span></button>
@@ -1618,6 +1698,8 @@ function renderManzokukyoTruth(character) {
         const input = form.querySelector("input[name='passphrase']");
         const message = form.querySelector(".truth-message");
         const meter = form.querySelector("[data-denial-meter]");
+        const runeButtons = Array.from(form.querySelectorAll("[data-truth-rune]"));
+        const mobileQuery = window.matchMedia("(max-width: 720px)");
         const answers = (form.dataset.answers || "").split("|").map((item) => item.trim()).filter(Boolean);
         const nextUrl = form.dataset.nextUrl || "./red-house/";
         const badMessages = [
@@ -1629,10 +1711,33 @@ function renderManzokukyoTruth(character) {
         ];
         let timer = 0;
         let denials = 0;
+        const runeOptions = [["未", "満", "赤", "空"], ["定", "足", "罪", "門"]];
+        const runeIndices = [0, 0];
 
         const normalize = (value) => value.replace(/[\u3000\s]+/g, "").trim();
         const setListening = () => {
           if (!page.classList.contains("truth-accepted")) page.dataset.truthState = "listening";
+        };
+
+        const renderRunes = () => {
+          const selected = runeOptions.map((options, index) => options[runeIndices[index] % options.length]);
+          runeButtons.forEach((button, index) => {
+            const label = button.querySelector("[data-truth-rune-label]");
+            if (label) label.textContent = selected[index];
+            button.setAttribute("aria-label", (index === 0 ? "第一の印、現在は" : "第二の印、現在は") + selected[index]);
+          });
+          input.value = selected.join("");
+        };
+
+        const syncInputMode = () => {
+          const wasMobile = input.readOnly;
+          input.readOnly = mobileQuery.matches;
+          input.tabIndex = mobileQuery.matches ? -1 : 0;
+          if (mobileQuery.matches) {
+            renderRunes();
+          } else if (wasMobile) {
+            input.value = "";
+          }
         };
 
         input.addEventListener("focus", setListening);
@@ -1642,6 +1747,17 @@ function renderManzokukyoTruth(character) {
             page.dataset.truthState = "waiting";
           }
         });
+
+        runeButtons.forEach((button, index) => {
+          button.addEventListener("click", () => {
+            runeIndices[index] = (runeIndices[index] + 1) % runeOptions[index].length;
+            renderRunes();
+            setListening();
+            message.textContent = "印がひとつ進んだ。二つの音が、祭壇に残る。";
+          });
+        });
+
+        mobileQuery.addEventListener?.("change", syncInputMode);
 
         form.addEventListener("submit", (event) => {
           event.preventDefault();
@@ -1654,7 +1770,7 @@ function renderManzokukyoTruth(character) {
             page.classList.add("truth-accepted");
             message.textContent = "受理しました。次の部屋が、あなたを待っています。";
             input.disabled = true;
-            form.querySelector("button").disabled = true;
+            form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
             window.setTimeout(() => {
               window.location.href = nextUrl;
             }, 1120);
@@ -1670,12 +1786,14 @@ function renderManzokukyoTruth(character) {
           page.classList.remove("truth-denied");
           void page.offsetWidth;
           page.classList.add("truth-denied");
-          input.select();
+          if (!mobileQuery.matches) input.select();
           timer = window.setTimeout(() => {
             page.classList.remove("truth-denied");
             page.dataset.truthState = "listening";
           }, 1280);
         });
+
+        syncInputMode();
       })();
       </script>
     `
@@ -2095,13 +2213,23 @@ function renderZanneninCharacter(character) {
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
     headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}
-      <link rel="stylesheet" href="./assets/site/home.css?v=20260720-4">
-      <script src="./assets/site/home.js?v=20260720-4" defer></script>`,
+      <link rel="stylesheet" href="./assets/site/home.css?v=20260720-6">
+      <script src="./assets/site/home.js?v=20260720-6" defer></script>`,
     theme: character.theme,
     bodyClass: "zannenin-home",
     body: `
       <main class="zn-page" data-zn-page data-satisfaction="17">
         <div class="zn-progress" aria-hidden="true"><span data-zn-progress></span></div>
+        <div class="zn-milestone" data-zn-milestone hidden aria-live="assertive" aria-atomic="true">
+          <div class="zn-milestone-grid" aria-hidden="true"></div>
+          <div class="zn-milestone-echo" data-zn-milestone-echo aria-hidden="true">100%</div>
+          <div class="zn-milestone-core">
+            <span data-zn-milestone-tier>REWARD UNLOCKED</span>
+            <strong><b data-zn-milestone-value>100</b><i>%</i></strong>
+            <h2 data-zn-milestone-title>観測上限解除</h2>
+            <p data-zn-milestone-copy></p>
+          </div>
+        </div>
 
         <header class="zn-hero" id="top">
           <img class="zn-hero-image" src="./assets/brand/banner-source.png" alt="${escapeHtml(character.brandAssets?.banner?.alt ?? `${character.displayName} キービジュアル`)}" fetchpriority="high">
@@ -2135,6 +2263,11 @@ function renderZanneninCharacter(character) {
             <p class="zn-observer-value"><strong data-zn-value>17</strong><span>%</span></p>
             <div class="zn-observer-meter" aria-hidden="true"><span data-zn-meter></span></div>
             <p class="zn-oracle" data-zn-oracle aria-live="polite">満足度は自己申告制です。</p>
+            <div class="zn-reward" data-zn-reward hidden aria-live="polite">
+              <span data-zn-reward-tier>REWARD</span>
+              <strong data-zn-reward-title>観測報酬</strong>
+              <p data-zn-reward-copy></p>
+            </div>
             <button type="button" data-zn-satisfaction>満足を観測</button>
           </aside>
 
@@ -2260,6 +2393,1124 @@ function renderZanneninCharacter(character) {
 }
 
 function renderManzokukyoRedHouse(character) {
+  const title = "赤い懺悔室";
+  const description = "真理の扉の先にある、赤い灯りと懺悔のギミックで遊ぶ少し怖いページです。";
+
+  return htmlPage({
+    title: `${title} | 満足教`,
+    description,
+    urlPath: `${character.id}/manzokukyo/truth/red-house/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "website",
+    theme: character.theme,
+    stylesheetHref: "../../../../styles.css",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `${title} | 満足教`,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`),
+      inLanguage: "ja",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Character Canon",
+        url: absoluteUrl("")
+      }
+    },
+    body: `
+      <style>
+        :root {
+          --red-black: #050102;
+          --red-ink: #fff3e8;
+          --red-bone: #e9d8c7;
+          --red-brass: #bd8f52;
+          --red-crimson: #9f0d1d;
+          --red-hot: #ff3d4f;
+        }
+
+        html,
+        body {
+          min-height: 100%;
+          margin: 0;
+          overflow: hidden;
+          color: var(--red-ink);
+          background: var(--red-black);
+        }
+
+        .red-room,
+        .red-room *,
+        .red-room *::before,
+        .red-room *::after {
+          box-sizing: border-box;
+        }
+
+        .red-room {
+          --mouse-x: 50%;
+          --mouse-y: 45%;
+          --sin-level: 0;
+          position: relative;
+          min-height: 100svh;
+          overflow: hidden;
+          isolation: isolate;
+          font-family: var(--font-sans);
+          background: #050102;
+        }
+
+        .red-room-art,
+        .red-room-art img,
+        .red-room-shade,
+        .red-room-noise,
+        .red-room-flash {
+          position: absolute;
+          inset: 0;
+        }
+
+        .red-room-art {
+          z-index: -6;
+          overflow: hidden;
+        }
+
+        .red-room-art img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          filter: brightness(0.65) contrast(1.08) saturate(0.76);
+          transform: scale(1.035);
+          animation: red-room-enter 2.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+          transition: filter 0.5s ease, transform 0.5s ease;
+        }
+
+        .red-room-shade {
+          z-index: -5;
+          pointer-events: none;
+          background:
+            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 222, 180, 0.055), transparent 18%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.62), transparent 24% 76%, rgba(0, 0, 0, 0.62)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 25% 66%, rgba(0, 0, 0, 0.88)),
+            radial-gradient(ellipse at 50% 44%, rgba(130, 0, 16, calc(0.06 + var(--sin-level) * 0.2)), transparent 48%);
+        }
+
+        .red-room-noise {
+          z-index: 30;
+          pointer-events: none;
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, transparent 0 50%, rgba(0, 0, 0, 0.54) 84%, #000 100%);
+          background-size: 100% 4px, auto;
+          opacity: 0.74;
+          mix-blend-mode: screen;
+        }
+
+        .red-topbar {
+          position: absolute;
+          top: 0;
+          right: 0;
+          left: 0;
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 60px;
+          border-bottom: 1px solid rgba(189, 143, 82, 0.26);
+          padding: 0 clamp(18px, 4vw, 60px);
+          background: linear-gradient(180deg, rgba(2, 0, 1, 0.84), transparent);
+          font-family: var(--font-ui);
+          font-size: 0.7rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .red-area {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: rgba(255, 232, 216, 0.76);
+        }
+
+        .red-area::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          border: 1px solid var(--red-brass);
+          transform: rotate(45deg);
+          box-shadow: 0 0 12px rgba(255, 73, 73, 0.44);
+        }
+
+        .red-nav {
+          display: flex;
+          gap: 22px;
+        }
+
+        .red-nav a {
+          color: rgba(255, 236, 221, 0.62);
+          text-decoration: none;
+        }
+
+        .red-nav a:hover,
+        .red-nav a:focus-visible {
+          color: var(--red-ink);
+        }
+
+        .red-heading {
+          position: absolute;
+          top: clamp(80px, 11vh, 110px);
+          left: clamp(20px, 5vw, 74px);
+          z-index: 10;
+          width: min(560px, 46vw);
+          text-shadow: 0 4px 28px #000, 0 0 56px #000;
+          animation: red-copy-enter 0.9s 0.45s both;
+        }
+
+        .red-kicker {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 0 0 10px;
+          color: #d9aa78;
+          font-family: var(--font-ui);
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+        }
+
+        .red-kicker::before {
+          content: "";
+          width: 32px;
+          height: 1px;
+          background: var(--red-brass);
+        }
+
+        .red-heading h1 {
+          margin: 0;
+          color: #fff0e1;
+          font-family: var(--font-display);
+          font-size: clamp(3rem, 7.2vw, 6.1rem);
+          line-height: 0.92;
+          letter-spacing: 0;
+          text-shadow: 0 3px 0 #130002, 2px 0 rgba(255, 55, 67, 0.48), -2px 0 rgba(255, 219, 174, 0.2), 0 0 32px rgba(159, 13, 29, 0.3);
+        }
+
+        .red-lead {
+          max-width: 34em;
+          margin: 14px 0 0;
+          color: rgba(242, 218, 202, 0.7);
+          font-size: clamp(0.8rem, 1.35vw, 0.94rem);
+          font-weight: 750;
+          line-height: 1.72;
+        }
+
+        .red-lamps {
+          position: absolute;
+          top: 78px;
+          right: clamp(20px, 5vw, 72px);
+          z-index: 14;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(76px, 104px));
+          gap: 8px;
+        }
+
+        .red-lamp {
+          display: grid;
+          min-height: 84px;
+          place-items: center;
+          border: 1px solid rgba(189, 143, 82, 0.34);
+          border-radius: 2px;
+          padding: 8px 6px;
+          background: rgba(4, 1, 2, 0.68);
+          color: rgba(255, 233, 217, 0.62);
+          font-family: var(--font-sans);
+          cursor: pointer;
+          backdrop-filter: blur(9px);
+          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .red-lamp:hover,
+        .red-lamp:focus-visible {
+          border-color: rgba(255, 229, 196, 0.72);
+          color: var(--red-ink);
+          transform: translateY(-2px);
+        }
+
+        .red-lamp i {
+          display: block;
+          width: 12px;
+          height: 19px;
+          border: 1px solid rgba(233, 194, 139, 0.7);
+          background: #1a0808;
+          box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9);
+        }
+
+        .red-lamp small {
+          color: rgba(216, 174, 119, 0.56);
+          font-family: var(--font-ui);
+          font-size: 0.58rem;
+          letter-spacing: 0.14em;
+        }
+
+        .red-lamp strong {
+          font-size: 0.8rem;
+          letter-spacing: 0;
+        }
+
+        .red-lamp[aria-pressed="true"] {
+          border-color: #f1c68e;
+          background: rgba(70, 4, 10, 0.76);
+          color: #fff6e7;
+          box-shadow: 0 0 28px rgba(191, 24, 36, 0.34), inset 0 0 22px rgba(255, 189, 112, 0.08);
+        }
+
+        .red-lamp[aria-pressed="true"] i {
+          background: #ffe0a6;
+          box-shadow: 0 0 12px #ffb065, 0 0 32px rgba(255, 45, 56, 0.68);
+        }
+
+        .red-listener {
+          position: absolute;
+          top: 43%;
+          left: 50%;
+          z-index: 9;
+          display: grid;
+          width: clamp(108px, 12vw, 168px);
+          aspect-ratio: 1;
+          place-items: center;
+          border: 0;
+          border-radius: 50%;
+          padding: 0;
+          background: transparent;
+          cursor: pointer;
+          transform: translate(-50%, -50%);
+        }
+
+        .red-listener::before,
+        .red-listener::after {
+          content: "";
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .red-listener::before {
+          inset: 0;
+          border: 1px solid rgba(189, 143, 82, 0.22);
+          background: repeating-conic-gradient(from 0deg, rgba(189, 143, 82, 0.26) 0 1deg, transparent 1deg 24deg);
+          mask-image: radial-gradient(circle, transparent 0 61%, #000 62% 64%, transparent 65%);
+          animation: red-listener-orbit 24s linear infinite;
+        }
+
+        .red-listener::after {
+          width: 34%;
+          height: 13%;
+          border: 1px solid rgba(255, 225, 191, 0.42);
+          border-radius: 100% 0 100% 0;
+          background: radial-gradient(circle, #090001 0 15%, #f3c077 17% 26%, #8d0817 29% 54%, #060102 58%);
+          box-shadow: 0 0 24px rgba(159, 13, 29, 0.54);
+          transform: rotate(-45deg) scaleY(calc(0.08 + var(--sin-level) * 0.92));
+          transition: transform 0.34s ease, box-shadow 0.2s ease;
+        }
+
+        .red-listener:hover::after,
+        .red-listener:focus-visible::after,
+        .red-room.is-listening .red-listener::after {
+          transform: rotate(-45deg) scaleY(1);
+          box-shadow: 0 0 32px rgba(255, 32, 49, 0.7);
+        }
+
+        .red-listener-hint {
+          position: absolute;
+          top: calc(50% + 50px);
+          left: 50%;
+          width: max-content;
+          color: rgba(232, 203, 179, 0.42);
+          font-family: var(--font-ui);
+          font-size: 0.58rem;
+          font-weight: 900;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          transform: translateX(-50%);
+        }
+
+        .red-console,
+        .red-verdict {
+          position: absolute;
+          z-index: 12;
+          border: 1px solid rgba(189, 143, 82, 0.4);
+          background: linear-gradient(180deg, rgba(14, 3, 5, 0.78), rgba(3, 1, 2, 0.94));
+          box-shadow: 0 22px 72px rgba(0, 0, 0, 0.74), inset 0 0 44px rgba(107, 0, 13, 0.08);
+          backdrop-filter: blur(12px);
+          animation: red-panel-enter 0.9s 0.7s both;
+        }
+
+        .red-console {
+          bottom: clamp(22px, 4vh, 44px);
+          left: clamp(20px, 5vw, 72px);
+          display: grid;
+          gap: 11px;
+          width: min(620px, 52vw);
+          padding: 16px;
+        }
+
+        .red-console-head,
+        .red-verdict-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          color: rgba(226, 184, 135, 0.86);
+          font-family: var(--font-ui);
+          font-size: 0.66rem;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .red-counter {
+          color: rgba(255, 235, 217, 0.46);
+          letter-spacing: 0.1em;
+        }
+
+        .red-console label {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+          white-space: nowrap;
+        }
+
+        .red-console textarea {
+          width: 100%;
+          min-height: 88px;
+          resize: none;
+          border: 1px solid rgba(230, 193, 156, 0.28);
+          border-radius: 2px;
+          padding: 12px 14px;
+          background: rgba(0, 0, 0, 0.38);
+          color: var(--red-ink);
+          font: 750 0.92rem/1.65 var(--font-sans);
+          outline: none;
+          caret-color: #efb66d;
+        }
+
+        .red-console textarea::placeholder {
+          color: rgba(238, 213, 192, 0.3);
+        }
+
+        .red-console textarea:focus {
+          border-color: rgba(239, 189, 124, 0.78);
+          box-shadow: 0 0 0 1px rgba(189, 143, 82, 0.18), 0 0 28px rgba(143, 5, 20, 0.2);
+        }
+
+        .red-mobile-offerings {
+          display: none;
+        }
+
+        .red-mobile-offerings-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .red-mobile-offerings-head p {
+          margin: 0;
+          color: rgba(238, 214, 193, 0.6);
+          font-size: 0.7rem;
+          font-weight: 800;
+        }
+
+        .red-mobile-slots {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 7px;
+        }
+
+        .red-console .red-mobile-slot {
+          display: grid;
+          min-width: 0;
+          min-height: 78px;
+          align-content: center;
+          gap: 6px;
+          border-color: rgba(226, 184, 135, 0.34);
+          padding: 8px 6px;
+          background:
+            linear-gradient(135deg, transparent 0 8px, rgba(26, 5, 8, 0.9) 8px),
+            rgba(10, 2, 3, 0.92);
+          text-align: left;
+        }
+
+        .red-mobile-slot small {
+          color: rgba(211, 164, 109, 0.56);
+          font-family: var(--font-ui);
+          font-size: 0.54rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .red-mobile-slot strong {
+          color: rgba(255, 239, 225, 0.86);
+          font-size: 0.72rem;
+          line-height: 1.35;
+          overflow-wrap: anywhere;
+        }
+
+        .red-mobile-slot:active {
+          border-color: #f2c083;
+          background: rgba(92, 6, 17, 0.82);
+        }
+
+        .red-meter {
+          height: 3px;
+          overflow: hidden;
+          background: rgba(255, 239, 220, 0.1);
+        }
+
+        .red-meter span {
+          display: block;
+          width: calc(var(--sin-level) * 100%);
+          height: 100%;
+          background: linear-gradient(90deg, #d8ab70, #d51d30 62%, #ff3147);
+          box-shadow: 0 0 12px rgba(255, 39, 57, 0.62);
+          transition: width 0.2s ease;
+        }
+
+        .red-console-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+        }
+
+        .red-console-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .red-console button {
+          min-height: 40px;
+          border: 1px solid rgba(226, 184, 135, 0.46);
+          border-radius: 2px;
+          padding: 8px 13px;
+          background: rgba(20, 3, 5, 0.76);
+          color: rgba(255, 239, 225, 0.78);
+          font: 850 0.78rem/1 var(--font-sans);
+          cursor: pointer;
+        }
+
+        .red-console button[type="submit"] {
+          min-width: 132px;
+          border-color: #c19259;
+          background: linear-gradient(180deg, #a41425, #4a030c);
+          color: #fff4e7;
+        }
+
+        .red-console button:hover,
+        .red-console button:focus-visible {
+          border-color: #ffe0b8;
+          color: #fff;
+        }
+
+        .red-output {
+          min-width: 0;
+          margin: 0;
+          color: rgba(238, 214, 193, 0.62);
+          font-size: 0.72rem;
+          font-weight: 750;
+          line-height: 1.45;
+        }
+
+        .red-verdict {
+          right: clamp(20px, 5vw, 72px);
+          bottom: clamp(22px, 4vh, 44px);
+          display: grid;
+          grid-template-columns: 92px minmax(0, 1fr);
+          gap: 14px;
+          width: min(390px, 34vw);
+          min-height: 156px;
+          padding: 16px;
+        }
+
+        .red-verdict-head {
+          grid-column: 1 / -1;
+        }
+
+        .red-seal {
+          position: relative;
+          display: grid;
+          aspect-ratio: 1;
+          place-items: center;
+          border: 1px solid rgba(222, 173, 115, 0.34);
+          background: radial-gradient(circle, rgba(132, 4, 19, 0.22), transparent 66%);
+          overflow: hidden;
+        }
+
+        .red-seal::before,
+        .red-seal::after {
+          content: "";
+          position: absolute;
+          border: 1px solid rgba(229, 188, 137, 0.34);
+        }
+
+        .red-seal::before {
+          width: 62%;
+          aspect-ratio: 1;
+          transform: rotate(45deg);
+        }
+
+        .red-seal::after {
+          width: 42%;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          box-shadow: 0 0 24px rgba(164, 6, 25, 0.4);
+        }
+
+        .red-seal strong {
+          position: relative;
+          z-index: 1;
+          font-family: var(--font-display);
+          font-size: 2.8rem;
+          font-weight: 900;
+          line-height: 1;
+          text-shadow: 0 0 14px rgba(255, 34, 55, 0.64);
+        }
+
+        .red-verdict-copy {
+          align-self: center;
+          min-width: 0;
+        }
+
+        .red-verdict-copy p {
+          margin: 0;
+          color: rgba(248, 225, 206, 0.78);
+          font-size: 0.78rem;
+          font-weight: 750;
+          line-height: 1.55;
+        }
+
+        .red-verdict-copy small {
+          display: block;
+          margin-top: 7px;
+          color: rgba(225, 180, 132, 0.5);
+          font-family: var(--font-ui);
+          font-size: 0.58rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .red-memory-echo {
+          position: absolute;
+          top: 34%;
+          right: 8%;
+          z-index: 7;
+          max-width: 22em;
+          margin: 0;
+          color: rgba(255, 221, 202, 0.46);
+          font-family: var(--font-display);
+          font-size: clamp(1.2rem, 2.4vw, 2rem);
+          line-height: 1.5;
+          text-align: right;
+          text-shadow: 0 0 18px #000;
+          opacity: 0;
+          transform: translateX(12px);
+          transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .red-room[data-lamp="memory"] .red-memory-echo {
+          opacity: 0.72;
+          transform: translateX(0);
+        }
+
+        .red-room[data-lamp="silence"] .red-room-art img {
+          filter: brightness(0.44) contrast(1.14) saturate(0.42);
+        }
+
+        .red-room[data-lamp="satisfaction"] .red-room-art img,
+        .red-room.is-absolved .red-room-art img {
+          filter: brightness(0.75) contrast(1.04) saturate(0.7) sepia(0.16);
+        }
+
+        .red-room-flash {
+          z-index: 40;
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .red-room.is-judging .red-room-flash {
+          background:
+            repeating-linear-gradient(0deg, rgba(255, 0, 33, 0.12) 0 1px, transparent 1px 5px),
+            radial-gradient(circle at 50% 44%, transparent 0 20%, rgba(123, 0, 16, 0.58) 64%, rgba(0, 0, 0, 0.94) 100%);
+          animation: red-judge-flash 0.86s steps(5, end);
+        }
+
+        .red-room.is-judging .red-listener::after {
+          transform: rotate(-45deg) scale(1.7);
+          box-shadow: 0 0 64px rgba(255, 22, 43, 0.9);
+        }
+
+        .red-room.is-judging .red-console,
+        .red-room.is-judging .red-verdict {
+          animation: red-panel-shake 0.48s steps(2, end);
+        }
+
+        .red-room.is-absolved .red-seal strong {
+          color: #fff0ad;
+          text-shadow: 0 0 22px #ffce7a, 0 0 52px rgba(255, 72, 43, 0.54);
+        }
+
+        .red-room.is-absolved .red-seal {
+          border-color: rgba(255, 221, 153, 0.72);
+          box-shadow: 0 0 34px rgba(255, 187, 84, 0.18);
+        }
+
+        @keyframes red-room-enter {
+          from { opacity: 0; transform: scale(1.12); filter: brightness(0.2) contrast(1.4) saturate(0.3); }
+          to { opacity: 1; transform: scale(1.035); filter: brightness(0.65) contrast(1.08) saturate(0.76); }
+        }
+
+        @keyframes red-copy-enter {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes red-panel-enter {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes red-listener-orbit {
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes red-judge-flash {
+          0%, 100% { opacity: 0; }
+          18%, 52% { opacity: 1; }
+          34%, 76% { opacity: 0.22; }
+        }
+
+        @keyframes red-panel-shake {
+          0%, 100% { transform: translate(0, 0); }
+          20% { transform: translate(-7px, 2px); }
+          42% { transform: translate(6px, -3px); }
+          64% { transform: translate(-4px, -2px); }
+          82% { transform: translate(3px, 3px); }
+        }
+
+        @media (max-width: 920px) {
+          html,
+          body {
+            overflow: auto;
+          }
+
+          .red-room {
+            min-height: 1120px;
+          }
+
+          .red-heading {
+            top: 74px;
+            left: 18px;
+            width: calc(100% - 36px);
+          }
+
+          .red-heading h1 {
+            font-size: clamp(3rem, 15vw, 5rem);
+          }
+
+          .red-lead {
+            max-width: 32em;
+          }
+
+          .red-lamps {
+            top: 250px;
+            right: 12px;
+            left: 12px;
+            grid-template-columns: repeat(3, 1fr);
+          }
+
+          .red-lamp {
+            min-height: 70px;
+          }
+
+          .red-listener {
+            top: 435px;
+            width: 118px;
+          }
+
+          .red-memory-echo {
+            top: 390px;
+            right: 18px;
+            max-width: 13em;
+            font-size: 1.1rem;
+          }
+
+          .red-console {
+            top: 560px;
+            right: 12px;
+            bottom: auto;
+            left: 12px;
+            width: auto;
+          }
+
+          .red-console textarea {
+            display: none;
+          }
+
+          .red-mobile-offerings {
+            display: grid;
+            gap: 9px;
+          }
+
+          .red-verdict {
+            top: 875px;
+            right: 12px;
+            bottom: auto;
+            left: 12px;
+            width: auto;
+          }
+
+          .red-room-art img {
+            position: fixed;
+            object-position: center top;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .red-topbar {
+            min-height: 52px;
+          }
+
+          .red-nav a:last-child {
+            display: none;
+          }
+
+          .red-heading {
+            top: 66px;
+          }
+
+          .red-heading h1 {
+            font-size: clamp(2.8rem, 16vw, 4rem);
+          }
+
+          .red-lamps {
+            top: 238px;
+          }
+
+          .red-console-foot {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .red-console-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 42px;
+          }
+
+          .red-console button[type="submit"] {
+            min-width: 0;
+          }
+
+          .red-verdict {
+            top: 900px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .red-room-art img,
+          .red-heading,
+          .red-console,
+          .red-verdict,
+          .red-listener::before {
+            animation: none;
+          }
+        }
+      </style>
+      <main class="red-room" data-confession-page data-lamp="none" data-confessions="0">
+        <picture class="red-room-art" aria-hidden="true">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.avif" type="image/avif">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.webp" type="image/webp">
+          <img src="../../../assets/manzokukyo/red-confession-chamber.png" alt="">
+        </picture>
+        <div class="red-room-shade" aria-hidden="true"></div>
+        <div class="red-room-noise" aria-hidden="true"></div>
+
+        <header class="red-topbar">
+          <span class="red-area">Satisfaction Cult / Area 02</span>
+          <nav class="red-nav" aria-label="赤い懺悔室メニュー">
+            <a href="../">← 真理の扉</a>
+            <a href="../../../">残念院さん公式設定</a>
+          </nav>
+        </header>
+
+        <section class="red-heading" aria-labelledby="red-confession-title">
+          <p class="red-kicker">Leave one thing behind</p>
+          <h1 id="red-confession-title">赤い懺悔室</h1>
+          <p class="red-lead">満足していないことを、ひとつだけ置いていく。部屋は裁かない。ただ、あなたの声と選んだ灯りを少しだけ覚えている。</p>
+        </section>
+
+        <div class="red-lamps" role="group" aria-label="三つの灯り" data-confession-switches>
+          <button class="red-lamp" type="button" data-lamp="silence" aria-pressed="false"><i aria-hidden="true"></i><small>LAMP 01</small><strong>沈黙</strong></button>
+          <button class="red-lamp" type="button" data-lamp="memory" aria-pressed="false"><i aria-hidden="true"></i><small>LAMP 02</small><strong>記憶</strong></button>
+          <button class="red-lamp" type="button" data-lamp="satisfaction" aria-pressed="false"><i aria-hidden="true"></i><small>LAMP 03</small><strong>満足</strong></button>
+        </div>
+
+        <button class="red-listener" type="button" data-listener aria-label="格子の向こうを覗く" title="格子の向こうを覗く">
+          <span class="red-listener-hint" aria-hidden="true">look through</span>
+        </button>
+        <p class="red-memory-echo" aria-hidden="true" data-memory-echo>前にここへ来た声が、まだ壁の中にいる。</p>
+
+        <form class="red-console" data-confession-form>
+          <div class="red-console-head">
+            <span>Confession intake</span>
+            <output class="red-counter" data-confession-counter>000 / 180</output>
+          </div>
+          <label for="confession-text">懺悔欄</label>
+          <textarea id="confession-text" name="confession" maxlength="180" autocomplete="off" placeholder="まだ満足していないことを、ひとつだけ"></textarea>
+          <div class="red-mobile-offerings" data-mobile-offerings aria-label="三枚の懺悔札">
+            <div class="red-mobile-offerings-head">
+              <p>札をタップして、懺悔を組み立てる。</p>
+              <button type="button" data-mobile-shuffle>札を混ぜる</button>
+            </div>
+            <div class="red-mobile-slots">
+              <button class="red-mobile-slot" type="button" data-confession-slot="0"><small>札・起</small><strong data-slot-label>ほんとうは</strong></button>
+              <button class="red-mobile-slot" type="button" data-confession-slot="1"><small>札・行</small><strong data-slot-label>満足したふりをした</strong></button>
+              <button class="red-mobile-slot" type="button" data-confession-slot="2"><small>札・結</small><strong data-slot-label>少し反省しています</strong></button>
+            </div>
+          </div>
+          <div class="red-meter" aria-hidden="true"><span data-confession-meter></span></div>
+          <div class="red-console-foot">
+            <p class="red-output" data-confession-output aria-live="polite">帳の向こうで、返事を待っている。</p>
+            <div class="red-console-actions">
+              <button type="submit">懺悔を渡す</button>
+              <button type="button" data-random-confession>代筆</button>
+              <button type="button" data-clear-confession aria-label="懺悔を消す" title="懺悔を消す">×</button>
+            </div>
+          </div>
+        </form>
+
+        <aside class="red-verdict" aria-label="懺悔室からの返答">
+          <div class="red-verdict-head">
+            <span>Room response</span>
+            <span data-verdict-status>waiting</span>
+          </div>
+          <div class="red-seal" aria-hidden="true"><strong data-sigil-word>未</strong></div>
+          <div class="red-verdict-copy">
+            <p data-confession-log aria-live="polite">三つの灯りのうち、ひとつを選べる。</p>
+            <small data-confession-count>confessions / 00</small>
+          </div>
+        </aside>
+
+        <div class="red-room-flash" aria-hidden="true"></div>
+      </main>
+      <script>
+        (() => {
+          const page = document.querySelector("[data-confession-page]");
+          const form = document.querySelector("[data-confession-form]");
+          const textarea = document.querySelector("#confession-text");
+          const output = document.querySelector("[data-confession-output]");
+          const log = document.querySelector("[data-confession-log]");
+          const sigil = document.querySelector("[data-sigil-word]");
+          const counter = document.querySelector("[data-confession-counter]");
+          const countLabel = document.querySelector("[data-confession-count]");
+          const verdictStatus = document.querySelector("[data-verdict-status]");
+          const memoryEcho = document.querySelector("[data-memory-echo]");
+          const randomButton = document.querySelector("[data-random-confession]");
+          const clearButton = document.querySelector("[data-clear-confession]");
+          const listener = document.querySelector("[data-listener]");
+          const lampButtons = Array.from(document.querySelectorAll(".red-lamp[data-lamp]"));
+          const mobileShuffle = document.querySelector("[data-mobile-shuffle]");
+          const confessionSlots = Array.from(document.querySelectorAll("[data-confession-slot]"));
+          const mobileQuery = window.matchMedia("(max-width: 920px)");
+
+          if (!page || !form || !textarea || !output || !log || !sigil || !counter) return;
+
+          const sampleConfessions = [
+            "カップ麺の待ち時間を一分だけごまかしました。",
+            "満足したふりをして、まだ次の満足を探しています。",
+            "赤い部屋へ戻るリンクを確認してから怖がっています。",
+            "今日はなにもしていないのに、少しだけ誇らしいです。"
+          ];
+          const slotOptions = [
+            ["ほんとうは", "今日も", "こっそり", "気づけば"],
+            ["満足したふりをした", "何もしなかった", "夜更かしをやめられなかった", "ラーメンを一口もらった"],
+            ["少し反省しています", "でも後悔はしていません", "もう忘れたいです", "まだ満足していません"]
+          ];
+          const lampTexts = {
+            silence: "沈黙の灯りが点いた。書かれた言葉だけが、重く残る。",
+            memory: "記憶の灯りが点いた。壁の中で、以前の声が目を覚ます。",
+            satisfaction: "満足の灯りが点いた。赤が少しだけ、やさしい色になる。"
+          };
+          const verdicts = [
+            "帳は閉じた。まだ赤い。",
+            "受理された。満足には、少し届かない。",
+            "格子の向こうで小さな拍手がした。誰のものかは、考えない方がいい。",
+            "赤い灯りが一度だけ瞬いた。今の言葉は、しばらく残る。"
+          ];
+          const whispers = [
+            "もう少し近くで話して。",
+            "前の人は、そこまで言わなかった。",
+            "その灯り、本当に自分で選んだ？",
+            "満足したら、ここへは戻れない。"
+          ];
+          let confessionCount = 0;
+          let whisperIndex = 0;
+          const slotIndices = [0, 0, 0];
+
+          const includesSatisfaction = (text) => text.includes("満足") || text.includes("まんぞく");
+
+          const updateLevel = () => {
+            const text = textarea.value.trim();
+            const level = Math.min(1, Array.from(text).length / 120);
+            page.style.setProperty("--sin-level", level.toFixed(3));
+            counter.textContent = String(Array.from(textarea.value).length).padStart(3, "0") + " / 180";
+            sigil.textContent = includesSatisfaction(text) ? "満" : text.length > 54 ? "罪" : "未";
+          };
+
+          const renderMobileConfession = () => {
+            const parts = slotOptions.map((options, index) => options[slotIndices[index] % options.length]);
+            confessionSlots.forEach((button, index) => {
+              const label = button.querySelector("[data-slot-label]");
+              if (label) label.textContent = parts[index];
+            });
+            textarea.value = parts[0] + "、" + parts[1] + "。" + parts[2] + "。";
+            updateLevel();
+          };
+
+          const shuffleMobileConfession = () => {
+            slotIndices.forEach((_, index) => {
+              slotIndices[index] = Math.floor(Math.random() * slotOptions[index].length);
+            });
+            renderMobileConfession();
+            output.textContent = "三枚の札が、新しい懺悔を作った。";
+          };
+
+          const syncInputMode = () => {
+            textarea.readOnly = mobileQuery.matches;
+            textarea.tabIndex = mobileQuery.matches ? -1 : 0;
+            if (mobileQuery.matches && !textarea.value) renderMobileConfession();
+          };
+
+          const setLamp = (button) => {
+            const wasActive = button.getAttribute("aria-pressed") === "true";
+            lampButtons.forEach((item) => item.setAttribute("aria-pressed", "false"));
+            const lamp = wasActive ? "none" : (button.dataset.lamp || "none");
+            if (!wasActive) button.setAttribute("aria-pressed", "true");
+            page.dataset.lamp = lamp;
+            log.textContent = lamp === "none" ? "灯りが消えた。格子だけが残った。" : lampTexts[lamp];
+            verdictStatus.textContent = lamp === "none" ? "waiting" : lamp;
+            if (lamp === "satisfaction") sigil.textContent = "満";
+            else updateLevel();
+          };
+
+          const judge = () => {
+            const text = textarea.value.trim();
+            page.classList.remove("is-absolved", "is-listening");
+            page.classList.remove("is-judging");
+            void page.offsetWidth;
+            page.classList.add("is-judging");
+            window.setTimeout(() => page.classList.remove("is-judging"), 900);
+
+            if (!text) {
+              output.textContent = "空白も声になる。けれど、今日は受け取らない。";
+              log.textContent = "格子の向こうで、指が二度だけ鳴った。";
+              sigil.textContent = "空";
+              verdictStatus.textContent = "refused";
+              return;
+            }
+
+            confessionCount += 1;
+            page.dataset.confessions = String(confessionCount);
+            countLabel.textContent = "confessions / " + String(confessionCount).padStart(2, "0");
+
+            if (includesSatisfaction(text) || page.dataset.lamp === "satisfaction") {
+              output.textContent = "今日だけ、あなたの懺悔は軽くなった。";
+              log.textContent = "奥の帳がわずかに開いた。先はまだ、作られていない。";
+              sigil.textContent = "赦";
+              verdictStatus.textContent = "absolved";
+              page.classList.add("is-absolved");
+              return;
+            }
+
+            const score = Array.from(text).reduce((sum, char) => sum + char.charCodeAt(0), text.length);
+            output.textContent = verdicts[score % verdicts.length];
+            log.textContent = page.dataset.lamp === "memory"
+              ? "壁が今の言葉を復唱した。最後の一音だけ、あなたの声ではなかった。"
+              : "部屋は受理した。灯りを変えると、返事も変わるかもしれない。";
+            verdictStatus.textContent = "recorded";
+            sigil.textContent = "罪";
+          };
+
+          textarea.addEventListener("input", updateLevel);
+          textarea.addEventListener("focus", () => page.classList.add("is-listening"));
+          textarea.addEventListener("blur", () => page.classList.remove("is-listening"));
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            judge();
+          });
+
+          randomButton?.addEventListener("click", () => {
+            if (mobileQuery.matches) {
+              shuffleMobileConfession();
+            } else {
+              textarea.value = sampleConfessions[Math.floor(Math.random() * sampleConfessions.length)];
+              updateLevel();
+            }
+            output.textContent = "代筆された懺悔が、告解台に置かれた。";
+            if (!mobileQuery.matches) textarea.focus();
+          });
+
+          clearButton?.addEventListener("click", () => {
+            if (mobileQuery.matches) {
+              slotIndices.fill(0);
+              renderMobileConfession();
+            } else {
+              textarea.value = "";
+            }
+            page.classList.remove("is-absolved", "is-listening");
+            updateLevel();
+            output.textContent = "消した跡だけが、きれいに残った。";
+            log.textContent = "三つの灯りのうち、ひとつを選べる。";
+            verdictStatus.textContent = "waiting";
+            if (!mobileQuery.matches) textarea.focus();
+          });
+
+          confessionSlots.forEach((button, index) => {
+            button.addEventListener("click", () => {
+              slotIndices[index] = (slotIndices[index] + 1) % slotOptions[index].length;
+              renderMobileConfession();
+              output.textContent = "一枚の札が裏返った。";
+            });
+          });
+
+          mobileShuffle?.addEventListener("click", shuffleMobileConfession);
+          mobileQuery.addEventListener?.("change", syncInputMode);
+
+          lampButtons.forEach((button) => button.addEventListener("click", () => setLamp(button)));
+
+          listener?.addEventListener("click", () => {
+            page.classList.add("is-listening");
+            const whisper = whispers[whisperIndex % whispers.length];
+            whisperIndex += 1;
+            log.textContent = whisper;
+            memoryEcho.textContent = whisper;
+            window.setTimeout(() => page.classList.remove("is-listening"), 1200);
+          });
+
+          page.addEventListener("pointermove", (event) => {
+            const rect = page.getBoundingClientRect();
+            page.style.setProperty("--mouse-x", ((event.clientX - rect.left) / rect.width * 100).toFixed(2) + "%");
+            page.style.setProperty("--mouse-y", ((event.clientY - rect.top) / rect.height * 100).toFixed(2) + "%");
+          });
+
+          syncInputMode();
+          updateLevel();
+        })();
+      </script>
+    `
+  });
+}
+
+function renderManzokukyoRedHouseLegacy(character) {
   const title = "赤い懺悔室";
   const description = "真理の扉の先にある、赤い灯りと懺悔のギミックで遊ぶ少し怖いページです。";
 
