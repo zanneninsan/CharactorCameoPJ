@@ -3,13 +3,16 @@
   if (!game) return;
 
   const assetsBase = game.dataset.assetsBase || "../../assets/generated/manzokukyo/";
+  const story = game.dataset.vnStory || "main";
   const backgrounds = {
     key: `${assetsBase}key-visual-hero.webp`,
     altar: `${assetsBase}altar.webp`,
     corridor: `${assetsBase}corridor-v2.webp`,
-    door: `${assetsBase}door-v2.webp`
+    door: `${assetsBase}door-v2.webp`,
+    confession: `${assetsBase}red-confession-chamber.webp`,
+    archive: `${assetsBase}memory-archive.webp`
   };
-  const scenes = [
+  const mainScenes = [
     {
       kind: "key",
       chapter: "序章 / TEASER TRANSMISSION",
@@ -108,6 +111,128 @@
       ]
     }
   ];
+  const archiveScenes = [
+    {
+      kind: "confession",
+      chapter: "余章 / AFTER CONFESSION",
+      chapterTitle: "赤い帳が閉じたあと。",
+      speaker: "記録者",
+      text: "懺悔を渡すと、部屋の奥で錠前がひとつ外れた。帰り道ではない。赤い帳の裏側へ続く、細い下り階段だった。"
+    },
+    {
+      kind: "confession",
+      chapter: "余章 / AFTER CONFESSION",
+      chapterTitle: "赤い帳が閉じたあと。",
+      speaker: "赤い懺悔室",
+      text: "「置いていった言葉には、行き先がある」"
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / MEMORY REPOSITORY",
+      chapterTitle: "声を札へ変える場所。",
+      speaker: "記録者",
+      text: "階段の先には、黒い棚がどこまでも並んでいた。吊るされた札の一枚一枚が、誰かの言えなかった言葉を薄く震わせている。"
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / MEMORY REPOSITORY",
+      chapterTitle: "声を札へ変える場所。",
+      speaker: "保管人",
+      text: "「ここは記憶保管庫。懺悔を赦す場所ではありません。忘れられないものを、忘れないまま整頓する場所です」"
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / INDEX",
+      chapterTitle: "一本だけ、赤い糸が揺れている。",
+      speaker: "SYSTEM",
+      text: "最初に確かめる札を選んでください。",
+      choices: [
+        { label: "自分の声に似た札へ触れる", next: 5 },
+        { label: "誰にも読まれなかった札を取る", next: 6 },
+        { label: "棚の奥から聞こえる笑い声を追う", next: 7 }
+      ]
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / INDEX 07",
+      chapterTitle: "自分の声に似た札。",
+      speaker: "札",
+      text: "「満足したふりは、嘘ではない。明日まで生き延びるための、小さな演技だ」",
+      next: 8
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / INDEX 00",
+      chapterTitle: "誰にも読まれなかった札。",
+      speaker: "札",
+      text: "紙は白いままだった。ただ、握るとラーメン一杯ぶんの熱が、指先へゆっくり戻ってきた。",
+      next: 8
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / INDEX 404",
+      chapterTitle: "棚の奥で笑うもの。",
+      speaker: "残念院さん",
+      text: "「見つからないものほど、よく残ります。インターネットも、だいたいそうでしょう？」",
+      next: 8
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / THE VAULT",
+      chapterTitle: "保管庫の最深部。",
+      speaker: "記録者",
+      text: "円形の扉には、三つの投入口があった。保存、焼却、奉納。どれを選んでも、札に書かれた事実は変わらない。変わるのは、持ち方だけだ。"
+    },
+    {
+      kind: "archive",
+      chapter: "第三領域 / THE VAULT",
+      chapterTitle: "この記憶を、どう持ちますか。",
+      speaker: "保管人",
+      text: "「選択してください。正解は保管しておりません」",
+      choices: [
+        { label: "記憶として、そのまま残す", next: 10 },
+        { label: "灰になるまで燃やす", next: 11 },
+        { label: "小さな満足として奉納する", next: 12 }
+      ]
+    },
+    {
+      kind: "archive",
+      chapter: "記録結末 / PRESERVED",
+      chapterTitle: "残されたものは、重さを失う。",
+      speaker: "保管人",
+      text: "「保存しました。忘れなくても、毎日持ち歩く必要はありません」札は棚の暗がりへ収まり、赤い糸だけが静かにほどけた。",
+      next: 13
+    },
+    {
+      kind: "archive",
+      chapter: "記録結末 / ASH",
+      chapterTitle: "燃えた紙は、光だけを残す。",
+      speaker: "記録者",
+      text: "札は音もなく燃えた。文字は消えたが、そこに何かが書かれていた手触りだけは、掌の奥に残った。",
+      next: 13
+    },
+    {
+      kind: "archive",
+      chapter: "記録結末 / OFFERING",
+      chapterTitle: "満足は、忘却とは少し違う。",
+      speaker: "残念院さん",
+      text: "「お預かりします。あなたが次に満足できるまで、これは私たちの荷物です」遠くで、鈴が一度だけ鳴った。",
+      next: 13
+    },
+    {
+      kind: "door",
+      chapter: "第三領域 / EXIT RECORD",
+      chapterTitle: "扉の先は、まだ記録されていない。",
+      speaker: "SYSTEM",
+      text: "Area 03の観測を終了します。",
+      choices: [
+        { label: "記憶保管庫を最初から読む", action: "restart" },
+        { label: "赤い懺悔室へ戻る", href: "../" },
+        { label: "真理の扉へ戻る", href: "../../" }
+      ]
+    }
+  ];
+  const scenes = story === "archive" ? archiveScenes : mainScenes;
 
   const titleScreen = game.querySelector("[data-vn-title]");
   const startButton = game.querySelector("[data-vn-start]");
@@ -131,7 +256,9 @@
   const audio = game.querySelector("[data-vn-audio]");
   const volume = game.querySelector("[data-vn-volume]");
   const toast = game.querySelector("[data-vn-toast]");
-  const progressKey = "manzokukyo-novel-progress-v1";
+  const progressKey = story === "archive"
+    ? "manzokukyo-archive-progress-v1"
+    : "manzokukyo-novel-progress-v1";
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const speedValues = { slow: 56, normal: 34, fast: 16 };
   let sceneIndex = 0;
@@ -195,6 +322,10 @@
       button.textContent = choice.label;
       button.addEventListener("click", () => {
         history.push({ speaker: "選択", text: choice.label });
+        if (choice.href) {
+          window.location.href = choice.href;
+          return;
+        }
         if (choice.action === "truth") {
           window.location.href = "../truth/";
           return;
@@ -418,5 +549,5 @@
   if (audio && volume) audio.volume = Number(volume.value);
   const progress = savedScene();
   if (continueButton) continueButton.hidden = progress === null;
-  setBackdrop("key", false);
+  setBackdrop(story === "archive" ? "archive" : "key", false);
 })();

@@ -1,0 +1,123 @@
+:root {
+  --archive-paper: #d8c8ab;
+  --archive-brass: #a9864c;
+  --archive-red: #711a24;
+  --archive-cyan: #719da1;
+}
+
+body.manzokukyo-archive-novel .vn-shell {
+  background: #060607;
+}
+
+.manzokukyo-archive-novel .vn-stage-shade {
+  background:
+    linear-gradient(90deg, rgba(3, 3, 4, 0.66), rgba(3, 3, 4, 0.02) 48%, rgba(3, 3, 4, 0.54)),
+    linear-gradient(180deg, rgba(3, 3, 4, 0.38), transparent 32%, rgba(3, 3, 4, 0.92) 100%);
+}
+
+.manzokukyo-archive-novel .vn-shell[data-scene-kind="confession"] .vn-backdrop {
+  object-position: center;
+  filter: saturate(0.62) contrast(1.14) brightness(0.5);
+}
+
+.manzokukyo-archive-novel .vn-shell[data-scene-kind="archive"] .vn-backdrop {
+  object-position: center;
+  filter: saturate(0.72) contrast(1.12) brightness(0.62);
+}
+
+.manzokukyo-archive-novel .vn-topbar {
+  border-bottom-color: rgba(169, 134, 76, 0.42);
+  background: rgba(5, 5, 6, 0.88);
+}
+
+.manzokukyo-archive-novel .vn-brand::before,
+.manzokukyo-archive-novel .vn-title-rule {
+  background: linear-gradient(90deg, var(--archive-red), var(--archive-brass), transparent);
+}
+
+.manzokukyo-archive-novel .vn-chapter span,
+.manzokukyo-archive-novel .vn-title-copy > span {
+  color: var(--archive-brass);
+}
+
+.manzokukyo-archive-novel .vn-title-screen {
+  background:
+    linear-gradient(90deg, rgba(3, 3, 4, 0.78), rgba(3, 3, 4, 0.08) 60%, rgba(3, 3, 4, 0.34)),
+    linear-gradient(180deg, rgba(3, 3, 4, 0.12), rgba(3, 3, 4, 0.76));
+}
+
+.manzokukyo-archive-novel .vn-title-copy {
+  position: relative;
+}
+
+.manzokukyo-archive-novel .vn-title-copy::before {
+  display: block;
+  width: max-content;
+  margin-bottom: 16px;
+  border: 1px solid rgba(169, 134, 76, 0.48);
+  padding: 6px 10px;
+  color: rgba(216, 200, 171, 0.72);
+  content: "AREA 03 / RESTRICTED RECORD";
+  font: 900 0.58rem / 1 var(--vn-sans);
+  letter-spacing: 0.16em;
+}
+
+.manzokukyo-archive-novel .vn-title-copy h1 {
+  color: #eee7db;
+  text-shadow: 0 3px 30px #000, 3px 0 0 rgba(113, 26, 36, 0.58);
+}
+
+.manzokukyo-archive-novel .vn-title-actions button,
+.manzokukyo-archive-novel .vn-panel-actions button,
+.manzokukyo-archive-novel .vn-panel-actions a {
+  border-color: rgba(169, 134, 76, 0.66);
+}
+
+.manzokukyo-archive-novel .vn-title-actions button:hover,
+.manzokukyo-archive-novel .vn-title-actions button:focus-visible {
+  border-color: #e1c58d;
+  background: rgba(113, 26, 36, 0.76);
+}
+
+.manzokukyo-archive-novel .vn-dialogue {
+  border-color: rgba(169, 134, 76, 0.62);
+  background:
+    linear-gradient(90deg, rgba(11, 8, 9, 0.96), rgba(5, 5, 7, 0.91)),
+    rgba(5, 5, 7, 0.92);
+}
+
+.manzokukyo-archive-novel .vn-dialogue::after {
+  background: linear-gradient(90deg, transparent, var(--archive-cyan));
+}
+
+.manzokukyo-archive-novel .vn-speaker {
+  border-color: rgba(169, 134, 76, 0.54);
+  color: #d7bd88;
+}
+
+.manzokukyo-archive-novel .vn-choice::before {
+  color: var(--archive-red);
+}
+
+.manzokukyo-archive-novel .vn-choice:hover,
+.manzokukyo-archive-novel .vn-choice:focus-visible {
+  border-color: #d3b578;
+  background: rgba(76, 17, 24, 0.88);
+}
+
+@media (max-width: 820px) {
+  .manzokukyo-archive-novel .vn-title-screen {
+    background:
+      linear-gradient(180deg, rgba(3, 3, 4, 0.08), rgba(3, 3, 4, 0.88) 70%),
+      rgba(3, 3, 4, 0.18);
+  }
+
+  .manzokukyo-archive-novel .vn-title-copy::before {
+    margin-bottom: 11px;
+    font-size: 0.5rem;
+  }
+
+  .manzokukyo-archive-novel .vn-title-copy h1 {
+    font-size: 3rem;
+  }
+}

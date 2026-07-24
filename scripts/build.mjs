@@ -90,14 +90,17 @@ async function build() {
           const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
           const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
+          const manzokukyoArchiveDir = path.join(manzokukyoRedHouseDir, "archive");
           await mkdir(manzokukyoDir, { recursive: true });
           await mkdir(manzokukyoNovelDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
+          await mkdir(manzokukyoArchiveDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
           await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
+          await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
         }
         for (const page of hiddenPages(character)) {
@@ -244,6 +247,7 @@ async function generateManzokukyoAssets(characterDir) {
   const doorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "door-v2.png");
   const truthChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "truth-chamber.png");
   const redConfessionChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "red-confession-chamber.png");
+  const memoryArchivePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "memory-archive.png");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -272,6 +276,7 @@ async function generateManzokukyoAssets(characterDir) {
     [doorScenePath, "door-v2"],
     [truthChamberPath, "truth-chamber"],
     [redConfessionChamberPath, "red-confession-chamber"],
+    [memoryArchivePath, "memory-archive"],
   ]) {
     if (!await fileExists(source)) continue;
     await sharp(source)
@@ -3002,6 +3007,40 @@ function renderManzokukyoRedHouse(character) {
           text-transform: uppercase;
         }
 
+        .red-next-area {
+          grid-column: 1 / -1;
+          display: flex;
+          min-height: 42px;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          border: 1px solid rgba(226, 184, 135, 0.48);
+          padding: 9px 12px;
+          background: rgba(63, 8, 14, 0.5);
+          color: #f6e7d7;
+          font-family: var(--font-ui);
+          font-size: 0.68rem;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-decoration: none;
+          text-transform: uppercase;
+          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .red-next-area::after {
+          color: #d5a45f;
+          content: "→";
+          font-size: 1rem;
+        }
+
+        .red-next-area:hover,
+        .red-next-area:focus-visible {
+          border-color: #ffe0b8;
+          background: rgba(119, 12, 25, 0.74);
+          color: #fff;
+          outline: none;
+        }
+
         .red-memory-echo {
           position: absolute;
           top: 34%;
@@ -3107,7 +3146,7 @@ function renderManzokukyoRedHouse(character) {
           }
 
           .red-room {
-            min-height: 1120px;
+            min-height: 1200px;
           }
 
           .red-heading {
@@ -3216,6 +3255,10 @@ function renderManzokukyoRedHouse(character) {
           .red-verdict {
             top: 900px;
           }
+
+          .red-room {
+            min-height: 1240px;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -3301,6 +3344,9 @@ function renderManzokukyoRedHouse(character) {
             <p data-confession-log aria-live="polite">三つの灯りのうち、ひとつを選べる。</p>
             <small data-confession-count>confessions / 00</small>
           </div>
+          <a class="red-next-area" href="./archive/">
+            <span>Area 03　記憶保管庫へ</span>
+          </a>
         </aside>
 
         <div class="red-room-flash" aria-hidden="true"></div>
@@ -4123,6 +4169,160 @@ function renderManzokukyoRedHouseLegacy(character) {
   });
 }
 
+function renderManzokukyoArchiveNovel(character) {
+  const title = "記憶保管庫";
+  const description = "赤い懺悔室へ置いていった言葉の行き先を、ノベルゲーム形式で辿る満足教Area 03です。";
+
+  return htmlPage({
+    title: `${title} | 満足教異聞録`,
+    description,
+    urlPath: `${character.id}/manzokukyo/truth/red-house/archive/`,
+    imagePath: `${character.id}/assets/generated/manzokukyo/memory-archive.webp`,
+    type: "VideoGame",
+    theme: character.theme,
+    stylesheetHref: "../../../../../styles.css",
+    bodyClass: "manzokukyo-novel manzokukyo-archive-novel",
+    headExtra: `
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?v=20260724-2">
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260724-1">
+      <script src="../../../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
+    `,
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: title,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/archive/`),
+      inLanguage: "ja",
+      gamePlatform: "Web browser",
+      isPartOf: {
+        "@type": "WebPage",
+        name: "赤い懺悔室",
+        url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`)
+      }
+    },
+    body: `
+      <main
+        class="vn-shell"
+        data-vn-game
+        data-vn-story="archive"
+        data-game-state="title"
+        data-scene-kind="archive"
+        data-scene="0"
+        data-assets-base="../../../../assets/generated/manzokukyo/"
+      >
+        <div class="vn-stage" aria-hidden="true">
+          <img
+            class="vn-backdrop is-active"
+            data-vn-backdrop
+            src="../../../../assets/generated/manzokukyo/memory-archive.webp"
+            alt=""
+            fetchpriority="high"
+          >
+          <img class="vn-backdrop" data-vn-backdrop src="../../../../assets/generated/manzokukyo/memory-archive.webp" alt="">
+          <div class="vn-stage-shade"></div>
+          <div class="vn-stage-grain"></div>
+        </div>
+
+        <header class="vn-topbar">
+          <a class="vn-brand" href="../">
+            <span>
+              <strong>満足教異聞録・記憶保管庫</strong>
+              <small>Satisfaction Cult / Area 03</small>
+            </span>
+          </a>
+          <nav class="vn-tools" aria-label="ノベルゲーム操作">
+            <button type="button" data-vn-log-open>LOG</button>
+            <button type="button" data-vn-auto aria-pressed="false">AUTO</button>
+            <button type="button" data-vn-skip aria-pressed="false">SKIP</button>
+            <button type="button" data-vn-save>SAVE</button>
+            <button type="button" data-vn-sound aria-pressed="false">SOUND</button>
+            <button type="button" data-vn-config-open>CONFIG</button>
+            <button type="button" data-vn-menu-open>MENU</button>
+          </nav>
+        </header>
+
+        <div class="vn-chapter">
+          <span data-vn-chapter>余章 / AFTER CONFESSION</span>
+          <strong data-vn-chapter-title>赤い帳が閉じたあと。</strong>
+        </div>
+
+        <section class="vn-choices" data-vn-choices aria-label="選択肢"></section>
+
+        <section class="vn-dialogue" data-vn-dialogue aria-live="polite">
+          <strong class="vn-speaker" data-vn-speaker>記録者</strong>
+          <p class="vn-text" data-vn-text></p>
+          <span class="vn-line-meta" data-vn-line-meta>01 / 14</span>
+          <button class="vn-next" type="button" data-vn-next aria-label="次の文章へ進む"></button>
+        </section>
+
+        <section class="vn-title-screen" data-vn-title>
+          <div class="vn-title-copy">
+            <span>Satisfaction Cult / A Fragmentary Record II</span>
+            <h1>記憶保管庫<small>満足教異聞録・第二幕</small></h1>
+            <div class="vn-title-rule" aria-hidden="true"></div>
+            <p>赤い懺悔室へ置いていった言葉には、行き先がある。<br>棚の奥で待つ三つの処理から、記憶の持ち方を選ぶ短編記録。</p>
+            <div class="vn-title-actions">
+              <button type="button" data-vn-start>保管庫へ入る</button>
+              <button type="button" data-vn-continue hidden>記録を再開する</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="log" aria-label="バックログ">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>BACK LOG</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="バックログを閉じる">×</button>
+            </header>
+            <div class="vn-log" data-vn-log></div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="config" aria-label="設定">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>CONFIG</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="設定を閉じる">×</button>
+            </header>
+            <div class="vn-config">
+              <label class="vn-config-row">
+                <span>BGM VOLUME</span>
+                <input type="range" data-vn-volume min="0" max="1" value="0.26" step="0.05">
+              </label>
+              <div class="vn-config-row">
+                <span>TEXT SPEED</span>
+                <div class="vn-speed">
+                  <button type="button" data-vn-speed="slow" aria-pressed="false">SLOW</button>
+                  <button type="button" data-vn-speed="normal" aria-pressed="true">NORMAL</button>
+                  <button type="button" data-vn-speed="fast" aria-pressed="false">FAST</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="menu" aria-label="メニュー">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>SYSTEM MENU</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="メニューを閉じる">×</button>
+            </header>
+            <div class="vn-panel-actions">
+              <button type="button" data-vn-close>物語へ戻る</button>
+              <button type="button" data-vn-restart>最初から読み返す</button>
+              <a href="../">赤い懺悔室へ戻る</a>
+            </div>
+          </div>
+        </section>
+
+        <div class="vn-toast" data-vn-toast role="status"></div>
+        <audio data-vn-audio src="../../../../assets/generated/manzokukyo/satisfaction-bgm.m4a" preload="metadata" loop></audio>
+      </main>
+    `
+  });
+}
+
 function renderManzokukyoNovel(character) {
   const title = "満足教異聞録";
   const description = "満足教の既存ビジュアルと教義断片を、硬派な日本のノベルゲームUIで辿る短編インタラクティブ試作です。";
@@ -4137,8 +4337,8 @@ function renderManzokukyoNovel(character) {
     stylesheetHref: "../../../styles.css",
     bodyClass: "manzokukyo-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260724-1">
-      <script src="../../assets/site/manzokukyo-novel.js?v=20260724-1" defer></script>
+      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260724-2">
+      <script src="../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
     `,
     structuredData: {
       "@context": "https://schema.org",
@@ -9148,6 +9348,7 @@ function renderSitemap(characters) {
         { loc: absoluteUrl(`${character.id}/manzokukyo/novel/`), priority: "0.5" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/`), priority: "0.6" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`), priority: "0.4" },
+        { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/archive/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
       ] : []),
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
