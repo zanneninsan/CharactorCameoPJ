@@ -5058,12 +5058,17 @@ function renderManzokukyoTeaser(character) {
 
         .mk-page .guestbook-launch {
           right: clamp(22px, 4vw, 72px);
-          bottom: calc(clamp(22px, 4vw, 58px) + 66px);
+          bottom: clamp(22px, 4vw, 58px);
           z-index: 81;
           min-height: 52px;
           padding: 12px 20px;
           font-size: 0.9rem;
           letter-spacing: 0.08em;
+          transition: bottom 0.38s ease;
+        }
+
+        .mk-page[data-ritual-state="ended"] .guestbook-launch {
+          bottom: calc(clamp(22px, 4vw, 58px) + 66px);
         }
 
         .mk-sigil {
@@ -6246,11 +6251,19 @@ function renderManzokukyoTeaser(character) {
           }
 
           .mk-scroll-cue {
-            top: 82px;
-            right: 18px;
-            padding: 10px 12px;
-            font-size: 0.66rem;
-            letter-spacing: 0.12em;
+            top: 48px;
+            right: 14px;
+            max-width: calc(100vw - 28px);
+            gap: 6px;
+            padding: 6px 10px;
+            font-size: 0.58rem;
+            line-height: 1.25;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+          }
+
+          .mk-scroll-cue::before {
+            width: 20px;
           }
 
           .mk-actions {
