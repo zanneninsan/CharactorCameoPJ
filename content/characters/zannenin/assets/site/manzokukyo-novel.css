@@ -67,24 +67,24 @@ body.manzokukyo-novel {
   opacity: 1;
 }
 
-.vn-backdrop img {
+.vn-backdrop {
   object-fit: cover;
   object-position: center;
   filter: saturate(0.72) contrast(1.1) brightness(0.72);
   scale: 1.015;
 }
 
-.vn-shell[data-scene-kind="key"] .vn-backdrop img {
+.vn-shell[data-scene-kind="key"] .vn-backdrop {
   object-position: center 18%;
 }
 
-.vn-shell[data-scene-kind="altar"] .vn-backdrop img {
+.vn-shell[data-scene-kind="altar"] .vn-backdrop {
   object-position: center bottom;
   filter: saturate(0.68) contrast(1.12) brightness(0.62);
 }
 
-.vn-shell[data-scene-kind="corridor"] .vn-backdrop img,
-.vn-shell[data-scene-kind="door"] .vn-backdrop img {
+.vn-shell[data-scene-kind="corridor"] .vn-backdrop,
+.vn-shell[data-scene-kind="door"] .vn-backdrop {
   object-position: center;
   filter: saturate(0.58) contrast(1.2) brightness(0.54);
 }
