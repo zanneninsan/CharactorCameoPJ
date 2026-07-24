@@ -87,12 +87,15 @@ async function build() {
         }
         if (character.id === "zannenin") {
           const manzokukyoDir = path.join(characterDir, "manzokukyo");
+          const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
           const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
           await mkdir(manzokukyoDir, { recursive: true });
+          await mkdir(manzokukyoNovelDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
+          await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
@@ -4120,6 +4123,158 @@ function renderManzokukyoRedHouseLegacy(character) {
   });
 }
 
+function renderManzokukyoNovel(character) {
+  const title = "満足教異聞録";
+  const description = "満足教の既存ビジュアルと教義断片を、硬派な日本のノベルゲームUIで辿る短編インタラクティブ試作です。";
+
+  return htmlPage({
+    title,
+    description,
+    urlPath: `${character.id}/manzokukyo/novel/`,
+    imagePath: `${character.id}/assets/generated/ogp.png`,
+    type: "VideoGame",
+    theme: character.theme,
+    stylesheetHref: "../../../styles.css",
+    bodyClass: "manzokukyo-novel",
+    headExtra: `
+      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260724-1">
+      <script src="../../assets/site/manzokukyo-novel.js?v=20260724-1" defer></script>
+    `,
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      name: title,
+      description,
+      url: absoluteUrl(`${character.id}/manzokukyo/novel/`),
+      inLanguage: "ja",
+      gamePlatform: "Web browser",
+      isPartOf: {
+        "@type": "WebPage",
+        name: "満足教",
+        url: absoluteUrl(`${character.id}/manzokukyo/`)
+      }
+    },
+    body: `
+      <main
+        class="vn-shell"
+        data-vn-game
+        data-game-state="title"
+        data-scene-kind="key"
+        data-scene="0"
+        data-assets-base="../../assets/generated/manzokukyo/"
+      >
+        <div class="vn-stage" aria-hidden="true">
+          <img
+            class="vn-backdrop is-active"
+            data-vn-backdrop
+            src="../../assets/generated/manzokukyo/key-visual-hero.webp"
+            alt=""
+            fetchpriority="high"
+          >
+          <img class="vn-backdrop" data-vn-backdrop src="../../assets/generated/manzokukyo/key-visual-hero.webp" alt="">
+          <div class="vn-stage-shade"></div>
+          <div class="vn-stage-grain"></div>
+        </div>
+
+        <header class="vn-topbar">
+          <a class="vn-brand" href="../">
+            <span>
+              <strong>満足教異聞録</strong>
+              <small>Satisfaction Cult / Visual Novel Prototype</small>
+            </span>
+          </a>
+          <nav class="vn-tools" aria-label="ノベルゲーム操作">
+            <button type="button" data-vn-log-open>LOG</button>
+            <button type="button" data-vn-auto aria-pressed="false">AUTO</button>
+            <button type="button" data-vn-skip aria-pressed="false">SKIP</button>
+            <button type="button" data-vn-save>SAVE</button>
+            <button type="button" data-vn-sound aria-pressed="false">SOUND</button>
+            <button type="button" data-vn-config-open>CONFIG</button>
+            <button type="button" data-vn-menu-open>MENU</button>
+          </nav>
+        </header>
+
+        <div class="vn-chapter">
+          <span data-vn-chapter>序章 / TEASER TRANSMISSION</span>
+          <strong data-vn-chapter-title>まだ全貌の見えない、小さな祭壇。</strong>
+        </div>
+
+        <section class="vn-choices" data-vn-choices aria-label="選択肢"></section>
+
+        <section class="vn-dialogue" data-vn-dialogue aria-live="polite">
+          <strong class="vn-speaker" data-vn-speaker>記録者</strong>
+          <p class="vn-text" data-vn-text></p>
+          <span class="vn-line-meta" data-vn-line-meta>01 / 12</span>
+          <button class="vn-next" type="button" data-vn-next aria-label="次の文章へ進む"></button>
+        </section>
+
+        <section class="vn-title-screen" data-vn-title>
+          <div class="vn-title-copy">
+            <span>Satisfaction Cult / A Fragmentary Record</span>
+            <h1>満足教<small>異聞録</small></h1>
+            <div class="vn-title-rule" aria-hidden="true"></div>
+            <p>祭壇に残された教義の断片を読み、怪しげな回廊の奥へ進む短編記録。</p>
+            <div class="vn-title-actions">
+              <button type="button" data-vn-start>物語を始める</button>
+              <button type="button" data-vn-continue hidden>続きから読む</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="log" aria-label="バックログ">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>BACK LOG</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="バックログを閉じる">×</button>
+            </header>
+            <div class="vn-log" data-vn-log></div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="config" aria-label="設定">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>CONFIG</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="設定を閉じる">×</button>
+            </header>
+            <div class="vn-config">
+              <label class="vn-config-row">
+                <span>BGM VOLUME</span>
+                <input type="range" data-vn-volume min="0" max="1" value="0.32" step="0.05">
+              </label>
+              <div class="vn-config-row">
+                <span>TEXT SPEED</span>
+                <div class="vn-speed">
+                  <button type="button" data-vn-speed="slow" aria-pressed="false">SLOW</button>
+                  <button type="button" data-vn-speed="normal" aria-pressed="true">NORMAL</button>
+                  <button type="button" data-vn-speed="fast" aria-pressed="false">FAST</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="vn-panel" data-vn-panel="menu" aria-label="メニュー">
+          <div class="vn-panel-window">
+            <header class="vn-panel-head">
+              <h2>SYSTEM MENU</h2>
+              <button class="vn-panel-close" type="button" data-vn-close aria-label="メニューを閉じる">×</button>
+            </header>
+            <div class="vn-panel-actions">
+              <button type="button" data-vn-close>物語へ戻る</button>
+              <button type="button" data-vn-restart>最初から読み返す</button>
+              <a href="../">満足教ティザーへ戻る</a>
+            </div>
+          </div>
+        </section>
+
+        <div class="vn-toast" data-vn-toast role="status"></div>
+        <audio data-vn-audio src="../../assets/generated/manzokukyo/satisfaction-bgm.m4a" preload="metadata" loop></audio>
+      </main>
+    `
+  });
+}
+
 function renderManzokukyoTeaser(character) {
   const title = "満足教";
   const description = "残念院さんが開く、まだ全貌の見えない満足教のティザーサイトです。";
@@ -5630,6 +5785,61 @@ function renderManzokukyoTeaser(character) {
           color: #ffffff;
         }
 
+        .mk-novel-launch {
+          display: grid;
+          grid-template-columns: minmax(120px, 0.45fr) minmax(180px, 0.7fr) minmax(220px, 1fr);
+          align-items: center;
+          gap: 24px;
+          margin-top: 38px;
+          border-top: 1px solid rgba(215, 180, 81, 0.52);
+          border-bottom: 1px solid rgba(215, 180, 81, 0.24);
+          padding: 22px 8px;
+          color: #fff7dc;
+          text-decoration: none;
+          transition: border-color 0.24s ease, background 0.24s ease;
+        }
+
+        .mk-novel-launch span,
+        .mk-novel-launch small {
+          color: rgba(245, 234, 210, 0.58);
+          font-size: 0.68rem;
+          font-weight: 900;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+
+        .mk-novel-launch strong {
+          font-family: var(--font-display);
+          font-size: 1.15rem;
+          letter-spacing: 0.08em;
+        }
+
+        .mk-novel-launch small {
+          position: relative;
+          padding-right: 30px;
+          text-align: right;
+        }
+
+        .mk-novel-launch small::after {
+          position: absolute;
+          top: 50%;
+          right: 4px;
+          width: 8px;
+          height: 8px;
+          border-top: 1px solid var(--cult-gold);
+          border-right: 1px solid var(--cult-gold);
+          content: "";
+          rotate: 45deg;
+          translate: 0 -50%;
+        }
+
+        .mk-novel-launch:hover,
+        .mk-novel-launch:focus-visible {
+          outline: none;
+          border-color: var(--cult-gold);
+          background: rgba(215, 180, 81, 0.08);
+        }
+
         .mk-footer {
           position: fixed;
           right: 24px;
@@ -6237,7 +6447,9 @@ function renderManzokukyoTeaser(character) {
 
           .mk-subtitle {
             max-width: min(22em, 100%);
-            font-size: 1.02rem;
+            margin-top: 16px;
+            font-size: 0.94rem;
+            line-height: 1.45;
             line-break: anywhere;
             overflow-wrap: anywhere;
             word-break: normal;
@@ -6245,6 +6457,9 @@ function renderManzokukyoTeaser(character) {
 
           .mk-copy {
             max-width: 100%;
+            margin-top: 10px;
+            font-size: 0.86rem;
+            line-height: 1.65;
             line-break: anywhere;
             overflow-wrap: anywhere;
             word-break: break-all;
@@ -6264,6 +6479,45 @@ function renderManzokukyoTeaser(character) {
 
           .mk-scroll-cue::before {
             width: 20px;
+          }
+
+          .mk-bgm-toggle,
+          .mk-ritual-replay,
+          .mk-page .guestbook-launch {
+            bottom: 12px;
+            min-height: 40px;
+            padding: 7px 12px;
+            font-size: 0.66rem;
+            letter-spacing: 0.06em;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.46);
+          }
+
+          .mk-bgm-toggle {
+            left: 12px;
+          }
+
+          .mk-ritual-replay,
+          .mk-page .guestbook-launch {
+            right: 12px;
+          }
+
+          .mk-page .guestbook-launch {
+            border-width: 2px;
+          }
+
+          .mk-page[data-ritual-state="ended"] .guestbook-launch {
+            bottom: 60px;
+          }
+
+          .mk-novel-launch {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 18px 4px;
+          }
+
+          .mk-novel-launch small {
+            padding-right: 26px;
+            text-align: left;
           }
 
           .mk-actions {
@@ -6548,6 +6802,11 @@ function renderManzokukyoTeaser(character) {
               <strong>画像、動画、AIプロンプト用のビジュアル断片を追加予定。</strong>
             </div>
           </div>
+          <a class="mk-novel-launch" href="./novel/">
+            <span>Alternate Interface</span>
+            <strong>NOVEL MODE</strong>
+            <small>満足教異聞録を起動</small>
+          </a>
         </section>
         <footer class="mk-footer">
           <p>このページは満足教ティザーのデザイン試作です。文章は仮置きであり、公式設定として確定する場合は character.json へ反映してください。</p>
@@ -8886,6 +9145,7 @@ function renderSitemap(characters) {
       { loc: absoluteUrl(`${character.id}/`), priority: "1.0" },
       ...(character.id === "zannenin" ? [
         { loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" },
+        { loc: absoluteUrl(`${character.id}/manzokukyo/novel/`), priority: "0.5" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/`), priority: "0.6" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
