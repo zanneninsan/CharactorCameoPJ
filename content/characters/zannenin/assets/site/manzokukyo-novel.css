@@ -70,7 +70,7 @@ body.manzokukyo-novel {
 .vn-backdrop {
   object-fit: cover;
   object-position: center;
-  filter: saturate(0.72) contrast(1.1) brightness(0.72);
+  filter: saturate(0.86) contrast(1.06) brightness(0.94);
   scale: 1.015;
 }
 
@@ -80,20 +80,20 @@ body.manzokukyo-novel {
 
 .vn-shell[data-scene-kind="altar"] .vn-backdrop {
   object-position: center bottom;
-  filter: saturate(0.68) contrast(1.12) brightness(0.62);
+  filter: saturate(0.82) contrast(1.08) brightness(0.88);
 }
 
 .vn-shell[data-scene-kind="corridor"] .vn-backdrop,
 .vn-shell[data-scene-kind="door"] .vn-backdrop {
   object-position: center;
-  filter: saturate(0.58) contrast(1.2) brightness(0.54);
+  filter: saturate(0.76) contrast(1.12) brightness(0.82);
 }
 
 .vn-stage-shade {
   z-index: 2;
   background:
-    linear-gradient(90deg, rgba(3, 3, 5, 0.72), rgba(3, 3, 5, 0.08) 48%, rgba(3, 3, 5, 0.38)),
-    linear-gradient(180deg, rgba(3, 3, 5, 0.5), transparent 34%, rgba(3, 3, 5, 0.88) 100%);
+    linear-gradient(90deg, rgba(3, 3, 5, 0.48), rgba(3, 3, 5, 0.03) 48%, rgba(3, 3, 5, 0.2)),
+    linear-gradient(180deg, rgba(3, 3, 5, 0.26), transparent 34%, rgba(3, 3, 5, 0.68) 100%);
 }
 
 .vn-stage-grain {
@@ -111,7 +111,7 @@ body.manzokukyo-novel {
   inset: 0;
   content: "";
   border: 1px solid rgba(198, 164, 90, 0.24);
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.78);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.54);
 }
 
 .vn-topbar {

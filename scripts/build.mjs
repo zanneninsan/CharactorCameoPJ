@@ -971,7 +971,7 @@ function renderManzokukyoTruth(character) {
           height: 100%;
           object-fit: cover;
           object-position: 50% 50%;
-          filter: brightness(0.68) contrast(1.08) saturate(0.82);
+          filter: brightness(0.92) contrast(1.04) saturate(0.94);
           transform: scale(1.07);
           animation: truth-chamber-enter 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -980,9 +980,9 @@ function renderManzokukyoTruth(character) {
           z-index: -4;
           pointer-events: none;
           background:
-            linear-gradient(90deg, rgba(0, 0, 0, 0.68), transparent 23% 77%, rgba(0, 0, 0, 0.68)),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.58), transparent 28% 68%, rgba(0, 0, 0, 0.82)),
-            radial-gradient(ellipse at 50% 47%, rgba(126, 60, 255, 0.12), transparent 34%);
+            linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 23% 77%, rgba(0, 0, 0, 0.42)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 28% 68%, rgba(0, 0, 0, 0.64)),
+            radial-gradient(ellipse at 50% 47%, rgba(177, 131, 255, 0.18), transparent 38%);
         }
 
         .truth-scanlines {
@@ -990,9 +990,9 @@ function renderManzokukyoTruth(character) {
           pointer-events: none;
           background:
             linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 48%, rgba(0, 0, 0, 0.54) 82%, rgba(0, 0, 0, 0.88) 100%);
+            radial-gradient(ellipse at 50% 50%, transparent 0 52%, rgba(0, 0, 0, 0.34) 84%, rgba(0, 0, 0, 0.66) 100%);
           background-size: 100% 4px, auto;
-          opacity: 0.72;
+          opacity: 0.52;
           mix-blend-mode: screen;
         }
 
@@ -1497,7 +1497,7 @@ function renderManzokukyoTruth(character) {
 
         @keyframes truth-chamber-enter {
           from { filter: brightness(1.08) contrast(1.16) saturate(0.7); transform: scale(1.16); }
-          to { filter: brightness(0.68) contrast(1.08) saturate(0.82); transform: scale(1.07); }
+          to { filter: brightness(0.92) contrast(1.04) saturate(0.94); transform: scale(1.07); }
         }
 
         @keyframes truth-copy-enter {
@@ -1541,7 +1541,7 @@ function renderManzokukyoTruth(character) {
         }
 
         @keyframes truth-room-jolt {
-          0%, 100% { transform: scale(1.07); filter: brightness(0.68) contrast(1.08) saturate(0.82); }
+          0%, 100% { transform: scale(1.07); filter: brightness(0.92) contrast(1.04) saturate(0.94); }
           28% { transform: scale(1.085) translateX(-5px); filter: brightness(0.36) contrast(1.4) saturate(0.2); }
           58% { transform: scale(1.075) translateX(4px); filter: brightness(0.9) contrast(1.24) saturate(0.7); }
         }
@@ -2483,7 +2483,7 @@ function renderManzokukyoRedHouse(character) {
           height: 100%;
           object-fit: cover;
           object-position: center;
-          filter: brightness(0.65) contrast(1.08) saturate(0.76);
+          filter: brightness(0.9) contrast(1.04) saturate(0.9);
           transform: scale(1.035);
           animation: red-room-enter 2.1s cubic-bezier(0.16, 1, 0.3, 1) both;
           transition: filter 0.5s ease, transform 0.5s ease;
@@ -2494,9 +2494,9 @@ function renderManzokukyoRedHouse(character) {
           pointer-events: none;
           background:
             radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 222, 180, 0.055), transparent 18%),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.62), transparent 24% 76%, rgba(0, 0, 0, 0.62)),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 25% 66%, rgba(0, 0, 0, 0.88)),
-            radial-gradient(ellipse at 50% 44%, rgba(130, 0, 16, calc(0.06 + var(--sin-level) * 0.2)), transparent 48%);
+            linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent 24% 76%, rgba(0, 0, 0, 0.4)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 25% 66%, rgba(0, 0, 0, 0.66)),
+            radial-gradient(ellipse at 50% 44%, rgba(174, 20, 38, calc(0.08 + var(--sin-level) * 0.2)), transparent 52%);
         }
 
         .red-room-noise {
@@ -2504,9 +2504,9 @@ function renderManzokukyoRedHouse(character) {
           pointer-events: none;
           background:
             linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 50%, rgba(0, 0, 0, 0.54) 84%, #000 100%);
+            radial-gradient(ellipse at 50% 50%, transparent 0 54%, rgba(0, 0, 0, 0.34) 86%, rgba(0, 0, 0, 0.72) 100%);
           background-size: 100% 4px, auto;
-          opacity: 0.74;
+          opacity: 0.5;
           mix-blend-mode: screen;
         }
 
@@ -3065,12 +3065,12 @@ function renderManzokukyoRedHouse(character) {
         }
 
         .red-room[data-lamp="silence"] .red-room-art img {
-          filter: brightness(0.44) contrast(1.14) saturate(0.42);
+          filter: brightness(0.65) contrast(1.1) saturate(0.58);
         }
 
         .red-room[data-lamp="satisfaction"] .red-room-art img,
         .red-room.is-absolved .red-room-art img {
-          filter: brightness(0.75) contrast(1.04) saturate(0.7) sepia(0.16);
+          filter: brightness(1) contrast(1.02) saturate(0.86) sepia(0.12);
         }
 
         .red-room-flash {
@@ -3108,7 +3108,7 @@ function renderManzokukyoRedHouse(character) {
 
         @keyframes red-room-enter {
           from { opacity: 0; transform: scale(1.12); filter: brightness(0.2) contrast(1.4) saturate(0.3); }
-          to { opacity: 1; transform: scale(1.035); filter: brightness(0.65) contrast(1.08) saturate(0.76); }
+          to { opacity: 1; transform: scale(1.035); filter: brightness(0.9) contrast(1.04) saturate(0.9); }
         }
 
         @keyframes red-copy-enter {
@@ -4183,8 +4183,8 @@ function renderManzokukyoArchiveNovel(character) {
     stylesheetHref: "../../../../../styles.css",
     bodyClass: "manzokukyo-novel manzokukyo-archive-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?v=20260724-2">
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260724-1">
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?v=20260729-1">
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260729-1">
       <script src="../../../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
     `,
     structuredData: {
@@ -4337,7 +4337,7 @@ function renderManzokukyoNovel(character) {
     stylesheetHref: "../../../styles.css",
     bodyClass: "manzokukyo-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260724-2">
+      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260729-1">
       <script src="../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
     `,
     structuredData: {
