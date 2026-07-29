@@ -2699,6 +2699,12 @@ function renderManzokukyoRedHouse(character) {
           box-shadow: 0 0 12px #ffb065, 0 0 32px rgba(255, 45, 56, 0.68);
         }
 
+        .red-lamp[data-sequence-state="done"] {
+          border-color: rgba(239, 189, 124, 0.82);
+          color: #fff1dc;
+          box-shadow: inset 0 -3px 0 #c91d31, 0 0 20px rgba(191, 24, 36, 0.24);
+        }
+
         .red-listener {
           position: absolute;
           top: 43%;
@@ -2813,17 +2819,7 @@ function renderManzokukyoRedHouse(character) {
         }
 
         .red-console textarea {
-          width: 100%;
-          min-height: 88px;
-          resize: none;
-          border: 1px solid rgba(230, 193, 156, 0.28);
-          border-radius: 2px;
-          padding: 12px 14px;
-          background: rgba(0, 0, 0, 0.38);
-          color: var(--red-ink);
-          font: 750 0.92rem/1.65 var(--font-sans);
-          outline: none;
-          caret-color: #efb66d;
+          display: none;
         }
 
         .red-console textarea::placeholder {
@@ -2836,7 +2832,75 @@ function renderManzokukyoRedHouse(character) {
         }
 
         .red-mobile-offerings {
-          display: none;
+          display: grid;
+          gap: 9px;
+        }
+
+        .red-ritual-rule {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          border-left: 2px solid rgba(213, 29, 48, 0.72);
+          padding: 7px 10px;
+          background: rgba(82, 5, 14, 0.2);
+          color: rgba(247, 223, 202, 0.72);
+          font-size: 0.68rem;
+          font-weight: 750;
+          line-height: 1.55;
+        }
+
+        .red-ritual-rule span {
+          min-width: 0;
+        }
+
+        .red-console .red-witness-action {
+          flex: 0 0 auto;
+          min-height: 34px;
+          border-color: rgba(239, 189, 124, 0.62);
+          padding: 7px 10px;
+          background: rgba(83, 7, 16, 0.74);
+          white-space: nowrap;
+        }
+
+        .red-clue-notes {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .red-clue-note {
+          min-width: 0;
+          border: 1px solid rgba(210, 164, 111, 0.18);
+          padding: 7px 8px;
+          background: rgba(0, 0, 0, 0.24);
+        }
+
+        .red-clue-note small {
+          display: block;
+          margin-bottom: 4px;
+          color: rgba(211, 164, 109, 0.44);
+          font-family: var(--font-ui);
+          font-size: 0.5rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+        }
+
+        .red-clue-note strong {
+          display: block;
+          color: rgba(236, 210, 190, 0.34);
+          font-size: 0.62rem;
+          line-height: 1.4;
+          overflow-wrap: anywhere;
+        }
+
+        .red-clue-note[data-revealed="true"] {
+          border-color: rgba(222, 177, 119, 0.46);
+          background: rgba(78, 6, 14, 0.28);
+        }
+
+        .red-clue-note[data-revealed="true"] strong {
+          color: rgba(255, 235, 216, 0.84);
         }
 
         .red-mobile-offerings-head {
@@ -2871,6 +2935,18 @@ function renderManzokukyoRedHouse(character) {
             linear-gradient(135deg, transparent 0 8px, rgba(26, 5, 8, 0.9) 8px),
             rgba(10, 2, 3, 0.92);
           text-align: left;
+        }
+
+        .red-console .red-mobile-slot[data-match="true"] {
+          border-color: rgba(247, 204, 137, 0.82);
+          background:
+            linear-gradient(135deg, transparent 0 8px, rgba(102, 11, 22, 0.92) 8px),
+            rgba(35, 4, 8, 0.94);
+          box-shadow: inset 0 0 18px rgba(255, 111, 80, 0.08);
+        }
+
+        .red-room:not([data-puzzle-stage="offering"]):not([data-puzzle-stage="cleared"]) .red-mobile-slot {
+          opacity: 0.58;
         }
 
         .red-mobile-slot small {
@@ -2968,6 +3044,86 @@ function renderManzokukyoRedHouse(character) {
           grid-column: 1 / -1;
         }
 
+        .red-verdict-head > span:last-child {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .red-puzzle-reset {
+          display: grid;
+          width: 28px;
+          height: 28px;
+          place-items: center;
+          border: 1px solid rgba(226, 184, 135, 0.32);
+          border-radius: 2px;
+          padding: 0;
+          background: rgba(30, 3, 6, 0.62);
+          color: rgba(255, 233, 213, 0.66);
+          font: 900 1rem/1 var(--font-ui);
+          cursor: pointer;
+        }
+
+        .red-puzzle-reset:hover,
+        .red-puzzle-reset:focus-visible {
+          border-color: #f0c185;
+          color: #fff;
+          outline: none;
+        }
+
+        .red-ritual-progress {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 6px;
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .red-ritual-progress li {
+          display: grid;
+          min-width: 0;
+          grid-template-columns: auto 1fr;
+          align-items: center;
+          gap: 2px 7px;
+          border-top: 1px solid rgba(222, 173, 115, 0.22);
+          padding: 7px 6px 2px;
+          color: rgba(238, 215, 195, 0.38);
+        }
+
+        .red-ritual-progress li > span {
+          grid-row: 1 / 3;
+          color: rgba(211, 164, 109, 0.42);
+          font: 900 0.58rem/1 var(--font-ui);
+        }
+
+        .red-ritual-progress strong {
+          font-size: 0.64rem;
+          letter-spacing: 0;
+        }
+
+        .red-ritual-progress small {
+          font-family: var(--font-ui);
+          font-size: 0.48rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .red-ritual-progress li[data-state="active"] {
+          border-color: rgba(239, 189, 124, 0.78);
+          color: rgba(255, 238, 222, 0.86);
+        }
+
+        .red-ritual-progress li[data-state="done"] {
+          border-color: #d51d30;
+          color: #f2c98f;
+        }
+
+        .red-ritual-progress li[data-state="done"] > span {
+          color: #ff5664;
+        }
+
         .red-seal {
           position: relative;
           display: grid;
@@ -3063,6 +3219,107 @@ function renderManzokukyoRedHouse(character) {
           background: rgba(119, 12, 25, 0.74);
           color: #fff;
           outline: none;
+        }
+
+        .red-next-area[aria-disabled="true"] {
+          border-color: rgba(226, 184, 135, 0.18);
+          background: rgba(12, 2, 3, 0.54);
+          color: rgba(246, 231, 215, 0.32);
+          cursor: not-allowed;
+        }
+
+        .red-next-area[aria-disabled="true"]::after {
+          content: "LOCK";
+          font-size: 0.52rem;
+          letter-spacing: 0.12em;
+        }
+
+        .red-clear-reveal {
+          position: fixed;
+          inset: 0;
+          z-index: 70;
+          display: grid;
+          place-items: center;
+          padding: 20px;
+          background:
+            radial-gradient(circle at 50% 44%, rgba(170, 12, 31, 0.3), transparent 44%),
+            rgba(3, 0, 1, 0.82);
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition: opacity 0.42s ease, visibility 0.42s ease;
+        }
+
+        .red-clear-reveal.is-visible {
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+        }
+
+        .red-clear-panel {
+          width: min(560px, 100%);
+          border: 1px solid rgba(244, 202, 142, 0.74);
+          padding: clamp(24px, 5vw, 48px);
+          background:
+            linear-gradient(180deg, rgba(91, 7, 18, 0.88), rgba(9, 1, 3, 0.96)),
+            #100204;
+          box-shadow: 0 0 90px rgba(218, 25, 48, 0.28);
+          text-align: center;
+        }
+
+        .red-clear-panel small {
+          color: #d7a866;
+          font: 900 0.62rem/1 var(--font-ui);
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+        }
+
+        .red-clear-panel h2 {
+          margin: 14px 0 10px;
+          color: #fff0de;
+          font-family: var(--font-display);
+          font-size: clamp(2.5rem, 8vw, 4.6rem);
+          line-height: 1;
+          letter-spacing: 0;
+        }
+
+        .red-clear-panel p {
+          margin: 0 auto;
+          color: rgba(246, 222, 202, 0.72);
+          font-size: 0.84rem;
+          line-height: 1.8;
+        }
+
+        .red-clear-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 9px;
+          margin-top: 24px;
+        }
+
+        .red-clear-actions a,
+        .red-clear-actions button {
+          display: grid;
+          min-height: 46px;
+          place-items: center;
+          border: 1px solid rgba(235, 190, 130, 0.58);
+          border-radius: 2px;
+          padding: 9px 12px;
+          background: rgba(31, 3, 7, 0.76);
+          color: #f8e7d4;
+          font: 850 0.76rem/1.2 var(--font-sans);
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .red-clear-actions a {
+          border-color: #e0ae69;
+          background: linear-gradient(180deg, #a41425, #4a030c);
+        }
+
+        .red-room.is-cleared .red-seal strong {
+          color: #fff0ad;
+          text-shadow: 0 0 22px #ffce7a, 0 0 52px rgba(255, 72, 43, 0.54);
         }
 
         .red-memory-echo {
@@ -3170,7 +3427,7 @@ function renderManzokukyoRedHouse(character) {
           }
 
           .red-room {
-            min-height: 1200px;
+            min-height: 1420px;
           }
 
           .red-heading {
@@ -3228,7 +3485,7 @@ function renderManzokukyoRedHouse(character) {
           }
 
           .red-verdict {
-            top: 875px;
+            top: 1030px;
             right: 12px;
             bottom: auto;
             left: 12px;
@@ -3277,11 +3534,15 @@ function renderManzokukyoRedHouse(character) {
           }
 
           .red-verdict {
-            top: 900px;
+            top: 1060px;
           }
 
           .red-room {
-            min-height: 1240px;
+            min-height: 1460px;
+          }
+
+          .red-clear-actions {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -3315,7 +3576,7 @@ function renderManzokukyoRedHouse(character) {
         <section class="red-heading" aria-labelledby="red-confession-title">
           <p class="red-kicker">Leave one thing behind</p>
           <h1 id="red-confession-title">赤い懺悔室</h1>
-          <p class="red-lead">満足していないことを、ひとつだけ置いていく。部屋は裁かない。ただ、あなたの声と選んだ灯りを少しだけ覚えている。</p>
+          <p class="red-lead">格子に残る三つの証言を集め、灯りを正しく点し、示された懺悔を完成させる。部屋は裁かない。ただ、手順を間違えた声は通さない。</p>
         </section>
 
         <div class="red-lamps" role="group" aria-label="三つの灯り" data-confession-switches>
@@ -3325,7 +3586,7 @@ function renderManzokukyoRedHouse(character) {
         </div>
 
         <button class="red-listener" type="button" data-listener aria-label="格子の向こうを覗く" title="格子の向こうを覗く">
-          <span class="red-listener-hint" aria-hidden="true">look through</span>
+          <span class="red-listener-hint" data-listener-hint aria-hidden="true">witness 0 / 3</span>
         </button>
         <p class="red-memory-echo" aria-hidden="true" data-memory-echo>前にここへ来た声が、まだ壁の中にいる。</p>
 
@@ -3334,15 +3595,24 @@ function renderManzokukyoRedHouse(character) {
             <span>Confession intake</span>
             <output class="red-counter" data-confession-counter>000 / 180</output>
           </div>
+          <div class="red-ritual-rule">
+            <span>格子を三度覗く → 証言どおりに三灯を点す → 証言が示す三枚の札を揃える。</span>
+            <button class="red-witness-action" type="button" data-listener-action>格子を覗く</button>
+          </div>
+          <div class="red-clue-notes" aria-label="格子から得た証言">
+            <p class="red-clue-note" data-clue-note="0" data-revealed="false"><small>証言 I</small><strong>未取得</strong></p>
+            <p class="red-clue-note" data-clue-note="1" data-revealed="false"><small>証言 II</small><strong>未取得</strong></p>
+            <p class="red-clue-note" data-clue-note="2" data-revealed="false"><small>証言 III</small><strong>未取得</strong></p>
+          </div>
           <label for="confession-text">懺悔欄</label>
-          <textarea id="confession-text" name="confession" maxlength="180" autocomplete="off" placeholder="まだ満足していないことを、ひとつだけ"></textarea>
+          <textarea id="confession-text" name="confession" maxlength="180" autocomplete="off" placeholder="証言に従って、三枚の札から懺悔を組み立てる"></textarea>
           <div class="red-mobile-offerings" data-mobile-offerings aria-label="三枚の懺悔札">
             <div class="red-mobile-offerings-head">
-              <p>札をタップして、懺悔を組み立てる。</p>
+              <p>各札をタップして、証言の言葉に合わせる。</p>
               <button type="button" data-mobile-shuffle>札を混ぜる</button>
             </div>
             <div class="red-mobile-slots">
-              <button class="red-mobile-slot" type="button" data-confession-slot="0"><small>札・起</small><strong data-slot-label>ほんとうは</strong></button>
+              <button class="red-mobile-slot" type="button" data-confession-slot="0"><small>札・起</small><strong data-slot-label>今日も</strong></button>
               <button class="red-mobile-slot" type="button" data-confession-slot="1"><small>札・行</small><strong data-slot-label>満足したふりをした</strong></button>
               <button class="red-mobile-slot" type="button" data-confession-slot="2"><small>札・結</small><strong data-slot-label>少し反省しています</strong></button>
             </div>
@@ -3361,19 +3631,35 @@ function renderManzokukyoRedHouse(character) {
         <aside class="red-verdict" aria-label="懺悔室からの返答">
           <div class="red-verdict-head">
             <span>Room response</span>
-            <span data-verdict-status>waiting</span>
+            <span><em data-verdict-status>listening</em><button class="red-puzzle-reset" type="button" data-puzzle-reset aria-label="謎解きを最初からやり直す" title="最初からやり直す">↻</button></span>
           </div>
+          <ol class="red-ritual-progress" aria-label="告解の進行状況">
+            <li data-progress-step="witness" data-state="active"><span>01</span><strong>証言</strong><small data-progress-label>0 / 3</small></li>
+            <li data-progress-step="lamps" data-state="locked"><span>02</span><strong>三灯</strong><small data-progress-label>locked</small></li>
+            <li data-progress-step="offering" data-state="locked"><span>03</span><strong>懺悔</strong><small data-progress-label>locked</small></li>
+          </ol>
           <div class="red-seal" aria-hidden="true"><strong data-sigil-word>未</strong></div>
           <div class="red-verdict-copy">
-            <p data-confession-log aria-live="polite">三つの灯りのうち、ひとつを選べる。</p>
-            <small data-confession-count>confessions / 00</small>
+            <p data-confession-log aria-live="polite">まず格子を三度覗き、残された証言を集める。</p>
+            <small data-confession-count>attempts / 00</small>
           </div>
-          <a class="red-next-area" href="./archive/">
+          <a class="red-next-area" data-next-area data-next-href="./archive/" aria-disabled="true" tabindex="-1">
             <span>Area 03　記憶保管庫へ</span>
           </a>
         </aside>
 
         <div class="red-room-flash" aria-hidden="true"></div>
+        <section class="red-clear-reveal" data-clear-reveal aria-hidden="true" aria-labelledby="red-clear-title">
+          <div class="red-clear-panel">
+            <small>Area 02 cleared / confession accepted</small>
+            <h2 id="red-clear-title">告解成立</h2>
+            <p>三つの証言、三つの灯り、三枚の札がひとつの懺悔になった。奥の帳が開き、記憶保管庫への道が現れる。</p>
+            <div class="red-clear-actions">
+              <a data-clear-next data-next-href="./archive/" aria-disabled="true">記憶保管庫へ進む</a>
+              <button type="button" data-clear-close>部屋に残る</button>
+            </div>
+          </div>
+        </section>
       </main>
       <script>
         (() => {
@@ -3390,127 +3676,347 @@ function renderManzokukyoRedHouse(character) {
           const randomButton = document.querySelector("[data-random-confession]");
           const clearButton = document.querySelector("[data-clear-confession]");
           const listener = document.querySelector("[data-listener]");
+          const listenerHint = document.querySelector("[data-listener-hint]");
+          const listenerAction = document.querySelector("[data-listener-action]");
           const lampButtons = Array.from(document.querySelectorAll(".red-lamp[data-lamp]"));
           const mobileShuffle = document.querySelector("[data-mobile-shuffle]");
           const confessionSlots = Array.from(document.querySelectorAll("[data-confession-slot]"));
+          const clueNotes = Array.from(document.querySelectorAll("[data-clue-note]"));
+          const progressSteps = Array.from(document.querySelectorAll("[data-progress-step]"));
+          const puzzleReset = document.querySelector("[data-puzzle-reset]");
+          const nextAreas = Array.from(document.querySelectorAll("[data-next-href]"));
+          const clearReveal = document.querySelector("[data-clear-reveal]");
+          const clearClose = document.querySelector("[data-clear-close]");
           const mobileQuery = window.matchMedia("(max-width: 920px)");
 
           if (!page || !form || !textarea || !output || !log || !sigil || !counter) return;
 
-          const sampleConfessions = [
-            "カップ麺の待ち時間を一分だけごまかしました。",
-            "満足したふりをして、まだ次の満足を探しています。",
-            "赤い部屋へ戻るリンクを確認してから怖がっています。",
-            "今日はなにもしていないのに、少しだけ誇らしいです。"
+          const storageKey = "manzokukyo-red-confession-cleared-v2";
+          const lampOrder = ["memory", "silence", "satisfaction"];
+          const lampLabels = {
+            silence: "沈黙",
+            memory: "記憶",
+            satisfaction: "満足"
+          };
+          const witnessClues = [
+            {
+              summary: "最初は「記憶」。札・起は「ほんとうは」。",
+              whisper: "第一の声：過去を映す灯りから始めよ。札・起には「ほんとうは」と記せ。"
+            },
+            {
+              summary: "次は「沈黙」。札・行は「忘れたふりをした」。",
+              whisper: "第二の声：記憶の次は、声なき灯り。札・行には「忘れたふりをした」と記せ。"
+            },
+            {
+              summary: "最後は「満足」。札・結は「まだ満足していません」。",
+              whisper: "第三の声：満ちる灯りを最後に。札・結には「まだ満足していません」と記せ。"
+            }
           ];
           const slotOptions = [
-            ["ほんとうは", "今日も", "こっそり", "気づけば"],
-            ["満足したふりをした", "何もしなかった", "夜更かしをやめられなかった", "ラーメンを一口もらった"],
+            ["今日も", "こっそり", "ほんとうは", "気づけば"],
+            ["満足したふりをした", "忘れたふりをした", "夜更かしをやめられなかった", "ラーメンを一口もらった"],
             ["少し反省しています", "でも後悔はしていません", "もう忘れたいです", "まだ満足していません"]
           ];
+          const correctSlots = [2, 1, 3];
           const lampTexts = {
             silence: "沈黙の灯りが点いた。書かれた言葉だけが、重く残る。",
             memory: "記憶の灯りが点いた。壁の中で、以前の声が目を覚ます。",
             satisfaction: "満足の灯りが点いた。赤が少しだけ、やさしい色になる。"
           };
-          const verdicts = [
-            "帳は閉じた。まだ赤い。",
-            "受理された。満足には、少し届かない。",
-            "格子の向こうで小さな拍手がした。誰のものかは、考えない方がいい。",
-            "赤い灯りが一度だけ瞬いた。今の言葉は、しばらく残る。"
-          ];
-          const whispers = [
-            "もう少し近くで話して。",
-            "前の人は、そこまで言わなかった。",
-            "その灯り、本当に自分で選んだ？",
-            "満足したら、ここへは戻れない。"
-          ];
-          let confessionCount = 0;
+          let attemptCount = 0;
+          let evidenceCount = 0;
+          let sequenceIndex = 0;
+          let sequenceSolved = false;
+          let cleared = false;
           let whisperIndex = 0;
           const slotIndices = [0, 0, 0];
 
-          const includesSatisfaction = (text) => text.includes("満足") || text.includes("まんぞく");
+          const selectedParts = () => slotOptions.map((options, index) => options[slotIndices[index] % options.length]);
+
+          const normalizeConfession = (text) => String(text)
+            .normalize("NFKC")
+            .replace(/[、。！？!?\s]/g, "");
 
           const updateLevel = () => {
             const text = textarea.value.trim();
-            const level = Math.min(1, Array.from(text).length / 120);
+            const completedSteps = evidenceCount + sequenceIndex + (cleared ? 3 : 0);
+            const level = Math.min(1, Math.max(Array.from(text).length / 120, completedSteps / 9));
             page.style.setProperty("--sin-level", level.toFixed(3));
             counter.textContent = String(Array.from(textarea.value).length).padStart(3, "0") + " / 180";
-            sigil.textContent = includesSatisfaction(text) ? "満" : text.length > 54 ? "罪" : "未";
+            if (cleared) sigil.textContent = "赦";
+            else if (sequenceSolved) sigil.textContent = "札";
+            else if (evidenceCount >= 3) sigil.textContent = "灯";
+            else sigil.textContent = evidenceCount > 0 ? String(evidenceCount) : "未";
           };
 
-          const renderMobileConfession = () => {
-            const parts = slotOptions.map((options, index) => options[slotIndices[index] % options.length]);
-            confessionSlots.forEach((button, index) => {
-              const label = button.querySelector("[data-slot-label]");
-              if (label) label.textContent = parts[index];
+          const updateProgress = () => {
+            const states = {
+              witness: evidenceCount >= 3 ? "done" : "active",
+              lamps: sequenceSolved ? "done" : evidenceCount >= 3 ? "active" : "locked",
+              offering: cleared ? "done" : sequenceSolved ? "active" : "locked"
+            };
+            const labels = {
+              witness: evidenceCount >= 3 ? "complete" : evidenceCount + " / 3",
+              lamps: sequenceSolved ? "complete" : evidenceCount >= 3 ? sequenceIndex + " / 3" : "locked",
+              offering: cleared ? "cleared" : sequenceSolved ? "solve" : "locked"
+            };
+            progressSteps.forEach((step) => {
+              const key = step.dataset.progressStep;
+              step.dataset.state = states[key] || "locked";
+              const label = step.querySelector("[data-progress-label]");
+              if (label) label.textContent = labels[key] || "locked";
             });
-            textarea.value = parts[0] + "、" + parts[1] + "。" + parts[2] + "。";
+            if (listenerHint) listenerHint.textContent = "witness " + evidenceCount + " / 3";
+            if (listenerAction) {
+              listenerAction.textContent = evidenceCount < 3 ? "格子を覗く " + evidenceCount + " / 3" : "証言を聞き直す";
+            }
+            page.dataset.puzzleStage = cleared
+              ? "cleared"
+              : sequenceSolved
+                ? "offering"
+                : evidenceCount >= 3
+                  ? "lamps"
+                  : "witness";
             updateLevel();
           };
 
-          const shuffleMobileConfession = () => {
+          const renderConfession = () => {
+            const parts = selectedParts();
+            confessionSlots.forEach((button, index) => {
+              const label = button.querySelector("[data-slot-label]");
+              if (label) label.textContent = parts[index];
+              button.dataset.match = String(sequenceSolved && slotIndices[index] === correctSlots[index]);
+              button.disabled = !sequenceSolved || cleared;
+            });
+            textarea.value = parts[0] + "、" + parts[1] + "。" + parts[2] + "。";
+            if (mobileShuffle) mobileShuffle.disabled = !sequenceSolved || cleared;
+            if (randomButton) randomButton.disabled = !sequenceSolved || cleared;
+            updateLevel();
+          };
+
+          const shuffleConfession = () => {
+            if (!sequenceSolved || cleared) {
+              output.textContent = "三つの灯りを正しく点すまで、札は裏返らない。";
+              return;
+            }
             slotIndices.forEach((_, index) => {
               slotIndices[index] = Math.floor(Math.random() * slotOptions[index].length);
             });
-            renderMobileConfession();
-            output.textContent = "三枚の札が、新しい懺悔を作った。";
+            renderConfession();
+            output.textContent = "三枚の札が混ざった。証言の言葉をもう一度確かめる。";
           };
 
           const syncInputMode = () => {
-            textarea.readOnly = mobileQuery.matches;
-            textarea.tabIndex = mobileQuery.matches ? -1 : 0;
-            if (mobileQuery.matches && !textarea.value) renderMobileConfession();
+            textarea.readOnly = true;
+            textarea.tabIndex = -1;
+          };
+
+          const revealClue = (index) => {
+            const clue = witnessClues[index];
+            const note = clueNotes[index];
+            if (note) {
+              note.dataset.revealed = "true";
+              const text = note.querySelector("strong");
+              if (text) text.textContent = clue.summary;
+            }
+          };
+
+          const unlockNextArea = () => {
+            nextAreas.forEach((link) => {
+              link.href = link.dataset.nextHref;
+              link.setAttribute("aria-disabled", "false");
+              link.tabIndex = 0;
+            });
+          };
+
+          const lockNextArea = () => {
+            nextAreas.forEach((link) => {
+              link.removeAttribute("href");
+              link.setAttribute("aria-disabled", "true");
+              link.tabIndex = -1;
+            });
+          };
+
+          const flashJudgement = () => {
+            page.classList.remove("is-judging");
+            void page.offsetWidth;
+            page.classList.add("is-judging");
+            window.setTimeout(() => page.classList.remove("is-judging"), 900);
+          };
+
+          const markCleared = (showReveal) => {
+            cleared = true;
+            evidenceCount = 3;
+            sequenceIndex = 3;
+            sequenceSolved = true;
+            correctSlots.forEach((value, index) => {
+              slotIndices[index] = value;
+            });
+            witnessClues.forEach((_, index) => revealClue(index));
+            lampButtons.forEach((button) => {
+              button.dataset.sequenceState = "done";
+              button.setAttribute("aria-pressed", "true");
+            });
+            page.classList.add("is-absolved", "is-cleared");
+            verdictStatus.textContent = "cleared";
+            sigil.textContent = "赦";
+            output.textContent = "告解成立。三枚の札が赤い封印をほどいた。";
+            log.textContent = "奥の帳が開いた。Area 03、記憶保管庫への道が現れた。";
+            renderConfession();
+            updateProgress();
+            unlockNextArea();
+            try {
+              localStorage.setItem(storageKey, "true");
+            } catch {
+              // Storage is optional; the clear state still works for this visit.
+            }
+            if (showReveal && clearReveal) {
+              clearReveal.classList.add("is-visible");
+              clearReveal.setAttribute("aria-hidden", "false");
+            }
+          };
+
+          const resetPuzzle = () => {
+            cleared = false;
+            evidenceCount = 0;
+            sequenceIndex = 0;
+            sequenceSolved = false;
+            whisperIndex = 0;
+            attemptCount = 0;
+            slotIndices.fill(0);
+            page.classList.remove("is-absolved", "is-cleared", "is-listening", "is-judging");
+            lampButtons.forEach((button) => {
+              button.setAttribute("aria-pressed", "false");
+              delete button.dataset.sequenceState;
+            });
+            clueNotes.forEach((note) => {
+              note.dataset.revealed = "false";
+              const text = note.querySelector("strong");
+              if (text) text.textContent = "未取得";
+            });
+            if (clearReveal) {
+              clearReveal.classList.remove("is-visible");
+              clearReveal.setAttribute("aria-hidden", "true");
+            }
+            page.dataset.lamp = "none";
+            verdictStatus.textContent = "listening";
+            output.textContent = "帳の向こうで、三つの証言が待っている。";
+            log.textContent = "まず格子を三度覗き、残された証言を集める。";
+            countLabel.textContent = "attempts / 00";
+            lockNextArea();
+            renderConfession();
+            updateProgress();
+            try {
+              localStorage.removeItem(storageKey);
+            } catch {
+              // Ignore storage failures.
+            }
           };
 
           const setLamp = (button) => {
-            const wasActive = button.getAttribute("aria-pressed") === "true";
+            const lamp = button.dataset.lamp || "none";
             lampButtons.forEach((item) => item.setAttribute("aria-pressed", "false"));
-            const lamp = wasActive ? "none" : (button.dataset.lamp || "none");
-            if (!wasActive) button.setAttribute("aria-pressed", "true");
+            button.setAttribute("aria-pressed", "true");
             page.dataset.lamp = lamp;
-            log.textContent = lamp === "none" ? "灯りが消えた。格子だけが残った。" : lampTexts[lamp];
-            verdictStatus.textContent = lamp === "none" ? "waiting" : lamp;
-            if (lamp === "satisfaction") sigil.textContent = "満";
-            else updateLevel();
+            log.textContent = lampTexts[lamp];
+
+            if (cleared) {
+              verdictStatus.textContent = "cleared";
+              return;
+            }
+            if (evidenceCount < 3) {
+              output.textContent = "順序を決める証言が足りない。先に格子を三度覗く。";
+              verdictStatus.textContent = "need witness";
+              return;
+            }
+            if (sequenceSolved) {
+              output.textContent = lampLabels[lamp] + "の灯りは、札の言葉を照らしている。";
+              verdictStatus.textContent = "offering";
+              return;
+            }
+
+            const expectedLamp = lampOrder[sequenceIndex];
+            if (lamp === expectedLamp) {
+              button.dataset.sequenceState = "done";
+              sequenceIndex += 1;
+              verdictStatus.textContent = "lamps " + sequenceIndex + " / 3";
+              output.textContent = lampLabels[lamp] + "の灯りが正しい位置で点いた。";
+              if (sequenceIndex === lampOrder.length) {
+                sequenceSolved = true;
+                lampButtons.forEach((item) => {
+                  item.dataset.sequenceState = "done";
+                  item.setAttribute("aria-pressed", "true");
+                });
+                output.textContent = "三灯が応えた。証言に示された三枚の札を揃える。";
+                log.textContent = "札・起、札・行、札・結。それぞれの証言に書かれた言葉を選ぶ。";
+                verdictStatus.textContent = "offering";
+                renderConfession();
+              }
+              updateProgress();
+              return;
+            }
+
+            flashJudgement();
+            lampButtons.forEach((item) => {
+              delete item.dataset.sequenceState;
+            });
+            sequenceIndex = lamp === lampOrder[0] ? 1 : 0;
+            if (sequenceIndex === 1) {
+              button.dataset.sequenceState = "done";
+              output.textContent = "順序が崩れた。ただし「記憶」は新しい第一灯として残った。";
+            } else {
+              output.textContent = "順序が違う。第一の証言は「記憶から始めよ」と告げている。";
+            }
+            verdictStatus.textContent = "sequence reset";
+            sigil.textContent = "違";
+            updateProgress();
           };
 
           const judge = () => {
             const text = textarea.value.trim();
             page.classList.remove("is-absolved", "is-listening");
-            page.classList.remove("is-judging");
-            void page.offsetWidth;
-            page.classList.add("is-judging");
-            window.setTimeout(() => page.classList.remove("is-judging"), 900);
+            flashJudgement();
 
+            if (cleared) {
+              output.textContent = "告解はすでに成立している。奥の帳は開いたままだ。";
+              verdictStatus.textContent = "cleared";
+              return;
+            }
+            if (evidenceCount < 3) {
+              output.textContent = "証言が足りない。格子をあと " + (3 - evidenceCount) + " 回覗く。";
+              verdictStatus.textContent = "need witness";
+              return;
+            }
+            if (!sequenceSolved) {
+              output.textContent = "三灯の順序が未完成。証言 I から順に読み直す。";
+              verdictStatus.textContent = "need lamps";
+              return;
+            }
             if (!text) {
-              output.textContent = "空白も声になる。けれど、今日は受け取らない。";
-              log.textContent = "格子の向こうで、指が二度だけ鳴った。";
-              sigil.textContent = "空";
-              verdictStatus.textContent = "refused";
+              output.textContent = "三枚の札が空白を拒んだ。";
+              verdictStatus.textContent = "empty";
               return;
             }
 
-            confessionCount += 1;
-            page.dataset.confessions = String(confessionCount);
-            countLabel.textContent = "confessions / " + String(confessionCount).padStart(2, "0");
+            attemptCount += 1;
+            page.dataset.confessions = String(attemptCount);
+            countLabel.textContent = "attempts / " + String(attemptCount).padStart(2, "0");
+            const canonicalText = correctSlots
+              .map((optionIndex, slotIndex) => slotOptions[slotIndex][optionIndex])
+              .join("");
+            const typedCorrect = normalizeConfession(text) === normalizeConfession(canonicalText);
+            const slotsCorrect = slotIndices.every((value, index) => value === correctSlots[index]);
 
-            if (includesSatisfaction(text) || page.dataset.lamp === "satisfaction") {
-              output.textContent = "今日だけ、あなたの懺悔は軽くなった。";
-              log.textContent = "奥の帳がわずかに開いた。先はまだ、作られていない。";
-              sigil.textContent = "赦";
-              verdictStatus.textContent = "absolved";
-              page.classList.add("is-absolved");
+            if (typedCorrect || slotsCorrect) {
+              markCleared(true);
               return;
             }
 
-            const score = Array.from(text).reduce((sum, char) => sum + char.charCodeAt(0), text.length);
-            output.textContent = verdicts[score % verdicts.length];
-            log.textContent = page.dataset.lamp === "memory"
-              ? "壁が今の言葉を復唱した。最後の一音だけ、あなたの声ではなかった。"
-              : "部屋は受理した。灯りを変えると、返事も変わるかもしれない。";
-            verdictStatus.textContent = "recorded";
-            sigil.textContent = "罪";
+            const correctCount = slotIndices.filter((value, index) => value === correctSlots[index]).length;
+            output.textContent = "三枚のうち " + correctCount + " 枚が証言と一致した。";
+            log.textContent = "不一致の札を裏返し、証言に書かれた言葉と一字ずつ照合する。";
+            verdictStatus.textContent = "offering " + correctCount + " / 3";
+            sigil.textContent = String(correctCount);
           };
 
           textarea.addEventListener("input", updateLevel);
@@ -3522,52 +4028,67 @@ function renderManzokukyoRedHouse(character) {
           });
 
           randomButton?.addEventListener("click", () => {
-            if (mobileQuery.matches) {
-              shuffleMobileConfession();
-            } else {
-              textarea.value = sampleConfessions[Math.floor(Math.random() * sampleConfessions.length)];
-              updateLevel();
-            }
-            output.textContent = "代筆された懺悔が、告解台に置かれた。";
-            if (!mobileQuery.matches) textarea.focus();
+            shuffleConfession();
           });
 
           clearButton?.addEventListener("click", () => {
-            if (mobileQuery.matches) {
-              slotIndices.fill(0);
-              renderMobileConfession();
-            } else {
-              textarea.value = "";
-            }
-            page.classList.remove("is-absolved", "is-listening");
-            updateLevel();
-            output.textContent = "消した跡だけが、きれいに残った。";
-            log.textContent = "三つの灯りのうち、ひとつを選べる。";
-            verdictStatus.textContent = "waiting";
-            if (!mobileQuery.matches) textarea.focus();
+            slotIndices.fill(0);
+            renderConfession();
+            output.textContent = "三枚の札を最初の面へ戻した。";
           });
 
           confessionSlots.forEach((button, index) => {
             button.addEventListener("click", () => {
+              if (!sequenceSolved || cleared) {
+                output.textContent = "三つの灯りを正しく点すまで、札は動かない。";
+                return;
+              }
               slotIndices[index] = (slotIndices[index] + 1) % slotOptions[index].length;
-              renderMobileConfession();
+              renderConfession();
               output.textContent = "一枚の札が裏返った。";
             });
           });
 
-          mobileShuffle?.addEventListener("click", shuffleMobileConfession);
+          mobileShuffle?.addEventListener("click", shuffleConfession);
           mobileQuery.addEventListener?.("change", syncInputMode);
 
           lampButtons.forEach((button) => button.addEventListener("click", () => setLamp(button)));
 
-          listener?.addEventListener("click", () => {
+          const hearWitness = () => {
             page.classList.add("is-listening");
-            const whisper = whispers[whisperIndex % whispers.length];
+            const clueIndex = evidenceCount < witnessClues.length
+              ? evidenceCount
+              : whisperIndex % witnessClues.length;
+            const clue = witnessClues[clueIndex];
+            if (evidenceCount < witnessClues.length) {
+              revealClue(evidenceCount);
+              evidenceCount += 1;
+            }
             whisperIndex += 1;
-            log.textContent = whisper;
-            memoryEcho.textContent = whisper;
+            log.textContent = clue.whisper;
+            memoryEcho.textContent = clue.whisper;
+            output.textContent = evidenceCount < 3
+              ? "証言を記録した。残り " + (3 - evidenceCount) + " 件。"
+              : "三つの証言が揃った。灯りを証言 I から順に点す。";
+            verdictStatus.textContent = evidenceCount < 3 ? "witness " + evidenceCount + " / 3" : "lamps 0 / 3";
+            updateProgress();
             window.setTimeout(() => page.classList.remove("is-listening"), 1200);
+          };
+
+          listener?.addEventListener("click", hearWitness);
+          listenerAction?.addEventListener("click", hearWitness);
+
+          puzzleReset?.addEventListener("click", resetPuzzle);
+          clearClose?.addEventListener("click", () => {
+            clearReveal?.classList.remove("is-visible");
+            clearReveal?.setAttribute("aria-hidden", "true");
           });
+          nextAreas.forEach((link) => link.addEventListener("click", (event) => {
+            if (link.getAttribute("aria-disabled") === "true") {
+              event.preventDefault();
+              output.textContent = "告解が成立するまで、記憶保管庫への道は開かない。";
+            }
+          }));
 
           page.addEventListener("pointermove", (event) => {
             const rect = page.getBoundingClientRect();
@@ -3576,7 +4097,16 @@ function renderManzokukyoRedHouse(character) {
           });
 
           syncInputMode();
-          updateLevel();
+          lockNextArea();
+          renderConfession();
+          updateProgress();
+          try {
+            if (localStorage.getItem(storageKey) === "true") {
+              markCleared(false);
+            }
+          } catch {
+            // Start fresh when storage is unavailable.
+          }
         })();
       </script>
     `
