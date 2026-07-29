@@ -614,10 +614,13 @@ async function downloadRandomVideoAssets(character, characterDir) {
     const fileName = `${baseName}-${hashText(video.driveId)}.mp4`;
     const relativePath = path.posix.join("assets", "generated", "videos", fileName);
     const outputPath = path.join(outputDir, fileName);
-    const buffer = await downloadDriveVideoFile(video.driveId);
-
-    await writeFile(outputPath, buffer);
-    video.playbackPath = relativePath;
+    try {
+      const buffer = await downloadDriveVideoFile(video.driveId);
+      await writeFile(outputPath, buffer);
+      video.playbackPath = relativePath;
+    } catch (error) {
+      console.warn(`Skipped unavailable Google Drive video ${video.driveId}: ${error.message}`);
+    }
   }
 }
 
