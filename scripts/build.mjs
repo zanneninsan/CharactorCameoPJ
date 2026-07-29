@@ -276,20 +276,35 @@ async function generateManzokukyoAssets(characterDir) {
     await cp(bgmPath, path.join(outputDir, "satisfaction-bgm.m4a"));
   }
 
-  for (const [source, basename] of [
+  for (const [source, basename, enhancement] of [
     [corridorScenePath, "corridor-v2"],
     [doorScenePath, "door-v2"],
     [truthChamberPath, "truth-chamber"],
-    [redConfessionChamberPath, "red-confession-chamber"],
-    [memoryArchivePath, "memory-archive"],
+    [redConfessionChamberPath, "red-confession-chamber", {
+      linear: [1.34, 8],
+      modulate: { brightness: 1.12, saturation: 1.3 }
+    }],
+    [memoryArchivePath, "memory-archive", {
+      linear: [1.24, 10],
+      modulate: { brightness: 1.1, saturation: 1.08 }
+    }],
   ]) {
     if (!await fileExists(source)) continue;
-    await sharp(source)
-      .resize({ width: 1920, withoutEnlargement: true })
+    const prepareScene = () => {
+      let scene = sharp(source)
+        .resize({ width: 1920, withoutEnlargement: true });
+      if (enhancement?.linear) {
+        scene = scene.linear(...enhancement.linear);
+      }
+      if (enhancement?.modulate) {
+        scene = scene.modulate(enhancement.modulate);
+      }
+      return scene;
+    };
+    await prepareScene()
       .avif({ quality: 54, effort: 6 })
       .toFile(path.join(outputDir, `${basename}.avif`));
-    await sharp(source)
-      .resize({ width: 1920, withoutEnlargement: true })
+    await prepareScene()
       .webp({ quality: 80 })
       .toFile(path.join(outputDir, `${basename}.webp`));
   }
@@ -2488,7 +2503,7 @@ function renderManzokukyoRedHouse(character) {
           height: 100%;
           object-fit: cover;
           object-position: center;
-          filter: brightness(0.9) contrast(1.04) saturate(0.9);
+          filter: brightness(1.12) contrast(1.02) saturate(1.18);
           transform: scale(1.035);
           animation: red-room-enter 2.1s cubic-bezier(0.16, 1, 0.3, 1) both;
           transition: filter 0.5s ease, transform 0.5s ease;
@@ -2498,10 +2513,10 @@ function renderManzokukyoRedHouse(character) {
           z-index: -5;
           pointer-events: none;
           background:
-            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 222, 180, 0.055), transparent 18%),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.4), transparent 24% 76%, rgba(0, 0, 0, 0.4)),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 25% 66%, rgba(0, 0, 0, 0.66)),
-            radial-gradient(ellipse at 50% 44%, rgba(174, 20, 38, calc(0.08 + var(--sin-level) * 0.2)), transparent 52%);
+            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 225, 190, 0.12), transparent 22%),
+            linear-gradient(90deg, rgba(25, 0, 3, 0.2), transparent 22% 78%, rgba(25, 0, 3, 0.2)),
+            linear-gradient(180deg, rgba(20, 0, 2, 0.16), transparent 24% 70%, rgba(18, 0, 2, 0.38)),
+            radial-gradient(ellipse at 50% 44%, rgba(255, 30, 57, calc(0.14 + var(--sin-level) * 0.24)), transparent 58%);
         }
 
         .red-room-noise {
@@ -2509,9 +2524,9 @@ function renderManzokukyoRedHouse(character) {
           pointer-events: none;
           background:
             linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 54%, rgba(0, 0, 0, 0.34) 86%, rgba(0, 0, 0, 0.72) 100%);
+            radial-gradient(ellipse at 50% 50%, transparent 0 58%, rgba(25, 0, 4, 0.18) 88%, rgba(10, 0, 2, 0.42) 100%);
           background-size: 100% 4px, auto;
-          opacity: 0.5;
+          opacity: 0.38;
           mix-blend-mode: screen;
         }
 
@@ -3070,12 +3085,12 @@ function renderManzokukyoRedHouse(character) {
         }
 
         .red-room[data-lamp="silence"] .red-room-art img {
-          filter: brightness(0.65) contrast(1.1) saturate(0.58);
+          filter: brightness(0.84) contrast(1.06) saturate(0.72);
         }
 
         .red-room[data-lamp="satisfaction"] .red-room-art img,
         .red-room.is-absolved .red-room-art img {
-          filter: brightness(1) contrast(1.02) saturate(0.86) sepia(0.12);
+          filter: brightness(1.2) contrast(1.01) saturate(1.06) sepia(0.08);
         }
 
         .red-room-flash {
@@ -3113,7 +3128,7 @@ function renderManzokukyoRedHouse(character) {
 
         @keyframes red-room-enter {
           from { opacity: 0; transform: scale(1.12); filter: brightness(0.2) contrast(1.4) saturate(0.3); }
-          to { opacity: 1; transform: scale(1.035); filter: brightness(0.9) contrast(1.04) saturate(0.9); }
+          to { opacity: 1; transform: scale(1.035); filter: brightness(1.12) contrast(1.02) saturate(1.18); }
         }
 
         @keyframes red-copy-enter {
@@ -4189,7 +4204,7 @@ function renderManzokukyoArchiveNovel(character) {
     bodyClass: "manzokukyo-novel manzokukyo-archive-novel",
     headExtra: `
       <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?v=20260729-1">
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260729-1">
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260729-2">
       <script src="../../../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
     `,
     structuredData: {
