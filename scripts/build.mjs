@@ -1,9 +1,14 @@
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
+const siteVersion = String(packageMetadata.version ?? "0.0.0");
+const buildRevision = resolveBuildRevision();
+const buildVersionLabel = `v${siteVersion} · ${buildRevision}`;
 const contentDir = path.join(rootDir, "content", "characters");
 const docsDir = path.join(rootDir, "docs");
 const sharedContentDir = path.join(rootDir, "content", "shared");
@@ -9239,6 +9244,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <meta name="description" content="${escapeHtml(seoDescription)}">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <meta name="theme-color" content="${escapeHtml(themeColor)}">
+    <meta name="application-version" content="${escapeHtml(buildVersionLabel)}">
     <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
     <meta property="og:site_name" content="Character Canon">
@@ -9268,6 +9274,12 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
   </head>
   <body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
+    <small
+      class="site-build-version"
+      data-build-version="${escapeHtml(buildRevision)}"
+      title="Deployment ${escapeHtml(buildVersionLabel)}"
+      aria-label="サイトバージョン ${escapeHtml(buildVersionLabel)}"
+    >${escapeHtml(buildVersionLabel)}</small>
     ${renderClientScript()}
   </body>
 </html>`;
@@ -9278,6 +9290,23 @@ function normalizeDescription(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 180);
+}
+
+function resolveBuildRevision() {
+  const environmentRevision = process.env.GITHUB_SHA?.trim();
+  if (environmentRevision) {
+    return environmentRevision.slice(0, 7);
+  }
+
+  try {
+    return execFileSync("git", ["rev-parse", "--short=7", "HEAD"], {
+      cwd: rootDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim();
+  } catch {
+    return "local";
+  }
 }
 
 function absoluteUrl(urlPath) {
@@ -9664,6 +9693,25 @@ body {
     linear-gradient(180deg, rgba(21, 18, 23, 0.045) 1px, transparent 1px),
     linear-gradient(180deg, var(--theme-paper) 0%, #fffdf8 48%, var(--theme-accent) 100%);
   background-size: 28px 28px, 28px 28px, auto;
+}
+
+.site-build-version {
+  position: fixed;
+  right: max(4px, env(safe-area-inset-right));
+  bottom: max(4px, env(safe-area-inset-bottom));
+  z-index: 2147483000;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 2px;
+  padding: 2px 5px;
+  background: rgba(8, 7, 10, 0.58);
+  color: rgba(255, 255, 255, 0.72);
+  font: 700 9px/1.25 ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0;
+  opacity: 0.64;
+  pointer-events: none;
+  user-select: none;
+  backdrop-filter: blur(6px);
 }
 
 a {
@@ -12045,6 +12093,10 @@ body[data-design="modern"] .timeline li {
 }
 
 @media print {
+  .site-build-version {
+    display: none !important;
+  }
+
   :root {
     color: #111;
     background: #fff;
