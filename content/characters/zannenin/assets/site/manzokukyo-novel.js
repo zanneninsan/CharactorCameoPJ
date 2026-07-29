@@ -3,14 +3,20 @@
   if (!game) return;
 
   const assetsBase = game.dataset.assetsBase || "../../assets/generated/manzokukyo/";
+  const assetsVersion = game.dataset.assetsVersion || "";
+  const versionAsset = (url) => {
+    if (!assetsVersion) return url;
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}v=${encodeURIComponent(assetsVersion)}`;
+  };
   const story = game.dataset.vnStory || "main";
   const backgrounds = {
-    key: `${assetsBase}key-visual-hero.webp`,
-    altar: `${assetsBase}altar.webp`,
-    corridor: `${assetsBase}corridor-v2.webp`,
-    door: `${assetsBase}door-v2.webp`,
-    confession: `${assetsBase}red-confession-chamber.webp`,
-    archive: `${assetsBase}memory-archive.webp`
+    key: versionAsset(`${assetsBase}key-visual-hero.webp`),
+    altar: versionAsset(`${assetsBase}altar.webp`),
+    corridor: versionAsset(`${assetsBase}corridor-v2.webp`),
+    door: versionAsset(`${assetsBase}door-v2.webp`),
+    confession: versionAsset(`${assetsBase}red-confession-chamber.webp`),
+    archive: versionAsset(`${assetsBase}memory-archive.webp`)
   };
   const mainScenes = [
     {

@@ -9,6 +9,7 @@ const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.js
 const siteVersion = String(packageMetadata.version ?? "0.0.0");
 const buildRevision = resolveBuildRevision();
 const buildVersionLabel = `v${siteVersion} · ${buildRevision}`;
+const assetVersionQuery = `v=${encodeURIComponent(siteVersion)}`;
 const contentDir = path.join(rootDir, "content", "characters");
 const docsDir = path.join(rootDir, "docs");
 const sharedContentDir = path.join(rootDir, "content", "shared");
@@ -2241,8 +2242,8 @@ function renderZanneninCharacter(character) {
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
     headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}
-      <link rel="stylesheet" href="./assets/site/home.css?v=20260720-6">
-      <script src="./assets/site/home.js?v=20260720-6" defer></script>`,
+      <link rel="stylesheet" href="./assets/site/home.css?${assetVersionQuery}">
+      <script src="./assets/site/home.js?${assetVersionQuery}" defer></script>`,
     theme: character.theme,
     bodyClass: "zannenin-home",
     body: `
@@ -3293,9 +3294,9 @@ function renderManzokukyoRedHouse(character) {
       </style>
       <main class="red-room" data-confession-page data-lamp="none" data-confessions="0">
         <picture class="red-room-art" aria-hidden="true">
-          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.avif" type="image/avif">
-          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.webp" type="image/webp">
-          <img src="../../../assets/manzokukyo/red-confession-chamber.png" alt="">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.avif?${assetVersionQuery}" type="image/avif">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.webp?${assetVersionQuery}" type="image/webp">
+          <img src="../../../assets/manzokukyo/red-confession-chamber.png?${assetVersionQuery}" alt="">
         </picture>
         <div class="red-room-shade" aria-hidden="true"></div>
         <div class="red-room-noise" aria-hidden="true"></div>
@@ -4203,9 +4204,9 @@ function renderManzokukyoArchiveNovel(character) {
     stylesheetHref: "../../../../../styles.css",
     bodyClass: "manzokukyo-novel manzokukyo-archive-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?v=20260729-1">
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?v=20260729-2">
-      <script src="../../../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?${assetVersionQuery}">
+      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?${assetVersionQuery}">
+      <script src="../../../../assets/site/manzokukyo-novel.js?${assetVersionQuery}" defer></script>
     `,
     structuredData: {
       "@context": "https://schema.org",
@@ -4230,16 +4231,17 @@ function renderManzokukyoArchiveNovel(character) {
         data-scene-kind="archive"
         data-scene="0"
         data-assets-base="../../../../assets/generated/manzokukyo/"
+        data-assets-version="${escapeHtml(siteVersion)}"
       >
         <div class="vn-stage" aria-hidden="true">
           <img
             class="vn-backdrop is-active"
             data-vn-backdrop
-            src="../../../../assets/generated/manzokukyo/memory-archive.webp"
+            src="../../../../assets/generated/manzokukyo/memory-archive.webp?${assetVersionQuery}"
             alt=""
             fetchpriority="high"
           >
-          <img class="vn-backdrop" data-vn-backdrop src="../../../../assets/generated/manzokukyo/memory-archive.webp" alt="">
+          <img class="vn-backdrop" data-vn-backdrop src="../../../../assets/generated/manzokukyo/memory-archive.webp?${assetVersionQuery}" alt="">
           <div class="vn-stage-shade"></div>
           <div class="vn-stage-grain"></div>
         </div>
@@ -4357,8 +4359,8 @@ function renderManzokukyoNovel(character) {
     stylesheetHref: "../../../styles.css",
     bodyClass: "manzokukyo-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260729-1">
-      <script src="../../assets/site/manzokukyo-novel.js?v=20260724-2" defer></script>
+      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?${assetVersionQuery}">
+      <script src="../../assets/site/manzokukyo-novel.js?${assetVersionQuery}" defer></script>
     `,
     structuredData: {
       "@context": "https://schema.org",
@@ -4382,16 +4384,17 @@ function renderManzokukyoNovel(character) {
         data-scene-kind="key"
         data-scene="0"
         data-assets-base="../../assets/generated/manzokukyo/"
+        data-assets-version="${escapeHtml(siteVersion)}"
       >
         <div class="vn-stage" aria-hidden="true">
           <img
             class="vn-backdrop is-active"
             data-vn-backdrop
-            src="../../assets/generated/manzokukyo/key-visual-hero.webp"
+            src="../../assets/generated/manzokukyo/key-visual-hero.webp?${assetVersionQuery}"
             alt=""
             fetchpriority="high"
           >
-          <img class="vn-backdrop" data-vn-backdrop src="../../assets/generated/manzokukyo/key-visual-hero.webp" alt="">
+          <img class="vn-backdrop" data-vn-backdrop src="../../assets/generated/manzokukyo/key-visual-hero.webp?${assetVersionQuery}" alt="">
           <div class="vn-stage-shade"></div>
           <div class="vn-stage-grain"></div>
         </div>
@@ -9259,7 +9262,9 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <meta name="description" content="${escapeHtml(seoDescription)}">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <meta name="theme-color" content="${escapeHtml(themeColor)}">
-    <meta name="application-version" content="${escapeHtml(buildVersionLabel)}">
+    <meta name="application-version" content="${escapeHtml(`v${siteVersion}`)}">
+    <meta name="build-revision" content="${escapeHtml(buildRevision)}">
+    <meta name="build-version" content="${escapeHtml(buildVersionLabel)}">
     <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
     <meta property="og:site_name" content="Character Canon">
@@ -9283,7 +9288,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
-    <link rel="stylesheet" href="${escapeHtml(stylesheetHref ?? (title === "Character Canon" ? "./styles.css" : "../styles.css"))}">
+    <link rel="stylesheet" href="${escapeHtml(versionAssetUrl(stylesheetHref ?? (title === "Character Canon" ? "./styles.css" : "../styles.css")))}">
     ${headExtra}
     ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
@@ -9305,6 +9310,15 @@ function normalizeDescription(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 180);
+}
+
+function versionAssetUrl(url) {
+  const value = String(url ?? "");
+  if (!value || /^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith("data:")) {
+    return value;
+  }
+  const separator = value.includes("?") ? "&" : "?";
+  return `${value}${separator}${assetVersionQuery}`;
 }
 
 function resolveBuildRevision() {
