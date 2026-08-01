@@ -1,0 +1,967 @@
+/*
+ * Erise Vooga — character-specific presentation.
+ * This stylesheet is loaded only by /erise-vooga/.
+ */
+
+body.erise-home {
+  --erise-night: #090c13;
+  --erise-ink: #111822;
+  --erise-mint: #59ead7;
+  --erise-mint-soft: #c9fff7;
+  --erise-pink: #ff8fc5;
+  --erise-pink-soft: #ffe3f1;
+  --erise-ice: #f4fcff;
+  --erise-line: rgba(24, 62, 72, 0.14);
+  --erise-shadow: 0 24px 70px rgba(9, 22, 31, 0.12);
+  background:
+    radial-gradient(circle at 8% 24%, rgba(89, 234, 215, 0.13), transparent 25rem),
+    radial-gradient(circle at 96% 46%, rgba(255, 143, 197, 0.12), transparent 28rem),
+    linear-gradient(180deg, #f9feff 0%, #f1fbfc 56%, #fff8fc 100%);
+  color: var(--erise-ink);
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  overflow-x: hidden;
+}
+
+.erise-home a {
+  color: inherit;
+}
+
+.erise-home .erise-masthead {
+  position: absolute;
+  z-index: 30;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100% - 5rem, 1400px);
+  min-height: 5.25rem;
+  margin: 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.erise-home .erise-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  text-decoration: none;
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.55);
+}
+
+.erise-home .erise-wordmark span {
+  font-size: 1.55rem;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+}
+
+.erise-home .erise-wordmark b {
+  color: var(--erise-mint);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+}
+
+.erise-home .erise-masthead nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.4rem, 3vw, 3.2rem);
+}
+
+.erise-home .erise-masthead nav a {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.erise-home .erise-masthead nav a:hover,
+.erise-home .erise-masthead nav a:focus-visible {
+  color: var(--erise-mint);
+}
+
+.erise-home .character-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 0;
+  padding: 0 0 clamp(4rem, 7vw, 6.5rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 88%, rgba(89, 234, 215, 0.12), transparent 24rem),
+    radial-gradient(circle at 82% 92%, rgba(255, 143, 197, 0.1), transparent 26rem),
+    var(--erise-night);
+}
+
+.erise-home .character-hero::before,
+.erise-home .character-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.erise-home .character-hero::before {
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.22) 0%, transparent 20%, transparent 78%, rgba(5, 8, 13, 0.16) 100%),
+    linear-gradient(180deg, transparent 24%, transparent 43%, rgba(7, 11, 17, 0.9) 62%, var(--erise-night) 76%);
+}
+
+.erise-home .character-hero::after {
+  width: 42rem;
+  height: 42rem;
+  right: -18rem;
+  bottom: -29rem;
+  border: 1px solid rgba(89, 234, 215, 0.36);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3.5rem rgba(255, 143, 197, 0.06),
+    0 0 0 7rem rgba(89, 234, 215, 0.04);
+}
+
+.erise-home .brand-banner-shell {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 3 / 1;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #10131a;
+  box-shadow: none;
+}
+
+.erise-home .brand-banner-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 24%;
+  background: linear-gradient(180deg, transparent, rgba(7, 11, 17, 0.82));
+}
+
+.erise-home .brand-banner {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(0.94) contrast(1.04);
+}
+
+.erise-home .character-hero > .shell {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, calc(100% - 3rem));
+  max-width: 1180px;
+  margin: clamp(-5rem, -6vw, -3.5rem) auto 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  color: #fff;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem);
+  column-gap: clamp(2.5rem, 6vw, 6.5rem);
+  align-items: end;
+}
+
+.erise-home .character-hero > .shell > :not(.erise-signal-card) {
+  grid-column: 1;
+}
+
+.erise-home .back-link {
+  display: none;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: clamp(2.5rem, 4vw, 4rem);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.erise-home .erise-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.erise-home .erise-hero-actions a {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.erise-home .erise-hero-actions a.is-primary {
+  border-color: var(--erise-mint);
+  background: var(--erise-mint);
+  color: #071310;
+}
+
+.erise-home .erise-hero-actions a:hover,
+.erise-home .erise-hero-actions a:focus-visible {
+  border-color: var(--erise-pink);
+  background: var(--erise-pink);
+  color: #1a0911;
+}
+
+.erise-home .erise-signal-card {
+  grid-column: 2;
+  grid-row: 1 / span 6;
+  align-self: end;
+  padding: 1.4rem;
+  border: 1px solid rgba(89, 234, 215, 0.42);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 48%),
+    rgba(7, 11, 17, 0.82);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+}
+
+.erise-home .erise-signal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.erise-home .erise-signal-head i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--erise-mint);
+  box-shadow: 0 0 1rem rgba(89, 234, 215, 0.8);
+}
+
+.erise-home .erise-signal-date {
+  display: block;
+  margin-top: 0.8rem;
+  color: #fff;
+  font-size: clamp(3.4rem, 6vw, 5.2rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.08em;
+}
+
+.erise-home .erise-signal-date span {
+  color: var(--erise-pink);
+  font-size: 0.42em;
+  letter-spacing: 0;
+}
+
+.erise-home .erise-signal-date + p {
+  margin: 0.25rem 0 0;
+  color: var(--erise-mint);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+}
+
+.erise-home .erise-signal-wave {
+  height: 3px;
+  margin: 1.3rem 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.erise-home .erise-signal-wave span {
+  display: block;
+  width: 72%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--erise-mint), var(--erise-pink));
+  box-shadow: 0 0 1rem rgba(89, 234, 215, 0.5);
+}
+
+.erise-home .erise-signal-card dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.erise-home .erise-signal-card dl div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.erise-home .erise-signal-card dt {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.57rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.erise-home .erise-signal-card dd {
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.erise-home .erise-signal-card > a {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 143, 197, 0.55);
+  color: var(--erise-pink-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.erise-home .erise-ticker {
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(5, 18, 18, 0.2);
+  background: linear-gradient(90deg, var(--erise-mint), #9df2e7 48%, var(--erise-pink));
+  color: #08110f;
+}
+
+.erise-home .erise-ticker > div {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  align-items: center;
+  justify-content: space-around;
+  min-height: 2.65rem;
+}
+
+.erise-home .erise-ticker span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.4rem;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.erise-home .erise-ticker span::after {
+  content: "♥";
+  margin-left: 2.8rem;
+  color: #b82c72;
+  font-size: 0.7rem;
+}
+
+.erise-home .back-link::before {
+  content: "←";
+  color: var(--erise-mint);
+  font-size: 1rem;
+  transition: transform 180ms ease;
+}
+
+.erise-home .back-link:hover::before,
+.erise-home .back-link:focus-visible::before {
+  transform: translateX(-0.25rem);
+}
+
+.erise-home .character-hero .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: fit-content;
+  margin: 0 0 1.1rem;
+  color: var(--erise-mint);
+  font-size: 0.73rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.erise-home .character-hero .eyebrow::after {
+  content: "";
+  width: 5.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--erise-mint), transparent);
+}
+
+.erise-home .character-hero h1 {
+  max-width: 13ch;
+  margin: 0;
+  color: #fff;
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-size: clamp(3.4rem, 8vw, 7.8rem);
+  font-weight: 900;
+  line-height: 0.93;
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+  text-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+}
+
+.erise-home .character-hero h1::after {
+  content: "ERISE VOOGA";
+  display: block;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: clamp(0.7rem, 1.15vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.46em;
+  line-height: 1;
+}
+
+.erise-home .character-hero .catchphrase {
+  max-width: 34rem;
+  margin: 2rem 0 0;
+  color: #fff;
+  font-size: clamp(1.1rem, 2vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+}
+
+.erise-home .character-hero .lead {
+  max-width: 42rem;
+  margin: 0.9rem 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(0.94rem, 1.4vw, 1.06rem);
+  line-height: 1.95;
+}
+
+.erise-home .hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  width: fit-content;
+  margin-top: 2.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.erise-home .hero-facts span {
+  min-width: 9.5rem;
+  padding: 0.85rem 1.3rem 0.95rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  font-size: 0.92rem;
+}
+
+.erise-home .hero-facts span + span {
+  padding-left: 1.3rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.erise-home .hero-facts strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--erise-pink);
+  font-size: 0.63rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.erise-home .page-menu {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(89, 234, 215, 0.18);
+  background: rgba(9, 12, 19, 0.9);
+  box-shadow: 0 12px 36px rgba(5, 12, 18, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.erise-home .page-menu-inner {
+  width: min(1180px, calc(100% - 3rem));
+  max-width: 1180px;
+  min-height: 4rem;
+}
+
+.erise-home .page-menu-label {
+  border: 0;
+  background: transparent;
+  color: var(--erise-mint);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+}
+
+.erise-home .guideline-card .links a,
+.erise-home #prompts .links a,
+.erise-home .source-links a {
+  border-color: var(--erise-mint);
+  background: var(--erise-night);
+  color: #fff;
+}
+
+.erise-home .guideline-card .links a:hover,
+.erise-home .guideline-card .links a:focus-visible,
+.erise-home #prompts .links a:hover,
+.erise-home #prompts .links a:focus-visible,
+.erise-home .source-links a:hover,
+.erise-home .source-links a:focus-visible {
+  border-color: var(--erise-pink);
+  background: var(--erise-pink);
+  color: #1a0911;
+}
+
+.erise-home .page-menu a {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.erise-home .page-menu a::after {
+  content: "";
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.25rem;
+  left: 0.7rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--erise-mint), var(--erise-pink));
+  opacity: 0;
+  transform: scaleX(0);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.erise-home .page-menu a:hover,
+.erise-home .page-menu a:focus-visible,
+.erise-home .page-menu a.is-active,
+.erise-home .page-menu a[aria-current="true"] {
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
+.erise-home .page-menu a:hover::after,
+.erise-home .page-menu a:focus-visible::after,
+.erise-home .page-menu a.is-active::after,
+.erise-home .page-menu a[aria-current="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.erise-home .content-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.6rem;
+  width: min(1180px, calc(100% - 3rem));
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(4.5rem, 8vw, 7.5rem) 0 6rem;
+}
+
+.erise-home .content-layout::before {
+  content: "OFFICIAL CHARACTER ARCHIVE";
+  grid-column: 1 / -1;
+  margin-bottom: 1rem;
+  color: rgba(17, 24, 34, 0.38);
+  font-size: 0.63rem;
+  font-weight: 900;
+  letter-spacing: 0.36em;
+}
+
+.erise-home .content-layout > * {
+  min-width: 0;
+}
+
+.erise-home .content-layout > #links,
+.erise-home .content-layout > #fanworks,
+.erise-home .content-layout > #prompts {
+  grid-column: span 4;
+}
+
+.erise-home .content-layout > #visual,
+.erise-home .content-layout > #videos,
+.erise-home .content-layout > .detail-layout,
+.erise-home .content-layout > #settings,
+.erise-home .content-layout > #timeline,
+.erise-home .content-layout > #rights,
+.erise-home .content-layout > .source-callout,
+.erise-home .content-layout > .hidden-entrances {
+  grid-column: 1 / -1;
+}
+
+.erise-home .panel,
+.erise-home .source-callout {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--erise-line);
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--erise-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.erise-home .panel::before,
+.erise-home .source-callout::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0 auto auto 0;
+  width: 5.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--erise-mint), var(--erise-pink));
+}
+
+.erise-home .panel h2,
+.erise-home .source-callout h2 {
+  color: var(--erise-ink);
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.erise-home .section-title small {
+  color: #5c7680;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.erise-home .official-links {
+  background:
+    radial-gradient(circle at 105% -5%, rgba(89, 234, 215, 0.2), transparent 15rem),
+    linear-gradient(145deg, #111823, #090c13);
+  color: #fff;
+}
+
+.erise-home .official-links h2,
+.erise-home .official-links .section-title small {
+  color: #fff;
+}
+
+.erise-home .link-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.erise-home .link-card:hover,
+.erise-home .link-card:focus-visible {
+  border-color: var(--erise-mint);
+  background: rgba(89, 234, 215, 0.1);
+  transform: translateY(-2px);
+}
+
+.erise-home .visual-references {
+  padding: clamp(1.2rem, 3vw, 2.2rem);
+  background:
+    linear-gradient(135deg, rgba(201, 255, 247, 0.36), transparent 42%),
+    rgba(255, 255, 255, 0.86);
+}
+
+.erise-home .visual-base {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.erise-home .visual-card {
+  border: 0;
+  border-radius: 0.25rem;
+  background: #fff;
+  box-shadow: 0 14px 42px rgba(18, 51, 60, 0.1);
+}
+
+.erise-home .visual-link {
+  overflow: hidden;
+  background: #e9f6f7;
+}
+
+.erise-home .visual-link img {
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.erise-home .visual-link:hover img {
+  transform: scale(1.025);
+}
+
+.erise-home .detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+  gap: 1.6rem;
+}
+
+.erise-home .detail-main,
+.erise-home .detail-stack {
+  min-width: 0;
+}
+
+.erise-home .profile-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.erise-home .profile-list div {
+  padding: 1.05rem 0;
+  border-bottom: 1px solid var(--erise-line);
+}
+
+.erise-home .profile-list div:nth-child(odd) {
+  padding-right: 1.5rem;
+}
+
+.erise-home .profile-list div:nth-child(even) {
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--erise-line);
+}
+
+.erise-home dt {
+  color: #66808a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.erise-home dd {
+  color: var(--erise-ink);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.erise-home .stack article {
+  border-color: var(--erise-line);
+  background: linear-gradient(135deg, rgba(201, 255, 247, 0.24), rgba(255, 227, 241, 0.2));
+}
+
+.erise-home .stack article h3 {
+  color: var(--erise-ink);
+}
+
+.erise-home .status {
+  color: #a2396d;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.erise-home #settings .stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.erise-home #settings .stack article {
+  padding: 1.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--erise-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.erise-home #settings .stack article:nth-child(odd) {
+  border-right: 1px solid var(--erise-line);
+}
+
+.erise-home #timeline {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 143, 197, 0.16), transparent 18rem),
+    #fff;
+}
+
+.erise-home #rights,
+.erise-home .source-callout {
+  box-shadow: none;
+}
+
+.erise-home .source-callout {
+  border-color: rgba(89, 234, 215, 0.3);
+  background: linear-gradient(135deg, rgba(201, 255, 247, 0.34), rgba(255, 255, 255, 0.88) 46%, rgba(255, 227, 241, 0.4));
+}
+
+.erise-home :focus-visible {
+  outline: 2px solid var(--erise-pink);
+  outline-offset: 4px;
+}
+
+@media (max-width: 940px) {
+  .erise-home .erise-masthead {
+    width: min(100% - 2.5rem, 1400px);
+  }
+
+  .erise-home .character-hero > .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .erise-home .erise-signal-card {
+    grid-column: 1;
+    grid-row: auto;
+    width: min(100%, 28rem);
+    margin-top: 2.5rem;
+  }
+
+  .erise-home .content-layout > #links,
+  .erise-home .content-layout > #fanworks,
+  .erise-home .content-layout > #prompts {
+    grid-column: span 6;
+  }
+
+  .erise-home .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .erise-home .erise-masthead {
+    min-height: 4.2rem;
+  }
+
+  .erise-home .erise-wordmark span {
+    font-size: 1.12rem;
+  }
+
+  .erise-home .erise-wordmark b {
+    display: none;
+  }
+
+  .erise-home .erise-masthead nav {
+    gap: 0;
+  }
+
+  .erise-home .erise-masthead nav a:not(:first-child) {
+    display: none;
+  }
+
+  .erise-home .erise-masthead nav a {
+    font-size: 0.58rem;
+  }
+
+  .erise-home .character-hero {
+    min-height: 0;
+    padding-bottom: 3.5rem;
+  }
+
+  .erise-home .brand-banner-shell {
+    height: auto;
+    aspect-ratio: 3 / 1;
+  }
+
+  .erise-home .brand-banner {
+    object-position: center;
+  }
+
+  .erise-home .character-hero::before {
+    background:
+      linear-gradient(180deg, transparent 10%, rgba(7, 11, 17, 0.92) 26%, var(--erise-night) 42%);
+  }
+
+  .erise-home .character-hero > .shell {
+    width: min(100% - 2rem, 1180px);
+    margin-top: -1.5rem;
+  }
+
+  .erise-home .erise-signal-card {
+    width: 100%;
+  }
+
+  .erise-home .erise-ticker > div {
+    justify-content: flex-start;
+  }
+
+  .erise-home .erise-ticker span {
+    padding: 0 0.8rem;
+  }
+
+  .erise-home .back-link {
+    margin-bottom: 3rem;
+  }
+
+  .erise-home .character-hero h1 {
+    max-width: none;
+    font-size: clamp(2.65rem, 15vw, 4.2rem);
+  }
+
+  .erise-home .character-hero h1::after {
+    letter-spacing: 0.3em;
+  }
+
+  .erise-home .character-hero .lead {
+    line-height: 1.75;
+  }
+
+  .erise-home .hero-facts {
+    width: 100%;
+  }
+
+  .erise-home .hero-facts span {
+    min-width: 50%;
+    flex: 1 1 50%;
+  }
+
+  .erise-home .page-menu-inner,
+  .erise-home .content-layout {
+    width: min(100% - 2rem, 1180px);
+  }
+
+  .erise-home .page-menu-label {
+    display: none;
+  }
+
+  .erise-home .content-layout {
+    display: block;
+    padding-top: 3.5rem;
+  }
+
+  .erise-home .content-layout::before {
+    display: block;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .erise-home .content-layout > * + * {
+    margin-top: 1rem;
+  }
+
+  .erise-home .visual-base,
+  .erise-home .profile-list,
+  .erise-home #settings .stack {
+    grid-template-columns: 1fr;
+  }
+
+  .erise-home .profile-list div:nth-child(odd),
+  .erise-home .profile-list div:nth-child(even) {
+    padding-right: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .erise-home #settings .stack article:nth-child(odd) {
+    border-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erise-home *,
+  .erise-home *::before,
+  .erise-home *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,15 +1,9 @@
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
-const siteVersion = String(packageMetadata.version ?? "0.0.0");
-const buildRevision = resolveBuildRevision();
-const buildVersionLabel = `v${siteVersion} · ${buildRevision}`;
-const assetVersionQuery = `v=${encodeURIComponent(siteVersion)}`;
 const contentDir = path.join(rootDir, "content", "characters");
 const docsDir = path.join(rootDir, "docs");
 const sharedContentDir = path.join(rootDir, "content", "shared");
@@ -96,17 +90,14 @@ async function build() {
           const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
           const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
-          const manzokukyoArchiveDir = path.join(manzokukyoRedHouseDir, "archive");
           await mkdir(manzokukyoDir, { recursive: true });
           await mkdir(manzokukyoNovelDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
-          await mkdir(manzokukyoArchiveDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
           await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
-          await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
         }
         for (const page of hiddenPages(character)) {
@@ -253,7 +244,6 @@ async function generateManzokukyoAssets(characterDir) {
   const doorScenePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "door-v2.png");
   const truthChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "truth-chamber.png");
   const redConfessionChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "red-confession-chamber.png");
-  const memoryArchivePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "memory-archive.png");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -277,35 +267,19 @@ async function generateManzokukyoAssets(characterDir) {
     await cp(bgmPath, path.join(outputDir, "satisfaction-bgm.m4a"));
   }
 
-  for (const [source, basename, enhancement] of [
+  for (const [source, basename] of [
     [corridorScenePath, "corridor-v2"],
     [doorScenePath, "door-v2"],
     [truthChamberPath, "truth-chamber"],
-    [redConfessionChamberPath, "red-confession-chamber", {
-      linear: [1.34, 8],
-      modulate: { brightness: 1.12, saturation: 1.3 }
-    }],
-    [memoryArchivePath, "memory-archive", {
-      linear: [1.24, 10],
-      modulate: { brightness: 1.1, saturation: 1.08 }
-    }],
+    [redConfessionChamberPath, "red-confession-chamber"],
   ]) {
     if (!await fileExists(source)) continue;
-    const prepareScene = () => {
-      let scene = sharp(source)
-        .resize({ width: 1920, withoutEnlargement: true });
-      if (enhancement?.linear) {
-        scene = scene.linear(...enhancement.linear);
-      }
-      if (enhancement?.modulate) {
-        scene = scene.modulate(enhancement.modulate);
-      }
-      return scene;
-    };
-    await prepareScene()
+    await sharp(source)
+      .resize({ width: 1920, withoutEnlargement: true })
       .avif({ quality: 54, effort: 6 })
       .toFile(path.join(outputDir, `${basename}.avif`));
-    await prepareScene()
+    await sharp(source)
+      .resize({ width: 1920, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toFile(path.join(outputDir, `${basename}.webp`));
   }
@@ -815,6 +789,7 @@ function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
   const includeGuestbook = shouldRenderGuestbook(character);
+  const isErise = character.id === "erise-vooga";
 
   return htmlPage({
     title: character.displayName,
@@ -823,10 +798,13 @@ function renderCharacter(character) {
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
-    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}`,
+    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}${isErise ? `
+      <link rel="stylesheet" href="./assets/site/erise-home.css?v=20260802-1">` : ""}`,
     theme: character.theme,
+    bodyClass: isErise ? "erise-home" : "",
     body: `
-      <main>
+      <main${isErise ? ` class="erise-page"` : ""}>
+        ${isErise ? renderEriseMasthead(character) : ""}
         <section class="character-hero">
           ${renderBrandBanner(character)}
           <div class="shell">
@@ -835,9 +813,11 @@ function renderCharacter(character) {
             <h1>${escapeHtml(character.displayName)}</h1>
             ${character.catchphrase ? `<p class="catchphrase">${escapeHtml(character.catchphrase)}</p>` : ""}
             <p class="lead">${escapeHtml(character.summary)}</p>
-            ${renderHeroFacts(character)}
+            ${isErise ? renderEriseHeroActions() : renderHeroFacts(character)}
+            ${isErise ? renderEriseSignalCard(character) : ""}
           </div>
         </section>
+        ${isErise ? renderEriseTicker() : ""}
         ${renderPageMenu(character)}
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
@@ -995,7 +975,7 @@ function renderManzokukyoTruth(character) {
           height: 100%;
           object-fit: cover;
           object-position: 50% 50%;
-          filter: brightness(0.92) contrast(1.04) saturate(0.94);
+          filter: brightness(0.68) contrast(1.08) saturate(0.82);
           transform: scale(1.07);
           animation: truth-chamber-enter 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -1004,9 +984,9 @@ function renderManzokukyoTruth(character) {
           z-index: -4;
           pointer-events: none;
           background:
-            linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 23% 77%, rgba(0, 0, 0, 0.42)),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 28% 68%, rgba(0, 0, 0, 0.64)),
-            radial-gradient(ellipse at 50% 47%, rgba(177, 131, 255, 0.18), transparent 38%);
+            linear-gradient(90deg, rgba(0, 0, 0, 0.68), transparent 23% 77%, rgba(0, 0, 0, 0.68)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.58), transparent 28% 68%, rgba(0, 0, 0, 0.82)),
+            radial-gradient(ellipse at 50% 47%, rgba(126, 60, 255, 0.12), transparent 34%);
         }
 
         .truth-scanlines {
@@ -1014,9 +994,9 @@ function renderManzokukyoTruth(character) {
           pointer-events: none;
           background:
             linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 52%, rgba(0, 0, 0, 0.34) 84%, rgba(0, 0, 0, 0.66) 100%);
+            radial-gradient(ellipse at 50% 50%, transparent 0 48%, rgba(0, 0, 0, 0.54) 82%, rgba(0, 0, 0, 0.88) 100%);
           background-size: 100% 4px, auto;
-          opacity: 0.52;
+          opacity: 0.72;
           mix-blend-mode: screen;
         }
 
@@ -1521,7 +1501,7 @@ function renderManzokukyoTruth(character) {
 
         @keyframes truth-chamber-enter {
           from { filter: brightness(1.08) contrast(1.16) saturate(0.7); transform: scale(1.16); }
-          to { filter: brightness(0.92) contrast(1.04) saturate(0.94); transform: scale(1.07); }
+          to { filter: brightness(0.68) contrast(1.08) saturate(0.82); transform: scale(1.07); }
         }
 
         @keyframes truth-copy-enter {
@@ -1565,7 +1545,7 @@ function renderManzokukyoTruth(character) {
         }
 
         @keyframes truth-room-jolt {
-          0%, 100% { transform: scale(1.07); filter: brightness(0.92) contrast(1.04) saturate(0.94); }
+          0%, 100% { transform: scale(1.07); filter: brightness(0.68) contrast(1.08) saturate(0.82); }
           28% { transform: scale(1.085) translateX(-5px); filter: brightness(0.36) contrast(1.4) saturate(0.2); }
           58% { transform: scale(1.075) translateX(4px); filter: brightness(0.9) contrast(1.24) saturate(0.7); }
         }
@@ -2245,8 +2225,8 @@ function renderZanneninCharacter(character) {
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
     headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}
-      <link rel="stylesheet" href="./assets/site/home.css?${assetVersionQuery}">
-      <script src="./assets/site/home.js?${assetVersionQuery}" defer></script>`,
+      <link rel="stylesheet" href="./assets/site/home.css?v=20260720-6">
+      <script src="./assets/site/home.js?v=20260720-6" defer></script>`,
     theme: character.theme,
     bodyClass: "zannenin-home",
     body: `
@@ -2507,7 +2487,7 @@ function renderManzokukyoRedHouse(character) {
           height: 100%;
           object-fit: cover;
           object-position: center;
-          filter: brightness(1.12) contrast(1.02) saturate(1.18);
+          filter: brightness(0.65) contrast(1.08) saturate(0.76);
           transform: scale(1.035);
           animation: red-room-enter 2.1s cubic-bezier(0.16, 1, 0.3, 1) both;
           transition: filter 0.5s ease, transform 0.5s ease;
@@ -2517,10 +2497,10 @@ function renderManzokukyoRedHouse(character) {
           z-index: -5;
           pointer-events: none;
           background:
-            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 225, 190, 0.12), transparent 22%),
-            linear-gradient(90deg, rgba(25, 0, 3, 0.2), transparent 22% 78%, rgba(25, 0, 3, 0.2)),
-            linear-gradient(180deg, rgba(20, 0, 2, 0.16), transparent 24% 70%, rgba(18, 0, 2, 0.38)),
-            radial-gradient(ellipse at 50% 44%, rgba(255, 30, 57, calc(0.14 + var(--sin-level) * 0.24)), transparent 58%);
+            radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 222, 180, 0.055), transparent 18%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.62), transparent 24% 76%, rgba(0, 0, 0, 0.62)),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 25% 66%, rgba(0, 0, 0, 0.88)),
+            radial-gradient(ellipse at 50% 44%, rgba(130, 0, 16, calc(0.06 + var(--sin-level) * 0.2)), transparent 48%);
         }
 
         .red-room-noise {
@@ -2528,9 +2508,9 @@ function renderManzokukyoRedHouse(character) {
           pointer-events: none;
           background:
             linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, transparent 0 58%, rgba(25, 0, 4, 0.18) 88%, rgba(10, 0, 2, 0.42) 100%);
+            radial-gradient(ellipse at 50% 50%, transparent 0 50%, rgba(0, 0, 0, 0.54) 84%, #000 100%);
           background-size: 100% 4px, auto;
-          opacity: 0.38;
+          opacity: 0.74;
           mix-blend-mode: screen;
         }
 
@@ -3031,40 +3011,6 @@ function renderManzokukyoRedHouse(character) {
           text-transform: uppercase;
         }
 
-        .red-next-area {
-          grid-column: 1 / -1;
-          display: flex;
-          min-height: 42px;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          border: 1px solid rgba(226, 184, 135, 0.48);
-          padding: 9px 12px;
-          background: rgba(63, 8, 14, 0.5);
-          color: #f6e7d7;
-          font-family: var(--font-ui);
-          font-size: 0.68rem;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-decoration: none;
-          text-transform: uppercase;
-          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-        }
-
-        .red-next-area::after {
-          color: #d5a45f;
-          content: "→";
-          font-size: 1rem;
-        }
-
-        .red-next-area:hover,
-        .red-next-area:focus-visible {
-          border-color: #ffe0b8;
-          background: rgba(119, 12, 25, 0.74);
-          color: #fff;
-          outline: none;
-        }
-
         .red-memory-echo {
           position: absolute;
           top: 34%;
@@ -3089,12 +3035,12 @@ function renderManzokukyoRedHouse(character) {
         }
 
         .red-room[data-lamp="silence"] .red-room-art img {
-          filter: brightness(0.84) contrast(1.06) saturate(0.72);
+          filter: brightness(0.44) contrast(1.14) saturate(0.42);
         }
 
         .red-room[data-lamp="satisfaction"] .red-room-art img,
         .red-room.is-absolved .red-room-art img {
-          filter: brightness(1.2) contrast(1.01) saturate(1.06) sepia(0.08);
+          filter: brightness(0.75) contrast(1.04) saturate(0.7) sepia(0.16);
         }
 
         .red-room-flash {
@@ -3132,7 +3078,7 @@ function renderManzokukyoRedHouse(character) {
 
         @keyframes red-room-enter {
           from { opacity: 0; transform: scale(1.12); filter: brightness(0.2) contrast(1.4) saturate(0.3); }
-          to { opacity: 1; transform: scale(1.035); filter: brightness(1.12) contrast(1.02) saturate(1.18); }
+          to { opacity: 1; transform: scale(1.035); filter: brightness(0.65) contrast(1.08) saturate(0.76); }
         }
 
         @keyframes red-copy-enter {
@@ -3170,7 +3116,7 @@ function renderManzokukyoRedHouse(character) {
           }
 
           .red-room {
-            min-height: 1200px;
+            min-height: 1120px;
           }
 
           .red-heading {
@@ -3279,10 +3225,6 @@ function renderManzokukyoRedHouse(character) {
           .red-verdict {
             top: 900px;
           }
-
-          .red-room {
-            min-height: 1240px;
-          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -3297,9 +3239,9 @@ function renderManzokukyoRedHouse(character) {
       </style>
       <main class="red-room" data-confession-page data-lamp="none" data-confessions="0">
         <picture class="red-room-art" aria-hidden="true">
-          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.avif?${assetVersionQuery}" type="image/avif">
-          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.webp?${assetVersionQuery}" type="image/webp">
-          <img src="../../../assets/manzokukyo/red-confession-chamber.png?${assetVersionQuery}" alt="">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.avif" type="image/avif">
+          <source srcset="../../../assets/generated/manzokukyo/red-confession-chamber.webp" type="image/webp">
+          <img src="../../../assets/manzokukyo/red-confession-chamber.png" alt="">
         </picture>
         <div class="red-room-shade" aria-hidden="true"></div>
         <div class="red-room-noise" aria-hidden="true"></div>
@@ -3368,9 +3310,6 @@ function renderManzokukyoRedHouse(character) {
             <p data-confession-log aria-live="polite">三つの灯りのうち、ひとつを選べる。</p>
             <small data-confession-count>confessions / 00</small>
           </div>
-          <a class="red-next-area" href="./archive/">
-            <span>Area 03　記憶保管庫へ</span>
-          </a>
         </aside>
 
         <div class="red-room-flash" aria-hidden="true"></div>
@@ -4193,161 +4132,6 @@ function renderManzokukyoRedHouseLegacy(character) {
   });
 }
 
-function renderManzokukyoArchiveNovel(character) {
-  const title = "記憶保管庫";
-  const description = "赤い懺悔室へ置いていった言葉の行き先を、ノベルゲーム形式で辿る満足教Area 03です。";
-
-  return htmlPage({
-    title: `${title} | 満足教異聞録`,
-    description,
-    urlPath: `${character.id}/manzokukyo/truth/red-house/archive/`,
-    imagePath: `${character.id}/assets/generated/manzokukyo/memory-archive.webp`,
-    type: "VideoGame",
-    theme: character.theme,
-    stylesheetHref: "../../../../../styles.css",
-    bodyClass: "manzokukyo-novel manzokukyo-archive-novel",
-    headExtra: `
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-novel.css?${assetVersionQuery}">
-      <link rel="stylesheet" href="../../../../assets/site/manzokukyo-archive-novel.css?${assetVersionQuery}">
-      <script src="../../../../assets/site/manzokukyo-novel.js?${assetVersionQuery}" defer></script>
-    `,
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "VideoGame",
-      name: title,
-      description,
-      url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/archive/`),
-      inLanguage: "ja",
-      gamePlatform: "Web browser",
-      isPartOf: {
-        "@type": "WebPage",
-        name: "赤い懺悔室",
-        url: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`)
-      }
-    },
-    body: `
-      <main
-        class="vn-shell"
-        data-vn-game
-        data-vn-story="archive"
-        data-game-state="title"
-        data-scene-kind="archive"
-        data-scene="0"
-        data-assets-base="../../../../assets/generated/manzokukyo/"
-        data-assets-version="${escapeHtml(siteVersion)}"
-      >
-        <div class="vn-stage" aria-hidden="true">
-          <img
-            class="vn-backdrop is-active"
-            data-vn-backdrop
-            src="../../../../assets/generated/manzokukyo/memory-archive.webp?${assetVersionQuery}"
-            alt=""
-            fetchpriority="high"
-          >
-          <img class="vn-backdrop" data-vn-backdrop src="../../../../assets/generated/manzokukyo/memory-archive.webp?${assetVersionQuery}" alt="">
-          <div class="vn-stage-shade"></div>
-          <div class="vn-stage-grain"></div>
-        </div>
-
-        <header class="vn-topbar">
-          <a class="vn-brand" href="../">
-            <span>
-              <strong>満足教異聞録・記憶保管庫</strong>
-              <small>Satisfaction Cult / Area 03</small>
-            </span>
-          </a>
-          <nav class="vn-tools" aria-label="ノベルゲーム操作">
-            <button type="button" data-vn-log-open>LOG</button>
-            <button type="button" data-vn-auto aria-pressed="false">AUTO</button>
-            <button type="button" data-vn-skip aria-pressed="false">SKIP</button>
-            <button type="button" data-vn-save>SAVE</button>
-            <button type="button" data-vn-sound aria-pressed="false">SOUND</button>
-            <button type="button" data-vn-config-open>CONFIG</button>
-            <button type="button" data-vn-menu-open>MENU</button>
-          </nav>
-        </header>
-
-        <div class="vn-chapter">
-          <span data-vn-chapter>余章 / AFTER CONFESSION</span>
-          <strong data-vn-chapter-title>赤い帳が閉じたあと。</strong>
-        </div>
-
-        <section class="vn-choices" data-vn-choices aria-label="選択肢"></section>
-
-        <section class="vn-dialogue" data-vn-dialogue aria-live="polite">
-          <strong class="vn-speaker" data-vn-speaker>記録者</strong>
-          <p class="vn-text" data-vn-text></p>
-          <span class="vn-line-meta" data-vn-line-meta>01 / 14</span>
-          <button class="vn-next" type="button" data-vn-next aria-label="次の文章へ進む"></button>
-        </section>
-
-        <section class="vn-title-screen" data-vn-title>
-          <div class="vn-title-copy">
-            <span>Satisfaction Cult / A Fragmentary Record II</span>
-            <h1>記憶保管庫<small>満足教異聞録・第二幕</small></h1>
-            <div class="vn-title-rule" aria-hidden="true"></div>
-            <p>赤い懺悔室へ置いていった言葉には、行き先がある。<br>棚の奥で待つ三つの処理から、記憶の持ち方を選ぶ短編記録。</p>
-            <div class="vn-title-actions">
-              <button type="button" data-vn-start>保管庫へ入る</button>
-              <button type="button" data-vn-continue hidden>記録を再開する</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="vn-panel" data-vn-panel="log" aria-label="バックログ">
-          <div class="vn-panel-window">
-            <header class="vn-panel-head">
-              <h2>BACK LOG</h2>
-              <button class="vn-panel-close" type="button" data-vn-close aria-label="バックログを閉じる">×</button>
-            </header>
-            <div class="vn-log" data-vn-log></div>
-          </div>
-        </section>
-
-        <section class="vn-panel" data-vn-panel="config" aria-label="設定">
-          <div class="vn-panel-window">
-            <header class="vn-panel-head">
-              <h2>CONFIG</h2>
-              <button class="vn-panel-close" type="button" data-vn-close aria-label="設定を閉じる">×</button>
-            </header>
-            <div class="vn-config">
-              <label class="vn-config-row">
-                <span>BGM VOLUME</span>
-                <input type="range" data-vn-volume min="0" max="1" value="0.26" step="0.05">
-              </label>
-              <div class="vn-config-row">
-                <span>TEXT SPEED</span>
-                <div class="vn-speed">
-                  <button type="button" data-vn-speed="slow" aria-pressed="false">SLOW</button>
-                  <button type="button" data-vn-speed="normal" aria-pressed="true">NORMAL</button>
-                  <button type="button" data-vn-speed="fast" aria-pressed="false">FAST</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="vn-panel" data-vn-panel="menu" aria-label="メニュー">
-          <div class="vn-panel-window">
-            <header class="vn-panel-head">
-              <h2>SYSTEM MENU</h2>
-              <button class="vn-panel-close" type="button" data-vn-close aria-label="メニューを閉じる">×</button>
-            </header>
-            <div class="vn-panel-actions">
-              <button type="button" data-vn-close>物語へ戻る</button>
-              <button type="button" data-vn-restart>最初から読み返す</button>
-              <a href="../">赤い懺悔室へ戻る</a>
-            </div>
-          </div>
-        </section>
-
-        <div class="vn-toast" data-vn-toast role="status"></div>
-        <audio data-vn-audio src="../../../../assets/generated/manzokukyo/satisfaction-bgm.m4a" preload="metadata" loop></audio>
-      </main>
-    `
-  });
-}
-
 function renderManzokukyoNovel(character) {
   const title = "満足教異聞録";
   const description = "満足教の既存ビジュアルと教義断片を、硬派な日本のノベルゲームUIで辿る短編インタラクティブ試作です。";
@@ -4362,8 +4146,8 @@ function renderManzokukyoNovel(character) {
     stylesheetHref: "../../../styles.css",
     bodyClass: "manzokukyo-novel",
     headExtra: `
-      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?${assetVersionQuery}">
-      <script src="../../assets/site/manzokukyo-novel.js?${assetVersionQuery}" defer></script>
+      <link rel="stylesheet" href="../../assets/site/manzokukyo-novel.css?v=20260724-1">
+      <script src="../../assets/site/manzokukyo-novel.js?v=20260724-1" defer></script>
     `,
     structuredData: {
       "@context": "https://schema.org",
@@ -4387,17 +4171,16 @@ function renderManzokukyoNovel(character) {
         data-scene-kind="key"
         data-scene="0"
         data-assets-base="../../assets/generated/manzokukyo/"
-        data-assets-version="${escapeHtml(siteVersion)}"
       >
         <div class="vn-stage" aria-hidden="true">
           <img
             class="vn-backdrop is-active"
             data-vn-backdrop
-            src="../../assets/generated/manzokukyo/key-visual-hero.webp?${assetVersionQuery}"
+            src="../../assets/generated/manzokukyo/key-visual-hero.webp"
             alt=""
             fetchpriority="high"
           >
-          <img class="vn-backdrop" data-vn-backdrop src="../../assets/generated/manzokukyo/key-visual-hero.webp?${assetVersionQuery}" alt="">
+          <img class="vn-backdrop" data-vn-backdrop src="../../assets/generated/manzokukyo/key-visual-hero.webp" alt="">
           <div class="vn-stage-shade"></div>
           <div class="vn-stage-grain"></div>
         </div>
@@ -8540,6 +8323,64 @@ function renderBrandBanner(character) {
   `;
 }
 
+function renderEriseMasthead(character) {
+  const socialUrl = character.links?.find((link) => link.type === "social")?.url;
+  return `
+    <header class="erise-masthead">
+      <a class="erise-wordmark" href="#top" aria-label="${escapeHtml(character.displayName)} ページトップ">
+        <span>ERISE</span><b>VOOGA</b>
+      </a>
+      <nav aria-label="エリセ・ヴーガ ページナビゲーション">
+        <a href="../">Character Canon</a>
+        <a href="#visual">Visual Archive</a>
+        ${socialUrl ? `<a href="${escapeHtml(socialUrl)}" target="_blank" rel="noopener noreferrer">Official X</a>` : ""}
+      </nav>
+    </header>
+  `;
+}
+
+function renderEriseHeroActions() {
+  return `
+    <div class="erise-hero-actions">
+      <a class="is-primary" href="#profile">プロフィールを見る</a>
+      <a href="#visual">ビジュアル資料</a>
+    </div>
+  `;
+}
+
+function renderEriseSignalCard(character) {
+  const age = character.profile?.["年齢"] ?? "未定義";
+  const height = character.profile?.["身長"] ?? "未定義";
+  const fanName = character.profile?.["ファンネーム"] ?? "未定義";
+  return `
+    <aside class="erise-signal-card" aria-label="エリセ・ヴーガ 基本プロフィール">
+      <div class="erise-signal-head">
+        <span>LIVE PROFILE</span>
+        <i aria-hidden="true"></i>
+      </div>
+      <strong class="erise-signal-date">08<span>/23</span></strong>
+      <p>BIRTHDAY</p>
+      <div class="erise-signal-wave" aria-hidden="true"><span></span></div>
+      <dl>
+        <div><dt>VISUAL AGE</dt><dd>${escapeHtml(age)}</dd></div>
+        <div><dt>HEIGHT</dt><dd>${escapeHtml(height)}</dd></div>
+        <div><dt>FAN NAME</dt><dd>${escapeHtml(fanName)}</dd></div>
+      </dl>
+      <a href="#visual">Official visualを見る</a>
+    </aside>
+  `;
+}
+
+function renderEriseTicker() {
+  const items = ["VIRTUAL SINGER", "IMO V", "MINT × PINK", "SING & DANCE", "HEARTBEAT LIVE"];
+  const content = items.map((item) => `<span>${escapeHtml(item)}</span>`).join("");
+  return `
+    <div class="erise-ticker" aria-label="エリセ・ヴーガ ブランドモチーフ">
+      <div>${content}${content}</div>
+    </div>
+  `;
+}
+
 function renderHeroFacts(character) {
   const keys = ["年齢", "身長", "好きな食べ物", "チャームポイント"];
   const facts = keys
@@ -9265,9 +9106,6 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <meta name="description" content="${escapeHtml(seoDescription)}">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <meta name="theme-color" content="${escapeHtml(themeColor)}">
-    <meta name="application-version" content="${escapeHtml(`v${siteVersion}`)}">
-    <meta name="build-revision" content="${escapeHtml(buildRevision)}">
-    <meta name="build-version" content="${escapeHtml(buildVersionLabel)}">
     <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
     <meta property="og:site_name" content="Character Canon">
@@ -9291,18 +9129,12 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
-    <link rel="stylesheet" href="${escapeHtml(versionAssetUrl(stylesheetHref ?? (title === "Character Canon" ? "./styles.css" : "../styles.css")))}">
+    <link rel="stylesheet" href="${escapeHtml(stylesheetHref ?? (title === "Character Canon" ? "./styles.css" : "../styles.css"))}">
     ${headExtra}
     ${structuredData ? `<script type="application/ld+json">${escapeScriptJson(structuredData)}</script>` : ""}
   </head>
   <body${bodyClass ? ` class="${escapeHtml(bodyClass)}"` : ""}${theme ? ` style="${escapeHtml(renderThemeStyle(theme))}"` : ""}>
     ${body}
-    <small
-      class="site-build-version"
-      data-build-version="${escapeHtml(buildRevision)}"
-      title="Deployment ${escapeHtml(buildVersionLabel)}"
-      aria-label="サイトバージョン ${escapeHtml(buildVersionLabel)}"
-    >${escapeHtml(buildVersionLabel)}</small>
     ${renderClientScript()}
   </body>
 </html>`;
@@ -9313,32 +9145,6 @@ function normalizeDescription(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 180);
-}
-
-function versionAssetUrl(url) {
-  const value = String(url ?? "");
-  if (!value || /^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith("data:")) {
-    return value;
-  }
-  const separator = value.includes("?") ? "&" : "?";
-  return `${value}${separator}${assetVersionQuery}`;
-}
-
-function resolveBuildRevision() {
-  const environmentRevision = process.env.GITHUB_SHA?.trim();
-  if (environmentRevision) {
-    return environmentRevision.slice(0, 7);
-  }
-
-  try {
-    return execFileSync("git", ["rev-parse", "--short=7", "HEAD"], {
-      cwd: rootDir,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"]
-    }).trim();
-  } catch {
-    return "local";
-  }
 }
 
 function absoluteUrl(urlPath) {
@@ -9409,7 +9215,6 @@ function renderSitemap(characters) {
         { loc: absoluteUrl(`${character.id}/manzokukyo/novel/`), priority: "0.5" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/`), priority: "0.6" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`), priority: "0.4" },
-        { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/archive/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
       ] : []),
       ...(character.fanworkGuidelines ? [{ loc: absoluteUrl(`${character.id}/fanworks.html`), priority: "0.7" }] : [])
@@ -9725,25 +9530,6 @@ body {
     linear-gradient(180deg, rgba(21, 18, 23, 0.045) 1px, transparent 1px),
     linear-gradient(180deg, var(--theme-paper) 0%, #fffdf8 48%, var(--theme-accent) 100%);
   background-size: 28px 28px, 28px 28px, auto;
-}
-
-.site-build-version {
-  position: fixed;
-  right: max(4px, env(safe-area-inset-right));
-  bottom: max(4px, env(safe-area-inset-bottom));
-  z-index: 2147483000;
-  display: inline-block;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 2px;
-  padding: 2px 5px;
-  background: rgba(8, 7, 10, 0.58);
-  color: rgba(255, 255, 255, 0.72);
-  font: 700 9px/1.25 ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
-  letter-spacing: 0;
-  opacity: 0.64;
-  pointer-events: none;
-  user-select: none;
-  backdrop-filter: blur(6px);
 }
 
 a {
@@ -12125,10 +11911,6 @@ body[data-design="modern"] .timeline li {
 }
 
 @media print {
-  .site-build-version {
-    display: none !important;
-  }
-
   :root {
     color: #111;
     background: #fff;
