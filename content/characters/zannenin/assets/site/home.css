@@ -1486,17 +1486,26 @@ body.zannenin-home {
   }
 
   .zn-hero-image {
-    display: none;
+    display: block;
+    opacity: 0.48;
+    background-image: url("../brand/mobile-hero-backdrop.webp");
+    background-position: center 154px;
+    background-repeat: no-repeat;
+    background-size: 145% auto;
+    scale: 1.02;
+    filter: blur(2.5px) brightness(0.62) saturate(0.7);
   }
 
   .zn-hero-character {
     position: absolute;
+    top: 78px;
     right: -90px;
-    bottom: 144px;
+    bottom: auto;
     z-index: 0;
     display: block;
-    width: min(105vw, 410px);
-    height: auto;
+    width: auto;
+    max-width: none;
+    height: min(calc(100% - 196px), 650px);
     pointer-events: none;
     filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.62));
   }
@@ -1527,7 +1536,7 @@ body.zannenin-home {
   .zn-topbar {
     min-height: 70px;
     padding: 12px 16px;
-    background: linear-gradient(180deg, rgba(5, 5, 7, 0.86), transparent);
+    background: linear-gradient(180deg, rgba(5, 5, 7, 0.98) 0%, rgba(5, 5, 7, 0.88) 68%, transparent 100%);
   }
 
   .zn-wordmark {
