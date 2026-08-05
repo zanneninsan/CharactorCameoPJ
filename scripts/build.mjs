@@ -2264,7 +2264,8 @@ function renderZanneninCharacter(character) {
         </div>
 
         <header class="zn-hero" id="top">
-          <img class="zn-hero-image" src="./assets/brand/banner-source.png" alt="${escapeHtml(character.brandAssets?.banner?.alt ?? `${character.displayName} キービジュアル`)}" fetchpriority="high">
+          <div class="zn-hero-image" role="img" aria-label="${escapeHtml(character.brandAssets?.banner?.alt ?? `${character.displayName} キービジュアル`)}"></div>
+          <img class="zn-hero-character" src="./assets/brand/mobile-hero-character.png" alt="" fetchpriority="high" aria-hidden="true">
           <div class="zn-hero-shade" aria-hidden="true"></div>
           <nav class="zn-topbar" aria-label="サイト上部メニュー">
             <a class="zn-wordmark" href="#top" aria-label="${escapeHtml(character.displayName)} ページ上部へ">

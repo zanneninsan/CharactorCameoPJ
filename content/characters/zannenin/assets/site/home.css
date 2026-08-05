@@ -214,14 +214,24 @@ body.zannenin-home {
   height: 100%;
 }
 
+.zn-hero-character {
+  display: none;
+}
+
 .zn-hero-image {
   z-index: -3;
-  object-fit: cover;
-  object-position: 64% center;
+  background-position: 64% center;
+  background-size: cover;
   scale: 1.02;
   filter: saturate(calc(0.82 + var(--zn-satisfaction-visual, 0.17) * 0.34)) contrast(1.04);
   transform: translate3d(calc(var(--zn-pointer-x, 0) * -10px), calc(var(--zn-pointer-y, 0) * -8px), 0);
   transition: filter 700ms ease;
+}
+
+@media (min-width: 801px) {
+  .zn-hero-image {
+    background-image: url("../brand/banner-source.png");
+  }
 }
 
 .zn-hero-shade {
@@ -1467,26 +1477,57 @@ body.zannenin-home {
   }
 
   .zn-hero {
-    display: flex;
-    min-height: 820px;
-    align-items: stretch;
-    flex-direction: column;
-    justify-content: flex-end;
+    display: block;
+    min-height: max(760px, 100svh);
+    max-height: 920px;
+    background:
+      linear-gradient(145deg, rgba(212, 167, 44, 0.1), transparent 34%),
+      linear-gradient(180deg, #08080b 0%, #111015 58%, #070709 100%);
   }
 
   .zn-hero-image {
-    object-position: 67% center;
+    display: none;
+  }
+
+  .zn-hero-character {
+    position: absolute;
+    right: -90px;
+    bottom: 144px;
+    z-index: 0;
+    display: block;
+    width: min(105vw, 410px);
+    height: auto;
+    pointer-events: none;
+    filter: drop-shadow(0 22px 32px rgba(0, 0, 0, 0.62));
   }
 
   .zn-hero-shade {
     background:
-      linear-gradient(180deg, rgba(5, 5, 7, 0.22) 0%, rgba(5, 5, 7, 0.08) 34%, rgba(5, 5, 7, 0.92) 70%, #050507 100%),
-      linear-gradient(90deg, rgba(5, 5, 7, 0.28), transparent 70%);
+      linear-gradient(90deg, rgba(5, 5, 7, 0.92) 0%, rgba(5, 5, 7, 0.48) 42%, transparent 72%),
+      linear-gradient(180deg, rgba(5, 5, 7, 0.22) 0%, transparent 52%, rgba(5, 5, 7, 0.88) 86%, #050507 100%),
+      repeating-linear-gradient(115deg, transparent 0 42px, rgba(240, 214, 131, 0.045) 42px 43px);
+  }
+
+  .zn-hero::before {
+    z-index: 1;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+      linear-gradient(90deg, transparent 49.8%, rgba(212, 167, 44, 0.2) 50%, transparent 50.2%);
+    background-size: 100% 4px, 86px 100%;
+    mix-blend-mode: screen;
+  }
+
+  .zn-hero::after {
+    right: -0.08em;
+    bottom: 116px;
+    z-index: 1;
+    font-size: 9rem;
   }
 
   .zn-topbar {
     min-height: 70px;
     padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(5, 5, 7, 0.86), transparent);
   }
 
   .zn-wordmark {
@@ -1506,34 +1547,113 @@ body.zannenin-home {
   }
 
   .zn-hero-copy {
-    width: auto;
-    margin: 0 18px 22px;
+    position: absolute;
+    top: 102px;
+    left: 18px;
+    z-index: 2;
+    width: 210px;
+    margin: 0;
   }
 
   .zn-hero h1 {
-    font-size: clamp(3.2rem, 16vw, 4.6rem);
-    white-space: nowrap;
+    max-width: 3.4ch;
+    font-size: clamp(3.35rem, 16vw, 4.2rem);
+    line-height: 0.92;
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .zn-hero-lead {
     display: none;
   }
 
+  .zn-hero-catch {
+    width: 190px;
+    margin-top: 18px;
+    font-size: 0.84rem;
+    line-height: 1.7;
+  }
+
+  .zn-hero-actions {
+    width: 190px;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .zn-hero-actions a {
+    min-height: 42px;
+    padding: 8px 13px;
+    font-size: 0.76rem;
+  }
+
   .zn-observer {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    left: auto;
+    right: 16px;
+    bottom: 18px;
+    left: 16px;
+    display: grid;
     width: auto;
-    margin: 0 18px 36px;
+    min-height: 110px;
+    grid-template-columns: 82px minmax(0, 1fr) 108px;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 12px;
+    margin: 0;
+    padding: 14px;
+    background: rgba(7, 7, 9, 0.86);
+    backdrop-filter: blur(20px);
+  }
+
+  .zn-observer-head {
+    grid-column: 1 / -1;
+    margin-bottom: 8px;
+  }
+
+  .zn-observer-value {
+    grid-row: 2 / 4;
+    align-self: center;
+    margin: 0;
   }
 
   .zn-observer-value strong {
-    font-size: 3.5rem;
+    font-size: 3rem;
+  }
+
+  .zn-observer-value span {
+    font-size: 0.86rem;
+  }
+
+  .zn-observer-meter {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+    margin: 0 0 9px;
   }
 
   .zn-oracle {
+    grid-column: 2;
+    grid-row: 3;
     min-height: 0;
+    margin: 0;
+    font-size: 0.67rem;
+    line-height: 1.45;
+  }
+
+  .zn-observer button {
+    grid-column: 3;
+    grid-row: 2 / 4;
+    align-self: stretch;
+    min-height: 54px;
+    margin: 0;
+    padding: 8px;
+    font-size: 0.72rem;
+  }
+
+  .zn-reward {
+    position: absolute;
+    right: 14px;
+    bottom: calc(100% + 10px);
+    left: 14px;
+    margin: 0;
+    background: rgba(7, 7, 9, 0.94);
   }
 
   .zn-scroll-cue {
