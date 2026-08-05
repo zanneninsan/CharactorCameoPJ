@@ -77,7 +77,7 @@
     "title": "静見 おと MV Player",
     "description": "YouTube再生リストから静見 おとのMVを再生できます。表示サイズは縦動画・横動画で切り替えられます。",
     "playlistUrl": "https://www.youtube.com/playlist?list=PL0Tn3FjrJUueglQetMupT3rhiLXAqhTxu",
-    "embedUrl": "https://www.youtube.com/embed?listType=playlist&list=PL0Tn3FjrJUueglQetMupT3rhiLXAqhTxu",
+    "embedUrl": "https://www.youtube.com/embed?listType=playlist&list=PL0Tn3FjrJUueglQetMupT3rhiLXAqhTxu&enablejsapi=1&playsinline=1",
     "icon": "assets/brand/logo-source.png",
     "trackTitle": "静見 おと MV Playlist",
     "trackSubtitle": "YouTube再生リスト",
