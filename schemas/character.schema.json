@@ -81,9 +81,12 @@
           "label": { "type": "string" },
           "url": { "type": "string" },
           "type": { "type": "string" },
+          "category": { "type": "string" },
           "icon": { "type": "string" },
           "displayUrl": { "type": "string" },
-          "description": { "type": "string" }
+          "description": { "type": "string" },
+          "creatorLabel": { "type": "string" },
+          "creatorUrl": { "type": "string" }
         }
       }
     },

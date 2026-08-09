@@ -912,7 +912,7 @@ body.zannenin-home {
   display: grid;
   min-height: 148px;
   grid-column: span 2;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 64px minmax(0, 1fr);
   align-content: center;
   gap: 6px 14px;
   border: 0;
@@ -929,14 +929,76 @@ body.zannenin-home {
   grid-column: span 3;
 }
 
+@media (min-width: 1051px) {
+  .zn-page .link-group-games .link-card {
+    grid-column: span 3;
+  }
+}
+
 .zn-page .link-card:hover,
-.zn-page .link-card:focus-visible {
+.zn-page .link-card:focus-visible,
+.zn-page .link-card-with-credit:has(.link-card-target:focus-visible),
+.zn-page .link-card-with-credit:has(.link-card-credit:focus-visible) {
   background: var(--zn-gold);
   color: var(--zn-black);
 }
 
 .zn-page .link-card .link-icon {
   grid-row: 1 / span 3;
+  width: 58px;
+  height: 58px;
+  border-radius: 6px;
+}
+
+.zn-page .link-card .link-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.zn-page .link-card .link-icon img {
+  border-radius: 6px;
+}
+
+.zn-page .link-icon-game {
+  background: var(--zn-gold);
+  color: var(--zn-black);
+}
+
+.zn-page .link-card-with-credit {
+  position: relative;
+}
+
+.zn-page .link-card-with-credit .link-card-target {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  outline: none;
+}
+
+.zn-page .link-card-with-credit > .link-icon,
+.zn-page .link-card-with-credit > span,
+.zn-page .link-card-with-credit > small,
+.zn-page .link-card-with-credit > em {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.zn-page .link-card-with-credit .link-icon {
+  grid-row: 1 / span 4;
+}
+
+.zn-page .link-card-credit {
+  position: relative;
+  z-index: 3;
+  grid-column: 2;
+  width: fit-content;
+  color: currentColor;
+  font-size: 0.74rem;
+  font-weight: 900;
+  opacity: 0.78;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .zn-page .link-card > span {

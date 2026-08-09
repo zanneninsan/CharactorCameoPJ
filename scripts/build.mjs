@@ -9444,6 +9444,8 @@ function visualReferenceLargePath(assetPath) {
 function renderOfficialLinks(character) {
   const socialLinks = Array.isArray(character.links) ? character.links : [];
   const contentLinks = Array.isArray(character.contentLinks) ? character.contentLinks : [];
+  const gameLinks = contentLinks.filter((link) => isGameLink(link));
+  const generalContentLinks = contentLinks.filter((link) => !isGameLink(link));
 
   if (socialLinks.length === 0 && contentLinks.length === 0) {
     return "";
@@ -9453,7 +9455,8 @@ function renderOfficialLinks(character) {
     <section class="panel wide official-links" id="links">
       <p class="eyebrow">🔗 Official Links</p>
       ${renderSectionHeading("links")}
-      ${renderLinkGroup("Contents", contentLinks)}
+      ${renderLinkGroup("Games", gameLinks)}
+      ${renderLinkGroup("Contents", generalContentLinks)}
       ${renderLinkGroup("Social", socialLinks)}
     </section>
   `;
@@ -9478,8 +9481,10 @@ function renderLinkGroup(title, links) {
     return "";
   }
 
+  const groupKey = String(title).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
   return `
-    <div class="link-group">
+    <div class="link-group link-group-${escapeHtml(groupKey)}">
       <h3>${escapeHtml(title)}</h3>
       <div class="link-list">
         ${links.map((link) => renderLinkCard(link)).join("")}
@@ -9489,14 +9494,32 @@ function renderLinkGroup(title, links) {
 }
 
 function renderLinkCard(link) {
+  const cardContent = `
+    ${renderLinkIcon(link)}
+    <span>${escapeHtml(link.label)}</span>
+    <small>${escapeHtml(formatUrl(link))}</small>
+    ${link.description ? `<em>${escapeHtml(link.description)}</em>` : ""}
+  `;
+
+  if (link.creatorLabel && link.creatorUrl) {
+    return `
+      <article class="link-card link-card-with-credit">
+        <a class="link-card-target" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(link.label)}"></a>
+        ${cardContent}
+        <a class="link-card-credit" href="${escapeHtml(link.creatorUrl)}" target="_blank" rel="noopener noreferrer">by ${escapeHtml(link.creatorLabel)}</a>
+      </article>
+    `;
+  }
+
   return `
     <a class="link-card" href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
-      ${renderLinkIcon(link)}
-      <span>${escapeHtml(link.label)}</span>
-      <small>${escapeHtml(formatUrl(link))}</small>
-      ${link.description ? `<em>${escapeHtml(link.description)}</em>` : ""}
+      ${cardContent}
     </a>
   `;
+}
+
+function isGameLink(link) {
+  return link?.category === "games" || link?.type === "game" || link?.type === "fan-game";
 }
 
 function hasItems(value) {
@@ -9602,6 +9625,8 @@ ${extraGuidance.map((item) => `- ${item}`).join("\n")}
 function renderLinksMarkdown(character) {
   const socialLinks = Array.isArray(character.links) ? character.links : [];
   const contentLinks = Array.isArray(character.contentLinks) ? character.contentLinks : [];
+  const gameLinks = contentLinks.filter((link) => isGameLink(link));
+  const generalContentLinks = contentLinks.filter((link) => !isGameLink(link));
 
   if (socialLinks.length === 0 && contentLinks.length === 0) {
     return "";
@@ -9609,7 +9634,8 @@ function renderLinksMarkdown(character) {
 
   return `## Official Links
 
-${renderLinksMarkdownGroup("Contents", contentLinks)}
+${renderLinksMarkdownGroup("Games", gameLinks)}
+${renderLinksMarkdownGroup("Contents", generalContentLinks)}
 ${renderLinksMarkdownGroup("Social", socialLinks)}`;
 }
 
@@ -9642,7 +9668,7 @@ function renderLinksMarkdownGroup(title, links) {
 
   return `### ${title}
 
-${links.map((link) => `- ${link.label}: ${link.url}`).join("\n")}`;
+${links.map((link) => `- ${link.label}: ${link.url}${link.creatorLabel && link.creatorUrl ? ` (by [${link.creatorLabel}](${link.creatorUrl}))` : ""}`).join("\n")}`;
 }
 
 function renderSideFlavorsMarkdown(character) {
@@ -11013,6 +11039,11 @@ h3 {
 
 .link-icon-discord {
   background: #5865f2;
+}
+
+.link-icon-game {
+  background: #d4a72c;
+  color: #09090b;
 }
 
 .link-icon-googleDrive {
@@ -13393,6 +13424,7 @@ function renderLinkIcon(link) {
     instagram: '<rect x="5" y="5" width="14" height="14" rx="4" /><circle cx="12" cy="12" r="3.2" /><circle cx="16.4" cy="7.7" r="0.8" fill="currentColor" stroke="none" />',
     tiktok: '<path d="M13.5 5v9.2a3.4 3.4 0 1 1-3-3.4" /><path d="M13.5 5c.8 2.3 2.3 3.7 4.8 4.1" />',
     discord: '<path d="M7.5 8.5c3-1.5 6-1.5 9 0l1.1 7.2c-3.5 2.2-7.7 2.2-11.2 0z" /><circle cx="10" cy="12.3" r="0.8" fill="currentColor" stroke="none" /><circle cx="14" cy="12.3" r="0.8" fill="currentColor" stroke="none" />',
+    game: '<path d="M8 8h8a5 5 0 0 1 4.7 3.4l1 3a3.2 3.2 0 0 1-5.1 3.5l-2-1.6H9.4l-2 1.6a3.2 3.2 0 0 1-5.1-3.5l1-3A5 5 0 0 1 8 8z" /><path d="M7 11v4M5 13h4" /><circle cx="16.5" cy="12" r=".8" fill="currentColor" stroke="none" /><circle cx="18.5" cy="14" r=".8" fill="currentColor" stroke="none" />',
     googleDrive: '<path d="M8.4 4.5h7.2l5.4 9.4h-7.2z" /><path d="M8.4 4.5 3 13.9l3.6 6.2 5.4-9.4z" /><path d="M6.6 20.1h10.8l3.6-6.2H10.2z" />',
     github: '<path d="M9 19c-4 1.2-4-2-5.5-2.5" /><path d="M15 22v-3.6a3.1 3.1 0 0 0-.9-2.4c3-.3 6.1-1.5 6.1-6.6a5.1 5.1 0 0 0-1.4-3.6 4.7 4.7 0 0 0-.1-3.5s-1.1-.4-3.7 1.4a12.8 12.8 0 0 0-6.8 0C5.6 1.9 4.5 2.3 4.5 2.3a4.7 4.7 0 0 0-.1 3.5A5.1 5.1 0 0 0 3 9.4c0 5.1 3.1 6.3 6.1 6.6a3.1 3.1 0 0 0-.9 2.4V22" />',
     json: '<path d="M8 8c-1.4 0-2 .7-2 2v.8c0 .8-.4 1.2-1.2 1.2.8 0 1.2.4 1.2 1.2v.8c0 1.3.6 2 2 2" /><path d="M16 8c1.4 0 2 .7 2 2v.8c0 .8.4 1.2 1.2 1.2-.8 0-1.2.4-1.2 1.2v.8c0 1.3-.6 2-2 2" /><path d="M10 14l4-4" />',
@@ -13410,6 +13442,10 @@ function renderLinkIcon(link) {
 
 function detectLinkBrand(link) {
   const raw = `${link.label ?? ""} ${link.url ?? ""} ${link.href ?? ""}`.toLowerCase();
+
+  if (isGameLink(link)) {
+    return { key: "game", label: "Game" };
+  }
 
   if (raw.includes("x.com") || raw.includes("twitter.com") || raw.includes("x ")) {
     return { key: "x", label: "X" };
