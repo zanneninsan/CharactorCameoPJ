@@ -239,6 +239,18 @@ body.zannenin-home {
       linear-gradient(125deg, #060609 0%, #18141a 54%, #09090c 100%);
   }
 
+  .zn-hero-character {
+    position: absolute;
+    right: clamp(18px, 7vw, 128px);
+    bottom: 0;
+    z-index: 1;
+    display: block;
+    width: auto;
+    height: min(86svh, 820px);
+    pointer-events: none;
+    filter: drop-shadow(0 26px 34px rgba(0, 0, 0, 0.7));
+  }
+
   .zn-hero-profile {
     position: absolute;
     top: 0;
