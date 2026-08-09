@@ -284,11 +284,17 @@
   ],
   "visualReferences": [
     {
-      "label": "衣装三面図",
-      "path": "assets/outfit-reference.png",
-      "type": "outfit",
-      "description": "残念院さんの衣装リファレンス。正面、側面、背面。黒を基調に白と金の装飾を合わせたミリタリーテイストの修道服。"
-    },
+    "label": "基本三面図",
+    "path": "assets/character-sheet-classic.png",
+    "type": "outfit",
+    "description": "残念院さんの基本ビジュアル資料。正面、背面、顔アップ、側面の各ビュー。"
+  },
+  {
+    "label": "式典用衣装三面図",
+    "path": "assets/outfit-reference.png",
+    "type": "outfit",
+    "description": "式典用の衣装リファレンス。正面、側面、背面。黒を基調に白と金の装飾を合わせたミリタリーテイストの修道服。"
+  },
     {
       "label": "有志作: HHI3x4AboAAbbwA",
       "path": "assets/drive-visuals/ネタ系-有志作-hhi3x4aboaabbwa-jfif-10oyxkh.webp",

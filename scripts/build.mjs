@@ -2265,6 +2265,7 @@ function renderZanneninCharacter(character) {
 
         <header class="zn-hero" id="top">
           <div class="zn-hero-image" role="img" aria-label="${escapeHtml(character.brandAssets?.banner?.alt ?? `${character.displayName} キービジュアル`)}"></div>
+        <img class="zn-hero-profile" src="./assets/brand/hero-profile-transparent.png" alt="" aria-hidden="true">
           <img class="zn-hero-character" src="./assets/brand/mobile-hero-character.png" alt="" fetchpriority="high" aria-hidden="true">
           <div class="zn-hero-shade" aria-hidden="true"></div>
           <nav class="zn-topbar" aria-label="サイト上部メニュー">
@@ -9366,8 +9367,17 @@ function renderVisualReferences(character) {
       <p class="eyebrow">🎀 Visual Reference</p>
       ${renderSectionHeading("visual")}
       ${baseReferences.length > 0 ? `
-        <div class="visual-base">
-          ${baseReferences.map((item) => renderVisualReferenceCard(item)).join("")}
+        <div class="visual-carousel" data-visual-carousel>
+          <div class="visual-carousel-toolbar">
+            <button type="button" data-visual-prev aria-label="前の資料">←</button>
+            <span data-visual-count>1 / ${baseReferences.length}</span>
+            <button type="button" data-visual-next aria-label="次の資料">→</button>
+          </div>
+          <div class="visual-carousel-viewport" data-visual-viewport>
+            <div class="visual-base">
+              ${baseReferences.map((item) => renderVisualReferenceCard(item)).join("")}
+            </div>
+          </div>
         </div>
       ` : ""}
       ${driveReferences.length > 0 ? `
@@ -10259,6 +10269,26 @@ function renderClientScript() {
       update();
     });
 
+    update();
+  }
+
+  for (const carousel of document.querySelectorAll("[data-visual-carousel]")) {
+    const viewport = carousel.querySelector("[data-visual-viewport]");
+    const cards = Array.from(carousel.querySelectorAll(".visual-card"));
+    const previous = carousel.querySelector("[data-visual-prev]");
+    const next = carousel.querySelector("[data-visual-next]");
+    const count = carousel.querySelector("[data-visual-count]");
+    if (!viewport || cards.length < 2) continue;
+
+    const update = () => {
+      const index = Math.round(viewport.scrollLeft / Math.max(viewport.clientWidth, 1));
+      if (count) count.textContent = (index + 1) + " / " + cards.length;
+      previous.disabled = index <= 0;
+      next.disabled = index >= cards.length - 1;
+    };
+    previous.addEventListener("click", () => viewport.scrollBy({ left: -viewport.clientWidth, behavior: "smooth" }));
+    next.addEventListener("click", () => viewport.scrollBy({ left: viewport.clientWidth, behavior: "smooth" }));
+    viewport.addEventListener("scroll", () => window.requestAnimationFrame(update), { passive: true });
     update();
   }
 
