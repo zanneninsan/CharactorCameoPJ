@@ -2449,10 +2449,10 @@ function renderManzokukyoGallery(character) {
   const title = "記憶の画廊";
   const description = "真理の扉と赤い懺悔室のあいだに残された、未整理の視覚記録を巡る展示エリアです。";
   const seals = new Map([
-    [2, { order: 3, fragment: "と" }],
+    [2, { order: 3, fragment: "い" }],
     [9, { order: 1, fragment: "あ" }],
     [14, { order: 2, fragment: "か" }],
-    [21, { order: 4, fragment: "びら" }]
+    [21, { order: 4, fragment: "とびら" }]
   ]);
   const items = Array.from({ length: 24 }, (_, index) => {
     const number = index + 1;
