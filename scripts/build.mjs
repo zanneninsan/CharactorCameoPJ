@@ -95,16 +95,19 @@ async function build() {
           const manzokukyoDir = path.join(characterDir, "manzokukyo");
           const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
+          const manzokukyoGalleryDir = path.join(manzokukyoTruthDir, "gallery");
           const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
           const manzokukyoArchiveDir = path.join(manzokukyoRedHouseDir, "archive");
           await mkdir(manzokukyoDir, { recursive: true });
           await mkdir(manzokukyoNovelDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
+          await mkdir(manzokukyoGalleryDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
           await mkdir(manzokukyoArchiveDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
           await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
+          await writeFile(path.join(manzokukyoGalleryDir, "index.html"), renderManzokukyoGallery(character), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
           await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
@@ -254,6 +257,7 @@ async function generateManzokukyoAssets(characterDir) {
   const truthChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "truth-chamber.png");
   const redConfessionChamberPath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "red-confession-chamber.png");
   const memoryArchivePath = path.join(contentDir, "zannenin", "assets", "manzokukyo", "memory-archive.png");
+  const gallerySourceDir = path.join(contentDir, "zannenin", "assets", "manzokukyo", "gallery");
   const propAssets = [
     ["prop-coffin.png", "prop-coffin.webp", 760],
     ["prop-mirror.png", "prop-mirror.webp", 760],
@@ -350,6 +354,21 @@ async function generateManzokukyoAssets(characterDir) {
         .modulate({ brightness: 0.9, saturation: 0.88 })
         .webp({ quality: 58 })
         .toFile(path.join(outputDir, outputName));
+    }
+  }
+
+  if (await fileExists(gallerySourceDir)) {
+    const galleryOutputDir = path.join(outputDir, "gallery");
+    await mkdir(galleryOutputDir, { recursive: true });
+    const galleryFiles = (await readdir(gallerySourceDir))
+      .filter((file) => /^gallery-\d+\.png$/i.test(file))
+      .sort((a, b) => a.localeCompare(b, "en"));
+    for (const file of galleryFiles) {
+      const inputPath = path.join(gallerySourceDir, file);
+      const basename = path.basename(file, path.extname(file));
+      const render = () => sharp(inputPath).resize({ width: 960, withoutEnlargement: true });
+      await render().avif({ quality: 52, effort: 6 }).toFile(path.join(galleryOutputDir, `${basename}.avif`));
+      await render().webp({ quality: 82 }).toFile(path.join(galleryOutputDir, `${basename}.webp`));
     }
   }
 }
@@ -1693,7 +1712,7 @@ function renderManzokukyoTruth(character) {
         </div>
         <div class="truth-presence" aria-hidden="true"></div>
 
-        <form class="truth-console" data-truth-gate data-answers="満足|まんぞく" data-next-url="./red-house/">
+        <form class="truth-console" data-truth-gate data-answers="満足|まんぞく" data-next-url="./gallery/">
           <div class="truth-console-head">
             <span>Offering terminal</span>
             <output data-denial-meter>00 / 03</output>
@@ -1733,7 +1752,7 @@ function renderManzokukyoTruth(character) {
         const runeButtons = Array.from(form.querySelectorAll("[data-truth-rune]"));
         const mobileQuery = window.matchMedia("(max-width: 720px)");
         const answers = (form.dataset.answers || "").split("|").map((item) => item.trim()).filter(Boolean);
-        const nextUrl = form.dataset.nextUrl || "./red-house/";
+        const nextUrl = form.dataset.nextUrl || "./gallery/";
         const badMessages = [
           "違う。いまの声は、奥の誰かに届いた。",
           "祭壇の下で、爪が石をなぞっている。",
@@ -2422,6 +2441,63 @@ function renderZanneninCharacter(character) {
         </div>
         ${hasRandomVideos || hasMusicVideos ? renderRandomDriveVideoScript() : ""}
       </main>
+    `
+  });
+}
+
+function renderManzokukyoGallery(character) {
+  const title = "記憶の画廊";
+  const description = "真理の扉と赤い懺悔室のあいだに残された、未整理の視覚記録を巡る展示エリアです。";
+  const items = Array.from({ length: 24 }, (_, index) => {
+    const number = index + 1;
+    const shelf = number <= 6 ? "I / first impressions" : number <= 12 ? "II / lingering scenes" : number <= 18 ? "III / unsorted devotion" : "IV / afterimage";
+    return { number, id: String(number).padStart(2, "0"), shelf };
+  });
+  const featured = items.slice(0, 3);
+  const wall = items.slice(3);
+  const image = (item, eager = false) => `<picture><source srcset="../../../assets/generated/manzokukyo/gallery/gallery-${item.id}.avif?${assetVersionQuery}" type="image/avif"><img src="../../../assets/generated/manzokukyo/gallery/gallery-${item.id}.webp?${assetVersionQuery}" alt="記録 ${item.id}" ${eager ? "fetchpriority=\"high\"" : "loading=\"lazy\""}></picture>`;
+  const card = (item, className = "") => `<button class="gallery-frame ${className}" type="button" data-gallery-index="${item.number - 1}" aria-label="記録 ${item.id} を拡大表示"><span class="gallery-frame-image">${image(item)}</span><span class="gallery-frame-meta"><b>ARCHIVE ${item.id}</b><small>${escapeHtml(item.shelf)}</small></span></button>`;
+
+  return htmlPage({
+    title: `${title} | 満足教`,
+    description,
+    urlPath: `${character.id}/manzokukyo/truth/gallery/`,
+    imagePath: `${character.id}/assets/generated/manzokukyo/gallery/gallery-01.webp`,
+    type: "website",
+    theme: character.theme,
+    stylesheetHref: "../../../../styles.css",
+    body: `
+      <style>
+        :root { --gallery-ink:#f4eddc; --gallery-paper:#15131a; --gallery-dark:#07070a; --gallery-gold:#d7b45e; --gallery-red:#b53642; --gallery-line:rgba(233,211,154,.22); }
+        html { background: var(--gallery-dark); }
+        body { margin:0; background:radial-gradient(circle at 84% 6%,rgba(126,93,59,.2),transparent 28rem),linear-gradient(115deg,#060609,#121015 58%,#09090b); color:var(--gallery-ink); font-family:"Noto Sans JP",system-ui,sans-serif; }
+        *,*::before,*::after { box-sizing:border-box; }
+        .gallery-page { min-height:100vh; overflow:hidden; position:relative; isolation:isolate; }
+        .gallery-page::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.28; z-index:-1; background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.025) 4px),radial-gradient(circle at 50% 20%,transparent 0 30%,rgba(0,0,0,.74) 88%); }
+        .gallery-topbar { display:flex; justify-content:space-between; gap:2rem; align-items:center; padding:1.25rem clamp(1.25rem,4vw,5rem); border-bottom:1px solid var(--gallery-line); letter-spacing:.13em; font-size:.73rem; position:relative; z-index:2; }
+        .gallery-topbar strong { color:var(--gallery-gold); }
+        .gallery-nav { display:flex; gap:1.2rem; } .gallery-nav a { color:inherit; text-decoration:none; opacity:.8; } .gallery-nav a:hover { color:var(--gallery-gold); opacity:1; }
+        .gallery-intro { min-height:min(82vh,820px); padding:clamp(3.5rem,8vw,8rem) clamp(1.25rem,7vw,10rem) 4rem; display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,43vw); gap:clamp(2rem,6vw,7rem); align-items:center; position:relative; }
+        .gallery-intro-copy { max-width:43rem; position:relative; z-index:1; } .gallery-eyebrow { color:var(--gallery-gold); font-size:.72rem; font-weight:800; letter-spacing:.2em; text-transform:uppercase; display:flex; align-items:center; gap:.75rem; } .gallery-eyebrow::before { content:""; display:block; width:3rem; height:1px; background:currentColor; }
+        .gallery-intro h1 { font-family:Georgia,"Yu Mincho",serif; font-size:clamp(3.6rem,9vw,8.8rem); font-weight:500; line-height:.9; margin:.8rem 0 1.8rem; letter-spacing:.04em; text-wrap:balance; color:var(--gallery-ink) !important; text-shadow:0 2px 0 #050507,0 0 25px rgba(215,180,94,.15); } .gallery-intro p { line-height:2; max-width:34rem; color:rgba(244,237,220,.75); }
+        .gallery-stats { display:flex; flex-wrap:wrap; gap:1.6rem; margin-top:2.4rem; } .gallery-stats div { border-left:1px solid var(--gallery-gold); padding-left:.8rem; } .gallery-stats b { display:block; font-family:Georgia,serif; font-size:2rem; line-height:1; color:var(--gallery-gold); } .gallery-stats small { font-size:.64rem; letter-spacing:.12em; opacity:.55; }
+        .gallery-featured { display:grid; grid-template-columns:1fr .66fr; grid-template-rows:1fr 1fr; gap:.7rem; height:min(60vw,720px); position:relative; } .gallery-featured .gallery-frame:first-child { grid-row:1 / 3; } .gallery-frame { color:inherit; padding:0; border:1px solid rgba(233,211,154,.28); background:#0b0b0f; cursor:zoom-in; position:relative; overflow:hidden; text-align:left; transition:transform .35s ease,border-color .35s ease,box-shadow .35s ease; } .gallery-frame:hover { transform:translateY(-7px); border-color:var(--gallery-gold); box-shadow:0 16px 38px rgba(0,0,0,.42); z-index:1; } .gallery-frame-image,.gallery-frame picture,.gallery-frame img { display:block; width:100%; height:100%; } .gallery-frame img { object-fit:cover; transition:transform .6s ease,filter .4s ease; filter:saturate(.9) contrast(1.04); } .gallery-frame:hover img { transform:scale(1.04); filter:saturate(1.05); }
+        .gallery-featured .gallery-frame-meta { position:absolute; inset:auto 0 0; padding:1rem; background:linear-gradient(transparent,rgba(0,0,0,.86)); } .gallery-frame-meta { display:flex; flex-direction:column; gap:.25rem; letter-spacing:.1em; } .gallery-frame-meta b { font-size:.68rem; } .gallery-frame-meta small { font-size:.58rem; opacity:.6; }
+        .gallery-section { padding:clamp(5rem,10vw,10rem) clamp(1.25rem,7vw,10rem); border-top:1px solid var(--gallery-line); position:relative; } .gallery-section-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; margin-bottom:2.4rem; } .gallery-section-header h2 { font-family:Georgia,"Yu Mincho",serif; font-size:clamp(2.2rem,4vw,4.4rem); font-weight:500; margin:.45rem 0 0; color:var(--gallery-ink) !important; } .gallery-section-header p { max-width:31rem; color:rgba(244,237,220,.62); line-height:1.8; font-size:.9rem; }
+        .gallery-wall { columns:4 220px; column-gap:1rem; } .gallery-wall .gallery-frame { width:100%; display:block; margin:0 0 1rem; break-inside:avoid; aspect-ratio:768/1080; } .gallery-wall .gallery-frame-meta { padding:.7rem .8rem; position:absolute; inset:auto 0 0; background:linear-gradient(transparent,rgba(0,0,0,.86)); opacity:0; transform:translateY(12px); transition:.3s ease; } .gallery-wall .gallery-frame:hover .gallery-frame-meta { opacity:1; transform:translateY(0); }
+        .gallery-index { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--gallery-line); border:1px solid var(--gallery-line); margin-top:4rem; } .gallery-index div { padding:1.1rem; background:#0e0d12; } .gallery-index b { color:var(--gallery-gold); font-size:.75rem; letter-spacing:.12em; } .gallery-index span { display:block; margin-top:.35rem; font-size:.72rem; opacity:.6; }
+        .gallery-exit { min-height:55vh; display:grid; place-items:center; text-align:center; padding:5rem 1.25rem; background:radial-gradient(ellipse at center,rgba(159,29,40,.2),transparent 54%),linear-gradient(#10090c,#050507); border-top:1px solid rgba(181,54,66,.45); } .gallery-exit h2 { font-family:Georgia,"Yu Mincho",serif; font-weight:500; font-size:clamp(2.7rem,6vw,6rem); margin:.6rem 0 1rem; color:var(--gallery-ink) !important; } .gallery-exit p { color:rgba(244,237,220,.68); line-height:1.9; } .gallery-exit a { display:inline-flex; margin-top:2rem; padding:1rem 2rem; border:1px solid var(--gallery-gold); color:#130e08; background:var(--gallery-gold); text-decoration:none; font-weight:700; letter-spacing:.09em; transition:.25s ease; } .gallery-exit a:hover { background:transparent; color:var(--gallery-gold); }
+        .gallery-lightbox { width:min(95vw,1280px); max-height:94vh; color:var(--gallery-ink); border:1px solid var(--gallery-gold); background:#09090d; padding:0; box-shadow:0 30px 90px rgba(0,0,0,.8); } .gallery-lightbox::backdrop { background:rgba(0,0,0,.84); backdrop-filter:blur(8px); } .gallery-lightbox-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(13rem,23%); min-height:min(78vh,800px); } .gallery-lightbox picture,.gallery-lightbox img { display:block; width:100%; height:100%; } .gallery-lightbox img { object-fit:contain; max-height:86vh; background:#030304; } .gallery-lightbox-aside { display:flex; flex-direction:column; padding:1.5rem; border-left:1px solid var(--gallery-line); } .gallery-lightbox-aside small { color:var(--gallery-gold); letter-spacing:.15em; } .gallery-lightbox-aside strong { font-family:Georgia,serif; font-size:2.2rem; font-weight:400; margin:.65rem 0; } .gallery-lightbox-aside p { font-size:.84rem; line-height:1.8; color:rgba(244,237,220,.68); } .gallery-lightbox-actions { margin-top:auto; display:flex; flex-wrap:wrap; gap:.55rem; } .gallery-lightbox button { border:1px solid var(--gallery-line); background:transparent; color:inherit; padding:.66rem .8rem; cursor:pointer; } .gallery-lightbox button:hover { border-color:var(--gallery-gold); color:var(--gallery-gold); }
+        @media(max-width:760px){ .gallery-topbar{align-items:flex-start;flex-direction:column;gap:.7rem}.gallery-intro{grid-template-columns:1fr;padding-top:4.5rem}.gallery-featured{height:112vw}.gallery-section-header{display:block}.gallery-wall{columns:2 150px;column-gap:.6rem}.gallery-wall .gallery-frame{margin-bottom:.6rem}.gallery-index{grid-template-columns:repeat(2,1fr);margin-top:2rem}.gallery-lightbox-inner{grid-template-columns:1fr}.gallery-lightbox-aside{border-left:0;border-top:1px solid var(--gallery-line);min-height:12rem}.gallery-lightbox img{max-height:64vh}.gallery-lightbox-aside p{display:none} }
+      </style>
+      <main class="gallery-page">
+        <header class="gallery-topbar"><strong>満足教 / Area 01.5</strong><nav class="gallery-nav"><a href="../">← 真理の扉</a><a href="../../../../">残念院さん公式設定</a></nav></header>
+        <section class="gallery-intro"><div class="gallery-intro-copy"><span class="gallery-eyebrow">Gallery of unfiled images</span><h1>記憶の画廊</h1><p>扉の向こうには、まだ名前を持たない記録だけが並んでいる。足を止めるたび、額縁はほんの少しだけこちらを見返す。</p><div class="gallery-stats"><div><b>24</b><small>FRAMED RECORDS</small></div><div><b>04</b><small>COLLECTION SHELVES</small></div><div><b>01.5</b><small>BETWEEN THE ROOMS</small></div></div></div><div class="gallery-featured">${featured.map((item,index)=>card(item,index===0?"gallery-frame-featured":"")).join("")}</div></section>
+        <section class="gallery-section"><header class="gallery-section-header"><div><span class="gallery-eyebrow">Open storage / 24 records</span><h2>未整理の展示室</h2></div><p>画面を押すと、一枚ずつの記録を静かに開けます。展示順は保管番号に従っています。</p></header><div class="gallery-wall">${wall.map((item)=>card(item)).join("")}</div><div class="gallery-index">${["I / FIRST IMPRESSIONS","II / LINGERING SCENES","III / UNSORTED DEVOTION","IV / AFTERIMAGE"].map((label,index)=>`<div><b>COLLECTION ${String(index+1).padStart(2,"0")}</b><span>${label}</span></div>`).join("")}</div></section>
+        <section class="gallery-exit"><div><span class="gallery-eyebrow">The next room is warm</span><h2>赤い灯りが、待っている。</h2><p>見終えた記録を胸の奥にしまってから、次の部屋へ。</p><a href="../red-house/">赤い懺悔室へ進む&nbsp; →</a></div></section>
+      </main>
+      <dialog class="gallery-lightbox" data-gallery-lightbox><div class="gallery-lightbox-inner"><picture><source data-gallery-avif type="image/avif"><img data-gallery-image alt="拡大した記録"></picture><aside class="gallery-lightbox-aside"><small data-gallery-shelf></small><strong data-gallery-title></strong><p>この記録は画廊に保管されています。静かに閉じれば、展示室へ戻れます。</p><div class="gallery-lightbox-actions"><button type="button" data-gallery-prev>← 前へ</button><button type="button" data-gallery-next>次へ →</button><button type="button" data-gallery-close>閉じる</button></div></aside></div></dialog>
+      <script>(()=>{const records=${JSON.stringify(items.map(({number,id,shelf})=>({number,id,shelf})))};const dialog=document.querySelector('[data-gallery-lightbox]');if(!dialog)return;const img=dialog.querySelector('[data-gallery-image]'),avif=dialog.querySelector('[data-gallery-avif]'),title=dialog.querySelector('[data-gallery-title]'),shelf=dialog.querySelector('[data-gallery-shelf]');let current=0;const show=(index)=>{current=(index+records.length)%records.length;const item=records[current];const base='../../../assets/generated/manzokukyo/gallery/gallery-'+item.id;avif.srcset=base+'.avif?${assetVersionQuery}';img.src=base+'.webp?${assetVersionQuery}';title.textContent='ARCHIVE '+item.id;shelf.textContent=item.shelf;};document.querySelectorAll('[data-gallery-index]').forEach(button=>button.addEventListener('click',()=>{show(Number(button.dataset.galleryIndex));dialog.showModal();}));dialog.querySelector('[data-gallery-prev]').addEventListener('click',()=>show(current-1));dialog.querySelector('[data-gallery-next]').addEventListener('click',()=>show(current+1));dialog.querySelector('[data-gallery-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});document.addEventListener('keydown',event=>{if(!dialog.open)return;if(event.key==='ArrowLeft')show(current-1);if(event.key==='ArrowRight')show(current+1);});})();</script>
     `
   });
 }
@@ -3570,7 +3646,7 @@ function renderManzokukyoRedHouse(character) {
         <header class="red-topbar">
           <span class="red-area">Satisfaction Cult / Area 02</span>
           <nav class="red-nav" aria-label="赤い懺悔室メニュー">
-            <a href="../">← 真理の扉</a>
+            <a href="../gallery/">← 記憶の画廊</a>
             <a href="../../../">残念院さん公式設定</a>
           </nav>
         </header>
@@ -10053,6 +10129,7 @@ function renderSitemap(characters) {
         { loc: absoluteUrl(`${character.id}/manzokukyo/`), priority: "0.7" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/novel/`), priority: "0.5" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/`), priority: "0.6" },
+        { loc: absoluteUrl(`${character.id}/manzokukyo/truth/gallery/`), priority: "0.5" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/manzokukyo/truth/red-house/archive/`), priority: "0.4" },
         { loc: absoluteUrl(`${character.id}/desktopchillko/`), priority: "0.7" },
