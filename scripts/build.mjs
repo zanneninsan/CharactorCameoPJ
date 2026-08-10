@@ -9300,14 +9300,17 @@ function renderTimelineGroups(character) {
               <div class="timeline-marker">
                 ${renderTimelineDate(item.date)}
               </div>
-              <figure class="timeline-media">
-                <img src="${escapeHtml(timelineImageSrc(item))}" alt="${escapeHtml(timelineImageAlt(item, character))}" loading="lazy">
-              </figure>
               <div class="timeline-copy">
                 <h3>${escapeHtml(item.event)}</h3>
                 ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
                 ${timelineImageCaption(item) ? `<p class="timeline-image-caption">${escapeHtml(timelineImageCaption(item))}</p>` : ""}
               </div>
+              <figure class="timeline-media">
+                <a href="${escapeHtml(timelineImageSrc(item))}" target="_blank" rel="noopener noreferrer" data-lightbox-image data-lightbox-group="timeline" aria-label="${escapeHtml(item.event)}のイベントCGを拡大表示">
+                  <img src="${escapeHtml(timelineImageSrc(item))}" alt="${escapeHtml(timelineImageAlt(item, character))}" loading="lazy">
+                  <span>CGを拡大</span>
+                </a>
+              </figure>
             </li>
           `).join("")}
         </ol>
@@ -10180,6 +10183,7 @@ function renderClientScript() {
     const modalPrev = modal.querySelector("[data-modal-prev]");
     const modalNext = modal.querySelector("[data-modal-next]");
     let currentImageIndex = 0;
+    let activeLightboxLinks = lightboxLinks;
 
     const getLightboxItem = (link) => {
       const image = link.querySelector("img");
@@ -10192,11 +10196,11 @@ function renderClientScript() {
     };
 
     const showImageAt = (index) => {
-      currentImageIndex = (index + lightboxLinks.length) % lightboxLinks.length;
-      const item = getLightboxItem(lightboxLinks[currentImageIndex]);
+      currentImageIndex = (index + activeLightboxLinks.length) % activeLightboxLinks.length;
+      const item = getLightboxItem(activeLightboxLinks[currentImageIndex]);
       modalTitle.textContent = item.title;
       modalCaption.textContent = item.caption;
-      modalCount.textContent = (currentImageIndex + 1) + " / " + lightboxLinks.length;
+      modalCount.textContent = (currentImageIndex + 1) + " / " + activeLightboxLinks.length;
       modalImage.src = item.href;
       modalImage.alt = item.title;
       modalOpen.href = item.href;
@@ -10225,7 +10229,11 @@ function renderClientScript() {
           return;
         }
         event.preventDefault();
-        showImageAt(index);
+        const group = link.dataset.lightboxGroup;
+        activeLightboxLinks = group
+          ? lightboxLinks.filter((candidate) => candidate.dataset.lightboxGroup === group)
+          : lightboxLinks;
+        showImageAt(activeLightboxLinks.indexOf(link));
         modal.showModal();
       });
     });
