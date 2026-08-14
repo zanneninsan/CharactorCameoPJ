@@ -2180,18 +2180,26 @@ body.zannenin-home {
   }
 
   .zn-page .timeline li {
-    grid-template-columns: 62px minmax(0, 1fr);
-    gap: 9px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 18px 0 24px 28px;
   }
 
-  .zn-page .timeline-marker,
-  .zn-page .timeline-media {
-    grid-column: auto;
+  .zn-page .timeline-marker {
+    grid-column: 1;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .zn-page .timeline-marker time,
+  .zn-page .timeline-marker span {
+    font-size: 1.22rem;
+    line-height: 1.1;
   }
 
   .zn-page .timeline-copy {
-    grid-column: 2;
-    padding: 8px 10px;
+    grid-column: 1;
+    padding: 14px;
   }
 
   .zn-page .timeline-group {
@@ -2208,15 +2216,18 @@ body.zannenin-home {
   }
 
   .zn-page .timeline::before {
-    left: 66px;
+    left: 8px;
   }
 
   .zn-page .timeline li::before {
-    left: 60px;
+    top: 28px;
+    left: 2px;
   }
 
   .zn-page .timeline-media {
+    grid-column: 1;
     width: 100%;
+    max-width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
   }

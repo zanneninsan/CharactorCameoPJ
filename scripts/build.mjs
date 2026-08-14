@@ -13260,40 +13260,78 @@ body[data-design="modern"] .timeline li {
   }
 
   .image-modal {
-    width: 96vw;
-    max-height: 92vh;
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .image-modal-frame {
-    max-height: 92vh;
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 16px);
+    overflow: hidden;
   }
 
   .image-modal-toolbar {
+    min-width: 0;
     align-items: stretch;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .image-modal-toolbar strong {
+    overflow: visible;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    text-align: center;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .image-modal-actions {
+    display: grid;
     width: 100%;
-    flex-wrap: wrap;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 8px;
   }
 
   .image-modal-actions [data-modal-count] {
+    grid-column: 1 / -1;
     width: 100%;
     text-align: center;
   }
 
   .image-modal-actions a,
   .image-modal-actions button {
-    flex: 1 1 0;
+    width: 100%;
     min-width: 0;
+    min-height: 44px;
     padding-right: 10px;
     padding-left: 10px;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .image-modal-stage {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .image-modal img {
-    max-height: calc(92vh - 174px);
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 190px);
   }
 
   .image-modal-nav {
