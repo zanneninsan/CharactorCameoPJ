@@ -10233,7 +10233,13 @@ function renderClientScript() {
   const menuLinks = Array.from(document.querySelectorAll(".page-menu a[href^='#']"));
   const sections = menuLinks
     .map((link) => document.getElementById(link.getAttribute("href").slice(1)))
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => {
+      const position = a.compareDocumentPosition(b);
+      if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+      if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+      return 0;
+    });
 
   if (pageMenu && menuLinks.length && sections.length) {
     let activeId = "";
@@ -10267,15 +10273,19 @@ function renderClientScript() {
     const updateActiveSection = () => {
       ticking = false;
       const offset = pageMenu.offsetHeight + 28;
-      let currentId = sections[0].id;
-      for (const section of sections) {
-        if (section.getBoundingClientRect().top - offset <= 0) {
-          currentId = section.id;
-        } else {
-          break;
-        }
+      const passed = sections
+        .map((section) => ({ section, top: section.getBoundingClientRect().top }))
+        .filter(({ top }) => top <= offset);
+
+      if (!passed.length) {
+        setActive(sections[0].id);
+        return;
       }
-      setActive(currentId);
+
+      const nearestTop = Math.max(...passed.map(({ top }) => top));
+      const nearest = passed.filter(({ top }) => Math.abs(top - nearestTop) < 2);
+      const current = nearest.find(({ section }) => section.id === activeId) || nearest[0];
+      setActive(current.section.id);
     };
 
     const requestUpdate = () => {

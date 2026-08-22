@@ -218,6 +218,18 @@ body.zannenin-home {
   display: none;
 }
 
+.zannenin-home .hidden-entrances {
+  background: #18171b;
+}
+
+.zannenin-home .hidden-entrance {
+  color: transparent;
+}
+
+.zannenin-home .hidden-entrance:focus-visible {
+  color: var(--zn-paper);
+}
+
 .zn-hero-profile {
   display: none;
 }
@@ -821,12 +833,18 @@ body.zannenin-home {
   text-decoration: none;
 }
 
-.zannenin-home .page-menu a:hover,
 .zannenin-home .page-menu a:focus-visible,
 .zannenin-home .page-menu a.is-active,
 .zannenin-home .page-menu a[aria-current="true"] {
   background: var(--zn-gold);
   color: var(--zn-black);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .zannenin-home .page-menu a:hover {
+    background: var(--zn-gold);
+    color: var(--zn-black);
+  }
 }
 
 .zn-band {
@@ -1570,8 +1588,8 @@ body.zannenin-home {
 
 .zn-footer-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.68fr) minmax(0, 1.32fr);
-  gap: 90px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 64px;
 }
 
 .zn-page .rights-panel,
@@ -2145,6 +2163,22 @@ body.zannenin-home {
   .zn-page .timeline-copy {
     grid-column: 2;
     padding: 10px 12px;
+  }
+
+  .zannenin-home .guestbook-widget {
+    display: flex;
+    justify-content: center;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    background: #18171b;
+  }
+
+  .zannenin-home .guestbook-launch {
+    position: static;
+    width: min(100%, 220px);
+    min-height: 42px;
+    padding: 8px 14px;
+    border-width: 2px;
+    font-size: 0.78rem;
   }
 
   .zn-endmark b {
