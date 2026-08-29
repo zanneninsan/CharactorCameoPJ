@@ -158,16 +158,28 @@
   "sideFlavors": [],
   "visualReferences": [
     {
+      "label": "プレーン三面図（新ヘッドホン）",
+      "path": "assets/plain-three-view.png",
+      "type": "outfit",
+      "description": "新しいヘッドホン仕様を含む全身三面図。正面、背面、側面から髪型、ヘッドホン、衣装、ソックス、靴の形状を確認できる。"
+    },
+    {
+      "label": "バストアップ（新ヘッドホン）",
+      "path": "assets/bust-up-headphone.png",
+      "type": "portrait",
+      "description": "新しいヘッドホンを装着した正面バストアップ。顔立ち、瞳、髪、首元とアクセサリーのバランスを確認できる。"
+    },
+    {
+      "label": "ヘッドホン詳細図",
+      "path": "assets/headphone-detail.png",
+      "type": "reference",
+      "description": "エルフ耳に沿うサイバーアクセサリーの装着イメージと、形状・発光ラインをまとめた詳細資料。"
+    },
+    {
       "label": "エリセ・ヴーガ設定資料",
       "path": "assets/erise-settei.png",
       "type": "reference",
       "description": "プロフィール、三面図、キービジュアル、衣装ディテールを含む設定資料。"
-    },
-    {
-      "label": "プレーン三面図",
-      "path": "assets/plain-three-view.png",
-      "type": "outfit",
-      "description": "背景や注釈のない全身三面図。正面、背面、側面から髪型、ヘッドホン、衣装、ソックス、靴の形状を確認できる。"
     }
   ],
   "timeline": [],
