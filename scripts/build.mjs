@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { resolveCharacterPageOverride } from "./page-overrides/index.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
@@ -834,7 +835,7 @@ function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
   const includeGuestbook = shouldRenderGuestbook(character);
-  const isErise = character.id === "erise-vooga";
+  const pageOverride = resolveCharacterPageOverride(character, { escapeHtml });
 
   return htmlPage({
     title: character.displayName,
@@ -843,13 +844,12 @@ function renderCharacter(character) {
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
-    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}${isErise ? `
-      <link rel="stylesheet" href="./assets/site/erise-home.css?v=20260830-1">` : ""}`,
+    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}${pageOverride.headExtra ?? ""}`,
     theme: character.theme,
-    bodyClass: isErise ? "erise-home" : "",
+    bodyClass: pageOverride.bodyClass ?? "",
     body: `
-      <main${isErise ? ` class="erise-page"` : ""}>
-        ${isErise ? renderEriseMasthead(character) : ""}
+      <main${pageOverride.mainClass ? ` class="${escapeHtml(pageOverride.mainClass)}"` : ""}>
+        ${pageOverride.beforeHero ?? ""}
         <section class="character-hero">
           ${renderBrandBanner(character)}
           <div class="shell">
@@ -858,11 +858,11 @@ function renderCharacter(character) {
             <h1>${escapeHtml(character.displayName)}</h1>
             ${character.catchphrase ? `<p class="catchphrase">${escapeHtml(character.catchphrase)}</p>` : ""}
             <p class="lead">${escapeHtml(character.summary)}</p>
-            ${isErise ? renderEriseHeroActions() : renderHeroFacts(character)}
-            ${isErise ? renderEriseSignalCard(character) : ""}
+            ${pageOverride.heroDetails ?? renderHeroFacts(character)}
+            ${pageOverride.heroAfterDetails ?? ""}
           </div>
         </section>
-        ${isErise ? renderEriseTicker() : ""}
+        ${pageOverride.afterHero ?? ""}
         ${renderPageMenu(character)}
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
@@ -9280,64 +9280,6 @@ function renderBrandBanner(character) {
   return `
     <div class="brand-banner-shell" id="top">
       <img class="brand-banner" src="./assets/generated/brand/banner-logo.webp" alt="${escapeHtml(alt)}">
-    </div>
-  `;
-}
-
-function renderEriseMasthead(character) {
-  const socialUrl = character.links?.find((link) => link.type === "social")?.url;
-  return `
-    <header class="erise-masthead">
-      <a class="erise-wordmark" href="#top" aria-label="${escapeHtml(character.displayName)} ページトップ">
-        <span>ERISE</span><b>VOOGA</b>
-      </a>
-      <nav aria-label="エリセ・ヴーガ ページナビゲーション">
-        <a href="../">Character Canon</a>
-        <a href="#visual">Visual Archive</a>
-        ${socialUrl ? `<a href="${escapeHtml(socialUrl)}" target="_blank" rel="noopener noreferrer">Official X</a>` : ""}
-      </nav>
-    </header>
-  `;
-}
-
-function renderEriseHeroActions() {
-  return `
-    <div class="erise-hero-actions">
-      <a class="is-primary" href="#profile">プロフィールを見る</a>
-      <a href="#visual">ビジュアル資料</a>
-    </div>
-  `;
-}
-
-function renderEriseSignalCard(character) {
-  const age = character.profile?.["年齢"] ?? "未定義";
-  const height = character.profile?.["身長"] ?? "未定義";
-  const fanName = character.profile?.["ファンネーム"] ?? "未定義";
-  return `
-    <aside class="erise-signal-card" aria-label="エリセ・ヴーガ 基本プロフィール">
-      <div class="erise-signal-head">
-        <span>LIVE PROFILE</span>
-        <i aria-hidden="true"></i>
-      </div>
-      <strong class="erise-signal-date">08<span>/23</span></strong>
-      <p>BIRTHDAY</p>
-      <div class="erise-signal-wave" aria-hidden="true"><span></span></div>
-      <dl>
-        <div><dt>VISUAL AGE</dt><dd>${escapeHtml(age)}</dd></div>
-        <div><dt>HEIGHT</dt><dd>${escapeHtml(height)}</dd></div>
-        <div><dt>FAN NAME</dt><dd>${escapeHtml(fanName)}</dd></div>
-      </dl>
-      <a href="#visual">Official visualを見る</a>
-    </aside>
-  `;
-}
-
-function renderEriseTicker() {
-  const items = ["VIRTUAL SINGER", "IMO V", "MINT × PINK", "SING & DANCE", "HEARTBEAT LIVE"];
-  const content = items.map((item) => `<span>${escapeHtml(item)}</span>`).join("");
-  return `
-    <div class="erise-ticker" aria-label="エリセ・ヴーガ ブランドモチーフ">
-      <div>${content}${content}</div>
     </div>
   `;
 }
