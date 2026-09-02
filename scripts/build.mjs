@@ -123,6 +123,7 @@ async function build() {
         await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
       }
 
+      await buildAnimeTeaser();
       await copyPublishedDocs();
       await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
       await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
@@ -133,6 +134,112 @@ async function build() {
   }
 
   console.log(`Loaded ${characters.length} character(s).`);
+}
+
+async function buildAnimeTeaser() {
+  const sourceDir = path.join(staticSitesDir, "series", "manzokukyo-zannenin");
+  const targetDir = path.join(distDir, "anime", "manzokukyo-zannenin");
+  const assetDir = path.join(targetDir, "assets");
+  const pilotPackageDir = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "video-prompts",
+    "packages",
+    "pilot-vtuber-proposal-seedance20-15s-v2",
+  );
+  const teaserCharacterDir = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "website-assets",
+    "manzokukyo-zannenin",
+  );
+  const titleLogoSourcePath = path.join(teaserCharacterDir, "zannenin-title-logo.png");
+  const emblemSourcePath = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "world-setting-assets",
+    "manzokukyo-emblem-v2.png",
+  );
+
+  await stat(path.join(sourceDir, "index.html"));
+  await mkdir(targetDir, { recursive: true });
+  await cp(sourceDir, targetDir, { recursive: true });
+  await mkdir(assetDir, { recursive: true });
+  await cp(titleLogoSourcePath, path.join(assetDir, "zannenin-title-logo.png"));
+
+  const characterAssets = [
+    { input: "believer-f-cutout.png", output: "bad-nori.webp" },
+    { input: "zannenin-cutout.png", output: "zannenin.webp" },
+    { input: "believer-b-cutout.png", output: "tsukkomi.webp" },
+  ];
+
+  for (const asset of characterAssets) {
+    const inputPath = path.join(teaserCharacterDir, asset.input);
+    await sharp(inputPath)
+      .resize({ height: 1500, withoutEnlargement: true })
+      .webp({ quality: 88, alphaQuality: 100, smartSubsample: true })
+      .toFile(path.join(assetDir, asset.output));
+  }
+
+  await sharp(emblemSourcePath)
+    .resize({ width: 420, withoutEnlargement: true })
+    .png()
+    .toFile(path.join(assetDir, "manzokukyo-emblem.png"));
+
+  const environmentPath = path.join(pilotPackageDir, "04-reused-community-hall-reference.png");
+  await sharp(environmentPath)
+    .resize({ width: 1800, withoutEnlargement: true })
+    .webp({ quality: 84, smartSubsample: true })
+    .toFile(path.join(assetDir, "community-room.webp"));
+
+  const zanneninLayer = await sharp(path.join(assetDir, "zannenin.webp"))
+    .resize({ height: 620 })
+    .png()
+    .toBuffer();
+  const badNoriLayer = await sharp(path.join(assetDir, "bad-nori.webp"))
+    .resize({ height: 560 })
+    .png()
+    .toBuffer();
+  const tsukkomiLayer = await sharp(path.join(assetDir, "tsukkomi.webp"))
+    .resize({ height: 560 })
+    .png()
+    .toBuffer();
+  const emblemLayer = await sharp(emblemSourcePath)
+    .resize({ width: 58, withoutEnlargement: true })
+    .png()
+    .toBuffer();
+  const ogpTypography = Buffer.from(`
+    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <rect x="45" y="70" width="545" height="486" rx="6" fill="#fff" fill-opacity=".92" stroke="#28242b" stroke-width="5"/>
+      <rect x="61" y="86" width="513" height="454" rx="2" fill="none" stroke="#f34d83" stroke-width="3"/>
+      <text x="139" y="134" fill="#f34d83" font-family="Yu Gothic, sans-serif" font-size="17" font-weight="800" letter-spacing="4">SHORT ANIME PROJECT</text>
+      <text x="82" y="240" fill="#28242b" font-family="Yu Mincho, serif" font-size="51" font-weight="700" letter-spacing="10">満足教の</text>
+      <text x="74" y="352" fill="#28242b" font-family="Yu Mincho, serif" font-size="98" font-weight="700" letter-spacing="-7">残念院さん</text>
+      <rect x="82" y="379" width="425" height="48" fill="#fff14d" stroke="#28242b" stroke-width="3"/>
+      <text x="104" y="411" fill="#28242b" font-family="Yu Gothic, sans-serif" font-size="20" font-weight="800" letter-spacing="4">サティスファクション計画</text>
+      <text x="83" y="475" fill="#f34d83" font-family="Yu Gothic, sans-serif" font-size="22" font-weight="800" letter-spacing="1">満足を求めて、今日も会議はだいたい脱線。</text>
+      <text x="84" y="512" fill="#9175e9" font-family="Yu Gothic, sans-serif" font-size="14" font-weight="800" letter-spacing="3">PILOT FILM IN PRODUCTION</text>
+    </svg>`);
+  await sharp(path.join(sourceDir, "social-background.png"))
+    .resize(1200, 630, { fit: "cover" })
+    .composite([
+      { input: badNoriLayer, left: 610, top: 110, blend: "over" },
+      { input: tsukkomiLayer, left: 935, top: 115, blend: "over" },
+      { input: zanneninLayer, left: 765, top: 30, blend: "over" },
+      { input: emblemLayer, left: 66, top: 94, blend: "over" },
+      { input: ogpTypography, left: 0, top: 0, blend: "over" },
+    ])
+    .jpeg({ quality: 90, chromaSubsampling: "4:4:4" })
+    .toFile(path.join(assetDir, "ogp.jpg"));
 }
 
 async function acquireBuildLock() {
