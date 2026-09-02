@@ -38,20 +38,43 @@ believer_b.location = (1.40, 0.23, 0)
 believer_b.rotation_mode = "XYZ"
 believer_b.rotation_euler = (0, 0, -1.57079632679)
 
+# In the official front view, both gold hairpins are on the viewer-right side,
+# alongside the braid. Correct their local side after turning the proxy west.
+for index in range(2):
+    hairpin = bpy.data.objects[f"BelieverB_Hairpin_{index}"]
+    hairpin.location.x = 0.12
+
 chair_b = bpy.data.objects["Chair_BelieverB_Root"]
 chair_b.location = (1.76, 0.23, 0)
 chair_b.rotation_mode = "XYZ"
 chair_b.rotation_euler = (0, 0, -1.57079632679)
 
-# Align the matte-charcoal laptop with Believer B and the chair.
+# Align the matte-charcoal laptop with Believer B and the chair. The hinge/lid is
+# on the west (camera) edge; the keyboard and screen face east toward Believer B.
 laptop_base = bpy.data.objects["Laptop_Base"]
-laptop_base.location = (1.00, 0.23, 0.86)
+laptop_base.location = (1.06, 0.23, 0.86)
 laptop_base.rotation_mode = "XYZ"
 laptop_base.rotation_euler = (0, 0, 0)
 laptop_lid = bpy.data.objects["Laptop_Lid_Exterior"]
-laptop_lid.location = (1.10, 0.23, 1.08)
+laptop_lid.location = (0.72, 0.23, 1.08)
 laptop_lid.rotation_mode = "XYZ"
 laptop_lid.rotation_euler = (0, -0.17453292520, 0)
+
+lid_rotation = tuple(laptop_lid.rotation_euler)
+bpy.ops.mesh.primitive_cube_add(
+    size=2,
+    location=(0.775, 0.23, 1.08),
+    rotation=lid_rotation,
+)
+laptop_screen = bpy.context.active_object
+laptop_screen.name = "Laptop_Screen_Facing_BelieverB"
+laptop_screen.scale = (0.010, 0.24, 0.20)
+laptop_screen.color = (0.035, 0.040, 0.045, 1.0)
+bpy.ops.mesh.primitive_cube_add(size=2, location=(1.10, 0.23, 0.915))
+laptop_keyboard = bpy.context.active_object
+laptop_keyboard.name = "Laptop_Keyboard_Facing_BelieverB"
+laptop_keyboard.scale = (0.24, 0.23, 0.012)
+laptop_keyboard.color = (0.075, 0.080, 0.085, 1.0)
 
 # Fit the complete door inside its authored 5-25% horizontal range.
 door = bpy.data.objects["Door"]
@@ -97,15 +120,38 @@ door_x = screen_x_bounds(door)
 switch_x = screen_x_bounds(switch_plate)
 subject_x = screen_x_bounds(bpy.data.objects["BelieverB_Head"])
 laptop_x = screen_x_bounds(laptop_lid)
+hairpin_points = []
+for index in range(2):
+    hairpin = bpy.data.objects[f"BelieverB_Hairpin_{index}"]
+    hairpin_points.extend(
+        world_to_camera_view(
+            scene,
+            camera,
+            hairpin.matrix_world @ Vector(corner),
+        ).x
+        for corner in hairpin.bound_box
+    )
+hairpin_x = [round(min(hairpin_points), 4), round(max(hairpin_points), 4)]
 switch_center = round(sum(switch_x) / 2, 4)
 subject_center = round(sum(subject_x) / 2, 4)
 laptop_center = round(sum(laptop_x) / 2, 4)
+laptop_orientation_ok = (
+    laptop_lid.location.x
+    < laptop_screen.location.x
+    < believer_b.location.x
+    and laptop_lid.location.x
+    < laptop_keyboard.location.x
+    < believer_b.location.x
+)
+hairpins_viewer_right = sum(hairpin_x) / 2 > subject_center
 passed = (
     0.04 <= door_x[0] <= 0.06
     and 0.24 <= door_x[1] <= 0.26
     and 0.30 <= switch_center <= 0.34
     and 0.54 <= subject_center <= 0.58
     and 0.54 <= laptop_center <= 0.58
+    and laptop_orientation_ok
+    and hairpins_viewer_right
 )
 
 report = {
@@ -124,6 +170,18 @@ report = {
         "light_switch_center": switch_center,
         "believer_b_head_center": subject_center,
         "laptop_center": laptop_center,
+        "hairpin_bounds": hairpin_x,
+    },
+    "laptop_orientation": {
+        "screen_faces": "east/+X toward BelieverB",
+        "exterior_faces": "west/-X toward camera",
+        "hinge_side": "west/-X",
+        "keyboard_side": "east/+X",
+        "validated": laptop_orientation_ok,
+    },
+    "believer_b_hairpins": {
+        "side": "viewer-right, same side as braid",
+        "validated": hairpins_viewer_right,
     },
     "visible_characters": ["BelieverB"],
     "hidden_for_camera_position": ["Zannenin", "BelieverF"],

@@ -23,7 +23,22 @@
     ],
     "light_switch_center": 0.3211,
     "believer_b_head_center": 0.5595,
-    "laptop_center": 0.562
+    "laptop_center": 0.5681,
+    "hairpin_bounds": [
+      0.5777,
+      0.6094
+    ]
+  },
+  "laptop_orientation": {
+    "screen_faces": "east/+X toward BelieverB",
+    "exterior_faces": "west/-X toward camera",
+    "hinge_side": "west/-X",
+    "keyboard_side": "east/+X",
+    "validated": true
+  },
+  "believer_b_hairpins": {
+    "side": "viewer-right, same side as braid",
+    "validated": true
   },
   "visible_characters": [
     "BelieverB"

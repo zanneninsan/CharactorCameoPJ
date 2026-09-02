@@ -66,3 +66,5 @@
 - 静止画: `stills/blender-room-layout-v1/scene02-former-cut02-frame-v1.png`
 - カメラ付きBlend: `stills/blender-room-layout-v1/scene02-former-cut02-camera-v1.blend`
 - 構図評価: `stills/blender-room-layout-v1/evaluation-scene02-former-cut02-v1.json`
+- PCは画面・キーボードを東側の信者Bへ向け、蝶番・無地の外装背面を西側カメラへ向ける。
+- 信者Bの金色ヘアピン2本は、正面画の画面右、編み込みと同じ側に置く。
