@@ -1,0 +1,35 @@
+{
+  "name": "full-script-scene02-former-cut02-still-v1",
+  "passed": true,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "camera": {
+    "name": "Camera_SCENE02_FormerCUT02",
+    "position": [
+      -3.2,
+      0.44,
+      1.25
+    ],
+    "view": "west seat toward east wall",
+    "projection": "perspective",
+    "lens_mm": 45
+  },
+  "screen_x": {
+    "door_bounds": [
+      0.0499,
+      0.2503
+    ],
+    "light_switch_center": 0.3211,
+    "believer_b_head_center": 0.5595,
+    "laptop_center": 0.562
+  },
+  "visible_characters": [
+    "BelieverB"
+  ],
+  "hidden_for_camera_position": [
+    "Zannenin",
+    "BelieverF"
+  ]
+}
