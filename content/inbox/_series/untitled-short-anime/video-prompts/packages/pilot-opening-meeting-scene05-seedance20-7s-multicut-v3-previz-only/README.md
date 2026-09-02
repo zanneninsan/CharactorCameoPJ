@@ -57,6 +57,16 @@ QCでは、各SHOTの人物数1、机1、黒い社長椅子1、パイプ椅子2�
 - 入口側: `previz/room-layout-v1/layout_0003.png`
 - 自動評価: `previz/room-layout-v1/evaluation-room-layout-v1.json`
 
+## SHOT 2静止画
+
+残念院さんへ切り返した第2ショットは、動きが落ち着いたフレーム120を1920×1080 PNGとして出力する。
+
+```powershell
+.\tools\blender-previz\render-scene05-shot2-still.ps1
+```
+
+- 静止画: `stills/scene05-shot2-frame120-v1.png`
+
 ## 音声タイミング
 
 - 信者B: `06-audio-believer-b-summary.mp3`。発話は動画内の約00:00.338〜00:03.614。
