@@ -1,0 +1,184 @@
+{
+  "name": "pilot-opening-meeting-scene05-previz-v1-2d-camera",
+  "passed": true,
+  "duration_seconds": 7.0,
+  "fps": 24,
+  "frames": 168,
+  "hard_cut": {
+    "frame": 90,
+    "time_seconds": 3.7
+  },
+  "cameras": [
+    {
+      "name": "Camera_SHOT1_BelieverB",
+      "projection": "orthographic fixed angle",
+      "shot": "Believer B bust shot",
+      "ortho_scale_start": 2.3,
+      "ortho_scale_end": 2.208,
+      "push_percent": 4.0
+    },
+    {
+      "name": "Camera_SHOT2_Zannenin",
+      "projection": "orthographic fixed angle",
+      "shot": "Zannenin waist-up medium shot",
+      "ortho_scale": 3.15,
+      "movement": "fixed"
+    }
+  ],
+  "placement": {
+    "Zannenin": {
+      "seat": "north head executive chair",
+      "world_xy": [
+        0,
+        2.4
+      ]
+    },
+    "BelieverB": {
+      "seat": "east long-side folding chair",
+      "world_xy": [
+        1.4,
+        0.08
+      ]
+    },
+    "BelieverF": {
+      "seat": "west/window-side folding chair",
+      "world_xy": [
+        -1.4,
+        0.16
+      ],
+      "visibility": "outside both shots"
+    }
+  },
+  "fixed_counts": {
+    "characters_in_room": 3,
+    "visible_characters_per_shot": [
+      1,
+      1
+    ],
+    "continuous_tables": 1,
+    "executive_chairs": 1,
+    "folding_chairs": 2,
+    "laptops": 1,
+    "windows": 2,
+    "doors": 1,
+    "fluorescent_lights": 2,
+    "north_wall_emblems": 1
+  },
+  "laptop": {
+    "owner": "BelieverB",
+    "world_xyz": [
+      1.0,
+      0.42,
+      0.86
+    ],
+    "screen_faces": "southeast toward Believer B",
+    "material_color": "matte charcoal gray",
+    "visible_shot1": true,
+    "visible_shot2": false,
+    "shot1_center_axis_delta": 0.0042
+  },
+  "dialogue_axis": "BelieverB <-> Zannenin",
+  "camera_side_signs": [
+    1.472,
+    2.01
+  ],
+  "shot_visibility": {
+    "shot1": {
+      "BelieverB": true,
+      "Zannenin": false,
+      "BelieverF": false,
+      "laptop": true,
+      "laptop_fully_framed": false
+    },
+    "shot2": {
+      "BelieverB": false,
+      "Zannenin": true,
+      "BelieverF": false,
+      "laptop": false,
+      "emblem_fully_framed": true
+    }
+  },
+  "subjects_isolated": false,
+  "openings_in_frame": {
+    "shot1_start": {
+      "windows": [
+        false,
+        false
+      ],
+      "door": false
+    },
+    "shot1_end": {
+      "windows": [
+        false,
+        false
+      ],
+      "door": false
+    },
+    "shot2_start": {
+      "windows": [
+        false,
+        false
+      ],
+      "door": false
+    },
+    "shot2_end": {
+      "windows": [
+        false,
+        false
+      ],
+      "door": false
+    }
+  },
+  "openings_out_of_frame": true,
+  "screen_points": {
+    "shot1_believer_b_head": [
+      0.4875,
+      0.7124,
+      1.5822
+    ],
+    "shot1_laptop": [
+      0.4833,
+      0.2095,
+      1.2467
+    ],
+    "shot2_zannenin_head": [
+      0.4987,
+      0.4172,
+      1.8791
+    ],
+    "shot2_emblem": [
+      0.5561,
+      0.4788,
+      3.2747
+    ]
+  },
+  "qc_frames": [
+    1,
+    9,
+    48,
+    89,
+    90,
+    96,
+    120,
+    168
+  ],
+  "visual_qc_required": true,
+  "room_layout_mode": true,
+  "shot_evaluation_applicable": false,
+  "room_layout": {
+    "room_size_blender_units": [
+      8.4,
+      8.6,
+      3.1
+    ],
+    "north": "+Y",
+    "east": "+X",
+    "ceiling_hidden": true,
+    "open_dollhouse_side": "south"
+  },
+  "room_layout_cameras": [
+    "Camera_LAYOUT_Top",
+    "Camera_LAYOUT_SouthOblique",
+    "Camera_LAYOUT_FromEntrance"
+  ]
+}

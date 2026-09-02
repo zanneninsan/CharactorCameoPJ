@@ -42,6 +42,21 @@ SCENE 5「要約と即答」。信者Bの要約から残念院さんの即答ま
 
 QCでは、各SHOTの人物数1、机1、黒い社長椅子1、パイプ椅子2、PC1、窓2、扉1を検査した。両SHOTの窓・扉は画角外、PCはSHOT 1だけに全体表示、二つのカメラは会話軸の同じ側で合格している。
 
+## 箱型の部屋配置モデル
+
+映像用プレビズと同じ座標から、天井を外した会議室全体の箱モデルを生成する。上面図、南側斜視、東壁の入口側から見た確認画像を同時に出力するため、長机、3席、PC、西壁の窓2つ、東壁の扉1つ、北壁の垂れ幕を一画面で確認できる。
+
+```powershell
+.\tools\blender-previz\build-scene05-room-layout-v1.ps1
+```
+
+- Blend: `previz/room-layout-v1/scene05-room-layout-box-v1.blend`
+- 3方向確認: `previz/room-layout-v1/room-layout-contact-sheet-v1.jpg`
+- 上面図: `previz/room-layout-v1/layout_0001.png`
+- 南側斜視: `previz/room-layout-v1/layout_0002.png`
+- 入口側: `previz/room-layout-v1/layout_0003.png`
+- 自動評価: `previz/room-layout-v1/evaluation-room-layout-v1.json`
+
 ## 音声タイミング
 
 - 信者B: `06-audio-believer-b-summary.mp3`。発話は動画内の約00:00.338〜00:03.614。

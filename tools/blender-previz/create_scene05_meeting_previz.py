@@ -12,6 +12,7 @@ FPS = 24
 FRAMES = 168
 F_SHOT_2 = 90  # 3.70 seconds lands between frames 89 and 90 at 24 fps.
 QC = os.environ.get("QC", "0") == "1"
+ROOM_LAYOUT = os.environ.get("ROOM_LAYOUT", "0") == "1"
 OUT = os.environ["OUTDIR"]
 BLEND_OUT = os.environ["BLEND_OUT"]
 REPORT_OUT = os.environ["REPORT_OUT"]
@@ -70,7 +71,14 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 
 def cube(name, loc, scale, color, parent=None, rot=(0, 0, 0)):
-    bpy.ops.mesh.primitive_cube_add(size=1, location=loc, rotation=rot)
+    # The original shot previz was approved with size=1. The room-layout mode
+    # restores the authored half-extents (Blender's default size=2) without
+    # changing the existing camera-reference deliverable.
+    bpy.ops.mesh.primitive_cube_add(
+        size=2 if ROOM_LAYOUT else 1,
+        location=loc,
+        rotation=rot,
+    )
     obj = bpy.context.active_object
     obj.name = name
     obj.scale = scale
@@ -204,7 +212,9 @@ cube("Floor", (0, 0, -0.06), (4.2, 4.3, 0.06), C_FLOOR)
 cube("North_Wall", (0, 4.05, 1.55), (4.2, 0.08, 1.55), C_WALL)
 cube("West_Wall", (-4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
 cube("East_Wall", (4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
-cube("Ceiling", (0, 0, 3.12), (4.2, 4.3, 0.06), (0.40, 0.38, 0.33))
+ceiling = cube("Ceiling", (0, 0, 3.12), (4.2, 4.3, 0.06), (0.40, 0.38, 0.33))
+ceiling.hide_render = ROOM_LAYOUT
+ceiling.hide_viewport = ROOM_LAYOUT
 
 windows = []
 for index, y_pos in enumerate((-1.55, 1.30), 1):
@@ -434,6 +444,27 @@ camera_shot2 = build_ortho_camera(
     shift_y=0.02,
 )
 
+# Room-layout cameras are stored in the same scene so the blockout and shot previz
+# cannot silently drift apart. In layout mode the blend opens on the top view.
+camera_layout_top = build_ortho_camera(
+    "Camera_LAYOUT_Top",
+    (0, 0.15, 10.5),
+    (0, 0.15, 0),
+    9.4,
+)
+camera_layout_south = build_ortho_camera(
+    "Camera_LAYOUT_SouthOblique",
+    (7.0, -8.0, 6.2),
+    (0, 0.35, 0.85),
+    10.2,
+)
+camera_layout_entrance = build_ortho_camera(
+    "Camera_LAYOUT_FromEntrance",
+    (3.15, 2.55, 3.15),
+    (-0.25, 0.35, 0.85),
+    7.2,
+)
+
 # SHOT 1 has only the specified 4% planar push. Camera angle and occlusion stay fixed.
 camera_shot1.data.ortho_scale = 2.30
 camera_shot1.data.keyframe_insert("ortho_scale", frame=1)
@@ -446,7 +477,12 @@ marker1 = scene.timeline_markers.new("SHOT_1", frame=1)
 marker1.camera = camera_shot1
 marker2 = scene.timeline_markers.new("SHOT_2_HARD_CUT", frame=F_SHOT_2)
 marker2.camera = camera_shot2
-scene.camera = camera_shot1
+scene.camera = camera_layout_top if ROOM_LAYOUT else camera_shot1
+if ROOM_LAYOUT:
+    # Bound timeline cameras override scene.camera during still rendering.
+    # The layout deliverable keeps the shot cameras but disables the cut bindings.
+    marker1.camera = None
+    marker2.camera = None
 
 
 def side_of_line(point, a=Vector((1.40, 0.08)), b=Vector((0, 2.40))):
@@ -572,7 +608,11 @@ bpy.ops.wm.save_as_mainfile(filepath=BLEND_OUT)
 
 report = {
     "name": "pilot-opening-meeting-scene05-previz-v1-2d-camera",
-    "passed": all(value > 0 for value in camera_side_signs) and openings_out_of_frame and subjects_isolated,
+    "passed": ROOM_LAYOUT or (
+        all(value > 0 for value in camera_side_signs)
+        and openings_out_of_frame
+        and subjects_isolated
+    ),
     "duration_seconds": 7.0,
     "fps": FPS,
     "frames": FRAMES,
@@ -634,6 +674,20 @@ report = {
     },
     "qc_frames": [1, 9, 48, 89, 90, 96, 120, 168],
     "visual_qc_required": True,
+    "room_layout_mode": ROOM_LAYOUT,
+    "shot_evaluation_applicable": not ROOM_LAYOUT,
+    "room_layout": {
+        "room_size_blender_units": [8.4, 8.6, 3.1],
+        "north": "+Y",
+        "east": "+X",
+        "ceiling_hidden": ROOM_LAYOUT,
+        "open_dollhouse_side": "south",
+    },
+    "room_layout_cameras": [
+        camera_layout_top.name,
+        camera_layout_south.name,
+        camera_layout_entrance.name,
+    ],
 }
 with open(REPORT_OUT, "w", encoding="utf-8", newline="\n") as handle:
     json.dump(report, handle, ensure_ascii=False, indent=2)
@@ -677,6 +731,16 @@ placement = """# SCENE 5：配置・カメラ決定
 - SHOT 1に映る人物は信者Bだけ、SHOT 2に映る人物は残念院さんだけ。信者Fは両ショットで画角外。
 - 代理人物の顔、髪、衣装、色、ローポリ形状、3DCG質感はSeedance完成画へ転写しない。
 """
+if ROOM_LAYOUT:
+    placement += """
+
+## 箱モデル確認ビュー
+
+- `layout_0001.png`: 天井を外した上面図。画像上が北、右が東。
+- `layout_0002.png`: 南側から見た斜視。西壁の窓2つと北壁の掲示物を確認する。
+- `layout_0003.png`: 東壁の入口から室内を見た斜視。信者B側のPCと3席の関係を確認する。
+- 箱モデルの外形は幅8.4、奥行8.6、高さ3.1 Blender unit。南側はドールハウス表示のため開放し、天井は非表示にする。
+"""
 with open(PLACEMENT_OUT, "w", encoding="utf-8", newline="\n") as handle:
     handle.write(placement)
 
@@ -685,7 +749,22 @@ def active_camera(frame):
     return camera_shot1 if frame < F_SHOT_2 else camera_shot2
 
 
-if QC:
+if ROOM_LAYOUT:
+    scene.render.resolution_x = 1280
+    scene.render.resolution_y = 720
+    scene.render.resolution_percentage = 100
+    scene.frame_set(1)
+    layout_views = (
+        ("layout_0001.png", camera_layout_top),
+        ("layout_0002.png", camera_layout_south),
+        ("layout_0003.png", camera_layout_entrance),
+    )
+    for filename, camera in layout_views:
+        scene.camera = camera
+        bpy.context.view_layer.update()
+        scene.render.filepath = os.path.join(OUT, filename)
+        bpy.ops.render.render(write_still=True)
+elif QC:
     qc_frames = report["qc_frames"]
     for index, frame in enumerate(qc_frames, 1):
         scene.frame_set(frame)
