@@ -80,6 +80,8 @@ laptop_keyboard.color = (0.075, 0.080, 0.085, 1.0)
 door = bpy.data.objects["Door"]
 door.location.y = 2.44
 door.scale.y = 0.56
+door_handle = bpy.data.objects["Door_Handle"]
+door_handle.location.y = 2.75
 
 # Add the east-wall light switch between the north-side door and Believer B.
 bpy.ops.mesh.primitive_cube_add(size=2, location=(3.86, 1.45, 1.40))
@@ -117,6 +119,7 @@ def screen_x_bounds(obj):
 
 bpy.context.view_layer.update()
 door_x = screen_x_bounds(door)
+door_handle_x = screen_x_bounds(door_handle)
 switch_x = screen_x_bounds(switch_plate)
 subject_x = screen_x_bounds(bpy.data.objects["BelieverB_Head"])
 laptop_x = screen_x_bounds(laptop_lid)
@@ -144,6 +147,7 @@ laptop_orientation_ok = (
     < believer_b.location.x
 )
 hairpins_viewer_right = sum(hairpin_x) / 2 > subject_center
+door_handle_on_left = sum(door_handle_x) / 2 < sum(door_x) / 2
 passed = (
     0.04 <= door_x[0] <= 0.06
     and 0.24 <= door_x[1] <= 0.26
@@ -152,6 +156,7 @@ passed = (
     and 0.54 <= laptop_center <= 0.58
     and laptop_orientation_ok
     and hairpins_viewer_right
+    and door_handle_on_left
 )
 
 report = {
@@ -167,6 +172,7 @@ report = {
     },
     "screen_x": {
         "door_bounds": door_x,
+        "door_handle_bounds": door_handle_x,
         "light_switch_center": switch_center,
         "believer_b_head_center": subject_center,
         "laptop_center": laptop_center,
@@ -182,6 +188,10 @@ report = {
     "believer_b_hairpins": {
         "side": "viewer-right, same side as braid",
         "validated": hairpins_viewer_right,
+    },
+    "door_handle": {
+        "side_from_room_view": "left",
+        "validated": door_handle_on_left,
     },
     "visible_characters": ["BelieverB"],
     "hidden_for_camera_position": ["Zannenin", "BelieverF"],

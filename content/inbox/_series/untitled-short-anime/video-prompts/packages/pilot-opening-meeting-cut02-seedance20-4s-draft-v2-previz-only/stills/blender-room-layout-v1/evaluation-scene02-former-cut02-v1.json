@@ -21,6 +21,10 @@
       0.0499,
       0.2503
     ],
+    "door_handle_bounds": [
+      0.0804,
+      0.1015
+    ],
     "light_switch_center": 0.3211,
     "believer_b_head_center": 0.5595,
     "laptop_center": 0.5681,
@@ -38,6 +42,10 @@
   },
   "believer_b_hairpins": {
     "side": "viewer-right, same side as braid",
+    "validated": true
+  },
+  "door_handle": {
+    "side_from_room_view": "left",
     "validated": true
   },
   "visible_characters": [

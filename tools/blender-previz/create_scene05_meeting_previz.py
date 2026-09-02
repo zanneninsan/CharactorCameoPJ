@@ -242,7 +242,9 @@ for index, y_pos in enumerate((-1.55, 1.30), 1):
 door = cube(
     "Door", (3.96, 2.55, 1.18), (0.05, 0.72, 1.18), (0.27, 0.17, 0.10)
 )
-cube("Door_Handle", (3.86, 2.05, 1.18), (0.06, 0.04, 0.04), C_GOLD)
+# From the room interior/east-wall front view, north (+Y) is screen-left.
+# Keep the handle on the left leaf edge in the shared room blockout.
+cube("Door_Handle", (3.86, 2.75, 1.18), (0.06, 0.04, 0.04), C_GOLD)
 for index, y_pos in enumerate((-1.15, 1.30), 1):
     cube(
         f"Fluorescent_{index}",
