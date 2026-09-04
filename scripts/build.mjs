@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { buildAnimeTeaserCute } from "./build-anime-teaser-cute.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
@@ -124,6 +125,7 @@ async function build() {
       }
 
       await buildAnimeTeaser();
+      await buildAnimeTeaserCute();
       await copyPublishedDocs();
       await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
       await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
