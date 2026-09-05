@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { buildAnimeTeaserCute } from "./build-anime-teaser-cute.mjs";
 import { buildManzokukyoPreview } from "./build-manzokukyo-preview.mjs";
+import { resolveCharacterPageOverride } from "./page-overrides/index.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
@@ -945,6 +946,7 @@ function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
   const includeGuestbook = shouldRenderGuestbook(character);
+  const pageOverride = resolveCharacterPageOverride(character, { escapeHtml, assetVersionQuery });
 
   return htmlPage({
     title: character.displayName,
@@ -953,10 +955,12 @@ function renderCharacter(character) {
     imagePath: `${character.id}/assets/generated/ogp.png`,
     type: "profile",
     structuredData: characterStructuredData(character, `${character.id}/`),
-    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}`,
+    headExtra: `${renderAiPromptHeadMetadata(character)}${includeGuestbook ? renderGuestbookHead("../") : ""}${pageOverride.headExtra ?? ""}`,
     theme: character.theme,
+    bodyClass: pageOverride.bodyClass ?? "",
     body: `
-      <main>
+      <main${pageOverride.mainClass ? ` class="${escapeHtml(pageOverride.mainClass)}"` : ""}>
+        ${pageOverride.beforeHero ?? ""}
         <section class="character-hero">
           ${renderBrandBanner(character)}
           <div class="shell">
@@ -965,9 +969,11 @@ function renderCharacter(character) {
             <h1>${escapeHtml(character.displayName)}</h1>
             ${character.catchphrase ? `<p class="catchphrase">${escapeHtml(character.catchphrase)}</p>` : ""}
             <p class="lead">${escapeHtml(character.summary)}</p>
-            ${renderHeroFacts(character)}
+            ${pageOverride.heroDetails ?? renderHeroFacts(character)}
+            ${pageOverride.heroAfterDetails ?? ""}
           </div>
         </section>
+        ${pageOverride.afterHero ?? ""}
         ${renderPageMenu(character)}
         <div class="shell content-layout">
           ${renderOfficialLinks(character)}
