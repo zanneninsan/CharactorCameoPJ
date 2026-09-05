@@ -16,18 +16,28 @@ const gamesDialog = document.querySelector('.games-dialog');
 const toggle = document.querySelector('.sound-toggle');
 const status = document.querySelector('.sound-status');
 const audio = document.querySelector('#ambient-audio');
+const roomHost = window.ManzokukyoRoom;
 let scene, travel = 0, queued = false, consentGiven = false, lastStep = 0, stepDistance = 0, stepIndex = 0, lastScroll = 0, navigationTimer, fadeTimer, departing = false;
 const found = new Set();
 const stopIds = [...STOPS.map(stop => stop.id), 'threshold'];
 for (const stop of STOPS) document.getElementById(stop.id).style.top = `calc(var(--walk-length) * ${stop.progress})`;
+function updateSoundControls({ enabled, musicVolume, effectsVolume, consentGiven: sharedConsent }) {
+  toggle.setAttribute('aria-pressed', String(enabled));
+  toggle.setAttribute('aria-label', enabled ? '音をオフにする' : '音をオンにする');
+  document.querySelector('[data-sound-label]').textContent = enabled ? 'SOUND ON' : 'SOUND OFF';
+  if (Number.isFinite(musicVolume)) document.querySelector('#music-volume').value = String(Math.round(musicVolume * 100));
+  if (Number.isFinite(effectsVolume)) document.querySelector('#effects-volume').value = String(Math.round(effectsVolume * 100));
+  if (sharedConsent) {
+    consentGiven = true;
+    if (dialog.open) { dialog.close(); document.body.classList.remove('modal-open'); }
+  }
+}
 const sound = createSound(audio, {
-  onChange({ enabled }) {
-    toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.setAttribute('aria-label', enabled ? '音をオフにする' : '音をオンにする');
-    document.querySelector('[data-sound-label]').textContent = enabled ? 'SOUND ON' : 'SOUND OFF';
-  },
+  onChange: updateSoundControls,
   onError(message) { status.textContent = message; }
 });
+consentGiven = Boolean(sound.consentGiven);
+updateSoundControls(sound.state());
 const guestbook = connectGuestbook({
   onChange(open) {
     lastScroll = 0; stepDistance = 0;
@@ -115,7 +125,7 @@ function showFallback() {
   status.textContent = 'この環境では立体表示を利用できません。下のリンクから各ページへ進めます。';
 }
 // Ask before the async scene import; audio never starts merely by loading the page.
-if (typeof dialog.showModal === 'function') {
+if (!consentGiven && typeof dialog.showModal === 'function') {
   dialog.showModal(); document.body.classList.add('modal-open');
 } else { consentGiven = true; }
 try {
@@ -192,28 +202,31 @@ document.querySelector('[data-gate]').addEventListener('click', event => {
   scene?.setProgress(1); scene?.openDoor();
   const duration = reducedMotion.matches ? 250 : 2100;
   fadeTimer = window.setTimeout(() => document.body.classList.add('is-leaving'), reducedMotion.matches ? 0 : 1450);
-  navigationTimer = window.setTimeout(() => { window.location.href = destination; }, duration);
+  navigationTimer = window.setTimeout(() => {
+    if (roomHost?.navigate) roomHost.navigate(destination); else window.location.href = destination;
+  }, duration);
 });
 window.addEventListener('pagehide', () => {
-  sound.silence(); scene?.pause(); clearTimeout(navigationTimer); clearTimeout(fadeTimer);
+  if (!roomHost) sound.silence();
+  scene?.pause(); clearTimeout(navigationTimer); clearTimeout(fadeTimer);
 });
 window.addEventListener('pageshow', event => {
   departing = false; navigationTimer = undefined; fadeTimer = undefined;
   document.body.classList.remove('is-leaving');
   document.querySelector('[data-guestbook-widget]').inert = false;
   scene?.resetDoor(); if (!guestbook.isOpen() && !offering.isOpen()) scene?.resume(); updateTravel();
-  if (event.persisted && sound.enabled) void sound.resumeMusic();
+  if (!roomHost && event.persisted && sound.enabled) void sound.resumeMusic();
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { sound.silence(); scene?.pause(); }
-  else { if (!guestbook.isOpen() && !offering.isOpen()) scene?.resume(); if (consentGiven && sound.enabled) void sound.resumeMusic(); }
+  if (document.hidden) { if (!roomHost) sound.silence(); scene?.pause(); }
+  else { if (!guestbook.isOpen() && !offering.isOpen()) scene?.resume(); if (!roomHost && consentGiven && sound.enabled) void sound.resumeMusic(); }
 });
 
 // Optional browser integration uses the same controls and never enables audio without a click.
-if (document.modelContext?.registerTool) {
+if (roomHost?.registerTool || document.modelContext?.registerTool) {
   const lifecycle = new AbortController();
   const register = tool => {
-    try { Promise.resolve(document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {}
+    try { Promise.resolve(roomHost?.registerTool ? roomHost.registerTool(tool) : document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {}
   };
   register({ name: 'read_corridor_state', description: 'Read corridor position, rendering availability, sound, guestbook and pretend offering game state.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: () => ({ position: travel, sceneAvailable: Boolean(scene), sound: sound.state(), consentRequired: dialog.open, gamesOpen: gamesDialog.open, guestbookOpen: guestbook.isOpen(), guestbookReady: guestbook.isReady(), offering: offering.state() }) });
   register({ name: 'navigate_corridor', description: 'Move within the corridor to a chosen exhibit or the door. Does not open an external page or enable sound.', inputSchema: { type: 'object', properties: { stop: { type: 'string', enum: stopIds } }, required: ['stop'], additionalProperties: false }, execute: async input => {

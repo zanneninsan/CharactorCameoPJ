@@ -1,6 +1,10 @@
 const soundFiles = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal'];
 
 export function createSound(audio, { onChange, onError, soundPath = './sounds/', extraSounds = [] }) {
+  if (window.ManzokukyoRoom?.createSound) {
+    if (audio) { audio.pause(); audio.preload = 'none'; }
+    return window.ManzokukyoRoom.createSound({ onChange, onError });
+  }
   const requestedFiles = [...new Set([...soundFiles, ...extraSounds])];
   let context, effectsGain, enabled = false, requested = false, musicLevel = .28, effectsLevel = .65, decoded;
   let revision = 0;

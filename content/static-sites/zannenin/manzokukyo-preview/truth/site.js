@@ -14,22 +14,28 @@ const soundInvitation = document.querySelector('.truth-audio-invite');
 const status = document.querySelector('.sound-status');
 const guestbookRoot = document.querySelector('[data-guestbook-widget]');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const destination = new URL('../../manzokukyo/truth/gallery/', window.location.href).href;
+const roomHost = window.ManzokukyoRoom;
+const destination = new URL('../../manzokukyo/truth/gallery/', document.baseURI).href;
 const indices = [0, 0];
 let scene, state = 'waiting', denials = 0, rejectionTimer, navigationTimer, fadeTimer, navigationStarted = 0, remaining = 2400;
 let cancelDenialSound;
 let reaction = { active: false, pressure: 0, openness: 1, scale: 1 };
 
+function updateSoundControls({ enabled, musicVolume, effectsVolume, consentGiven }) {
+  soundToggle.setAttribute('aria-pressed', String(enabled));
+  soundToggle.setAttribute('aria-label', enabled ? '音をオフにする' : '音をオンにする');
+  document.querySelector('[data-sound-label]').textContent = enabled ? 'SOUND ON' : 'SOUND OFF';
+  if (Number.isFinite(musicVolume)) document.querySelector('#music-volume').value = String(Math.round(musicVolume * 100));
+  if (Number.isFinite(effectsVolume)) document.querySelector('#effects-volume').value = String(Math.round(effectsVolume * 100));
+  if (consentGiven) soundInvitation.hidden = true;
+}
 const sound = createSound(document.querySelector('#ambient-audio'), {
   soundPath: '../sounds/',
   extraSounds: ['truth-denied'],
-  onChange({ enabled }) {
-    soundToggle.setAttribute('aria-pressed', String(enabled));
-    soundToggle.setAttribute('aria-label', enabled ? '音をオフにする' : '音をオンにする');
-    document.querySelector('[data-sound-label]').textContent = enabled ? 'SOUND ON' : 'SOUND OFF';
-  },
+  onChange: updateSoundControls,
   onError(text) { status.textContent = text; }
 });
+updateSoundControls(sound.state());
 const guestbook = connectGuestbook({
   onChange(open) {
     if (open) { stopDenialSound(); scene?.setPointer(0, 0); scene?.pause(); pauseNavigation(); }
@@ -74,7 +80,9 @@ function resumeNavigation() {
   if (state !== 'accepted' || document.hidden || guestbook.isOpen() || navigationStarted) return;
   navigationStarted = performance.now();
   fadeTimer = setTimeout(() => document.body.classList.add('is-leaving'), Math.max(0, remaining - 650));
-  navigationTimer = setTimeout(() => { window.location.href = destination; }, remaining);
+  navigationTimer = setTimeout(() => {
+    if (roomHost?.navigate) roomHost.navigate(destination); else window.location.href = destination;
+  }, remaining);
 }
 function submitPassphrase(value) {
   assertAvailable();
@@ -133,7 +141,7 @@ soundToggle.addEventListener('click', () => {
 document.querySelector('#music-volume').addEventListener('input', event => sound.setMusicVolume(Number(event.target.value) / 100));
 document.querySelector('#effects-volume').addEventListener('input', event => sound.setEffectsVolume(Number(event.target.value) / 100));
 document.querySelector('#effects-volume').addEventListener('change', () => sound.play('tap'));
-soundToggle.hidden = false; document.querySelector('.sound-settings').hidden = false; soundInvitation.hidden = false;
+soundToggle.hidden = false; document.querySelector('.sound-settings').hidden = false; soundInvitation.hidden = Boolean(sound.consentGiven);
 
 window.addEventListener('pointermove', event => {
   if (event.pointerType === 'mouse' && !guestbook.isOpen() && state !== 'accepted') scene?.setPointer(event.clientX / innerWidth * 2 - 1, event.clientY / innerHeight * 2 - 1);
@@ -147,17 +155,17 @@ document.addEventListener('click', event => {
   if (index === 0 || index === 1) advanceRune(index);
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { stopDenialSound(); sound.silence(); scene?.pause(); pauseNavigation(); }
+  if (document.hidden) { stopDenialSound(); if (!roomHost) sound.silence(); scene?.pause(); pauseNavigation(); }
   else {
     if (!guestbook.isOpen()) { scene?.resume(); resumeNavigation(); }
-    if (sound.enabled) void sound.resumeMusic();
+    if (!roomHost && sound.enabled) void sound.resumeMusic();
   }
 });
-window.addEventListener('pagehide', () => { stopDenialSound(); sound.silence(); scene?.pause(); pauseNavigation(); clearTimeout(rejectionTimer); });
+window.addEventListener('pagehide', () => { stopDenialSound(); if (!roomHost) sound.silence(); scene?.pause(); pauseNavigation(); clearTimeout(rejectionTimer); });
 window.addEventListener('pageshow', event => {
   if (event.persisted) resetAfterReturn();
   if (!document.hidden && !guestbook.isOpen()) scene?.resume();
-  if (event.persisted && sound.enabled) void sound.resumeMusic();
+  if (!roomHost && event.persisted && sound.enabled) void sound.resumeMusic();
 });
 reducedMotion.addEventListener('change', () => {
   if (reducedMotion.matches && state === 'accepted') { pauseNavigation(); remaining = 250; resumeNavigation(); }
@@ -186,9 +194,9 @@ try {
   }
 } catch { showFallback(); }
 
-if (document.modelContext?.registerTool) {
+if (roomHost?.registerTool || document.modelContext?.registerTool) {
   const lifecycle = new AbortController();
-  const register = tool => { try { Promise.resolve(document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {} };
+  const register = tool => { try { Promise.resolve(roomHost?.registerTool ? roomHost.registerTool(tool) : document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {} };
   register({ name: 'read_truth_state', description: 'Read the altar seals, passphrase, reaction count, room state, sound and guestbook state.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: args => {
     if (!args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length) throw Error('Expected an empty object');
     return { state, denials, runes: selectedRunes(), passphrase: input.value, sceneAvailable: Boolean(scene), reaction, sound: sound.state(), guestbookOpen: guestbook.isOpen(), message: message.textContent };
