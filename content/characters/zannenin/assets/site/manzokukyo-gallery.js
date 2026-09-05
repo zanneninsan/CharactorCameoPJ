@@ -286,3 +286,6 @@ register({ name: 'open_gallery_record', description: 'Open one of the 24 display
 register({ name: 'collect_gallery_seal', description: 'Press the visible seal in the open record, with the normal imprint animation. Saves only local collection progress and never enables audio.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, execute: () => { if (!collectSeal()) throw Error('Open an uncollected marked record first'); return state(); } });
 register({ name: 'close_gallery_overlay', description: 'Close the record or finish/skip its ceremony using the same visible controls. Never skips collection or the passphrase.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, execute: () => { if (ceremony.open) closeCeremony(); else if (dialog.open) closeRecord(); return state(); } });
 register({ name: 'submit_gallery_word', description: 'Try a word after collecting all six seals. The same normal puzzle and release ceremony apply. Does not enable audio.', inputSchema: { type: 'object', properties: { word: { type: 'string', maxLength: 32 } }, required: ['word'], additionalProperties: false }, execute: input => { const result = submitWord(input?.word); return { ...result, ...state() }; } });
+
+// The optional 3D exhibition uses the same viewer, puzzle and sound owner.
+export { showRecord, play };

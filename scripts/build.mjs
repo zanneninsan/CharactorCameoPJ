@@ -1,4 +1,5 @@
 import { renderGalleryExperience } from "./render-manzokukyo-gallery.mjs";
+import { renderGallery3DExperience } from "./render-manzokukyo-gallery-3d.mjs";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -99,18 +100,21 @@ async function build() {
           const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
           const manzokukyoGalleryDir = path.join(manzokukyoTruthDir, "gallery");
+          const manzokukyoGallery3DDir = path.join(manzokukyoTruthDir, "gallery-3d");
           const manzokukyoRedHouseDir = path.join(manzokukyoTruthDir, "red-house");
           const manzokukyoArchiveDir = path.join(manzokukyoRedHouseDir, "archive");
           await mkdir(manzokukyoDir, { recursive: true });
           await mkdir(manzokukyoNovelDir, { recursive: true });
           await mkdir(manzokukyoTruthDir, { recursive: true });
           await mkdir(manzokukyoGalleryDir, { recursive: true });
+          await mkdir(manzokukyoGallery3DDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
           await mkdir(manzokukyoArchiveDir, { recursive: true });
           await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
           await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
           await writeFile(path.join(manzokukyoGalleryDir, "index.html"), renderManzokukyoGallery(character), "utf8");
+          await writeFile(path.join(manzokukyoGallery3DDir, "index.html"), renderGallery3DExperience(character, { htmlPage, escapeHtml, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` }), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
           await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");

@@ -14,6 +14,7 @@ const rooms = [
   { id: 'corridor', route: '', legacy: false },
   { id: 'truth', route: 'truth/', legacy: false },
   { id: 'gallery', route: 'truth/gallery/', legacy: true },
+  { id: 'gallery-3d', route: 'truth/gallery-3d/', legacy: true },
   { id: 'red-house', route: 'truth/red-house/', legacy: true },
   { id: 'archive', route: 'truth/red-house/archive/', legacy: true, novel: true },
   { id: 'novel', route: 'novel/', legacy: true, novel: true }
@@ -127,11 +128,20 @@ for (const room of rooms) {
     await checkAssetReferences(shell, shellTags, shellUrl, deployment, `${room.id} shell`);
     await checkAssetReferences(view, viewTags, viewUrl, deployment, `${room.id} view`);
   }
-  if (room.id === 'gallery') {
+  if (room.id === 'gallery' || room.id === 'gallery-3d') {
     assert.match(view, /assets\/site\/manzokukyo-gallery\.js/, 'Gallery must load its shared controller');
     const galleryController = await readFile(path.join(dist, 'zannenin/assets/site/manzokukyo-gallery.js'), 'utf8');
     assert.match(galleryController, /room\.navigate\(destination\)/, 'Gallery delayed door must use the persistent session');
     assert.doesNotMatch(view, /window\.location\.href\s*=\s*exit\.href/, 'Gallery must not discard the audio owner');
+    if (room.id === 'gallery-3d') {
+      assert.match(view, /assets\/site\/manzokukyo-gallery-3d\.js/, 'The 3D gallery must load its scene module');
+      assert.equal(viewTags.filter(element => element.attrs.has('data-gallery-index')).length, 24, 'The 3D view retains all original selectable records');
+      assert.ok(viewTags.some(element => element.attrs.has('data-gallery-3d-canvas')), 'The 3D view includes its canvas');
+      const canonical = await readFile(path.join(dist, canonicalPath, room.route, 'index.html'), 'utf8');
+      const canonicalTags = tags(canonical);
+      assert.equal(canonicalTags.find(element => element.attrs.get('name') === 'robots').attrs.get('content'), 'noindex,nofollow', 'The canonical 3D prototype is not indexed');
+      assert.ok(canonicalTags.find(element => element.name === 'link' && element.attrs.get('rel') === 'canonical').attrs.get('href').endsWith('/manzokukyo/truth/gallery-3d/'), 'The 3D canonical URL points to the 3D route');
+    }
   }
 }
 
@@ -143,4 +153,12 @@ for (const directory of [path.join(root, 'content/static-sites', previewPath), p
     assert.equal(result.status, 0, `${path.relative(root, filename)}: ${result.error?.message || result.stderr || result.stdout}`);
   }
 }
-console.log(`Manzokukyo session: 6 shells/views, both deployment prefixes, ${checkedAssets.size} local asset paths, delayed gallery door, novel controllers and 16 JavaScript syntax checks passed.`);
+const galleryScripts = ['manzokukyo-gallery.js', 'manzokukyo-gallery-3d.js'];
+for (const directory of [path.join(root, 'content/characters/zannenin/assets/site'), path.join(dist, 'zannenin/assets/site')]) {
+  for (const script of galleryScripts) {
+    const filename = path.join(directory, script);
+    const result = spawnSync(process.execPath, ['--check', filename], { encoding: 'utf8', windowsHide: true });
+    assert.equal(result.status, 0, `${path.relative(root, filename)}: ${result.error?.message || result.stderr || result.stdout}`);
+  }
+}
+console.log(`Manzokukyo session: ${rooms.length} shells/views, both deployment prefixes, ${checkedAssets.size} local asset paths, delayed gallery door, novel controllers and ${(scripts.length + galleryScripts.length) * 2} JavaScript syntax checks passed.`);

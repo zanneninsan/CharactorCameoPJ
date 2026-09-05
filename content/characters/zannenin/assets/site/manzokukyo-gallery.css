@@ -213,6 +213,16 @@ body.gallery-modal-open { overflow: hidden; scrollbar-gutter: stable; }
 }
 .gallery-restart:not(:disabled):hover { background: #39302a; color: #fff0cc; }
 .gallery-restart:disabled { opacity: .35; cursor: default; }
+.gallery-mode-link a {
+  display: inline-flex;
+  padding: .7rem 1rem;
+  border: 1px solid #c7af765e;
+  color: #e6d2a1;
+  background: #c4a65b0c;
+  font-size: .82rem;
+  text-decoration: none;
+}
+.gallery-mode-link a:hover { border-color: #dec389; background: #c4a65b20; }
 .gallery-ledger [data-ledger-puzzle] {
   grid-column: 1 / -1;
   min-height: 44px;

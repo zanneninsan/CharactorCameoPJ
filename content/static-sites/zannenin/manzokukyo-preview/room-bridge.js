@@ -1,7 +1,7 @@
 (() => {
   const root = new URL('./', document.currentScript.src);
   if (window === parent) {
-    const paths = { corridor: '', truth: 'truth/', gallery: 'truth/gallery/', 'red-house': 'truth/red-house/', archive: 'truth/red-house/archive/', novel: 'novel/' };
+    const paths = { corridor: '', truth: 'truth/', gallery: 'truth/gallery/', 'gallery-3d': 'truth/gallery-3d/', 'red-house': 'truth/red-house/', archive: 'truth/red-house/archive/', novel: 'novel/' };
     const id = location.pathname.split('/').pop().replace(/\.html$/, '');
     if (Object.hasOwn(paths, id)) location.replace(new URL(paths[id] + location.search + location.hash, root));
     return;

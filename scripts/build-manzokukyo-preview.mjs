@@ -75,7 +75,8 @@ export async function buildManzokukyoPreview() {
   const html = (await readFile(path.join(source, 'index.html'), 'utf8')).replaceAll('{{TIKTOK_URL}}', escapeHtml(tiktok.url)).replaceAll('{{GAME_LINKS}}', gameLinks).replace('{{OFFERING_DIALOG}}', offeringDialog);
   const sourceNames = ['styles.css', 'site.js', 'corridor.js', 'audio.js', 'route.js', 'guestbook-adapter.js', 'offering.js', 'offering.css', 'app.js', 'app.css', 'rooms.js', 'room-bridge.js', 'audio-session.js', 'novel-view.js', 'truth/styles.css', 'truth/site.js', 'truth/chamber.js'];
   const sourceFiles = await Promise.all(sourceNames.map(name => readFile(path.join(source, name), 'utf8')));
-  const version = createHash('sha256').update(sourceFiles.join('\n')).digest('hex').slice(0, 12);
+  const galleryFiles = await Promise.all(['manzokukyo-gallery.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-3d.css'].map(name => readFile(path.join(characterRoot, 'assets/site', name), 'utf8')));
+  const version = createHash('sha256').update([...sourceFiles, ...galleryFiles].join('\n')).digest('hex').slice(0, 12);
   await mkdir(path.join(output, 'truth'), { recursive: true });
   for (const [index, name] of sourceNames.entries()) {
     const text = name.endsWith('.js') ? sourceFiles[index].replace(/(["'])(\.\.?\/[^"'\n]+\.js)\1/g, `$1$2?v=${version}$1`) : sourceFiles[index];
@@ -88,6 +89,7 @@ export async function buildManzokukyoPreview() {
     { id: 'corridor', route: '', title: '満足教｜回廊', html, original: output, fallback: canonical },
     { id: 'truth', route: 'truth', title: '真理の扉｜満足教', html: await readFile(path.join(source, 'truth/index.html'), 'utf8'), original: path.join(output, 'truth'), fallback: path.join(canonical, 'truth') },
     { id: 'gallery', route: 'truth/gallery', title: '記憶の画廊｜満足教', legacy: true },
+    { id: 'gallery-3d', route: 'truth/gallery-3d', title: '記憶の画廊 3D｜満足教', legacy: true },
     { id: 'red-house', route: 'truth/red-house', title: '赤い懺悔室｜満足教', legacy: true },
     { id: 'archive', route: 'truth/red-house/archive', title: '記憶保管庫｜満足教', legacy: true, novel: true },
     { id: 'novel', route: 'novel', title: '満足教異聞録', legacy: true, novel: true }
