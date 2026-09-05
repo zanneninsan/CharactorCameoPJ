@@ -1,0 +1,256 @@
+{
+  "source": "Original deterministic procedural synthesis; no source recordings, sampled instruments or third-party audio.",
+  "generator": "generate_gallery_sounds.py",
+  "effects": [
+    {
+      "file": "gallery-reveal.wav",
+      "seed": 2026090706,
+      "channels": 1,
+      "sample_rate_hz": 24000,
+      "sample_width_bits": 16,
+      "format": "PCM16 little-endian WAV",
+      "compression": "NONE",
+      "frames": 15360,
+      "duration_seconds": 0.64,
+      "peak_linear": 0.59997559,
+      "peak_dbfs": -4.4373,
+      "rms_linear": 0.08367149,
+      "rms_dbfs": -21.5485,
+      "dc_offset_linear": -2.4871e-05,
+      "maximum_adjacent_step_linear": 0.80322266,
+      "first_nonzero_at_seconds": 0.000125,
+      "silent_tail_samples": 602,
+      "silent_tail_seconds": 0.025083333333333332,
+      "finite_synthesis": true,
+      "clipped_samples": 0,
+      "events": [
+        {
+          "at_seconds": 0.0,
+          "event": "paper fold",
+          "following_120ms_peak_linear": 0.59997559
+        },
+        {
+          "at_seconds": 0.045,
+          "event": "gold leaf friction",
+          "following_120ms_peak_linear": 0.59997559
+        },
+        {
+          "at_seconds": 0.3,
+          "event": "second dry brush",
+          "following_120ms_peak_linear": 0.3710022
+        }
+      ],
+      "sha256": "54c50cf078f82bb5ddf9ea40562f326eb4d2c6544a4be016f949a004344f3ae5"
+    },
+    {
+      "file": "gallery-collect.wav",
+      "seed": 2026090707,
+      "channels": 1,
+      "sample_rate_hz": 24000,
+      "sample_width_bits": 16,
+      "format": "PCM16 little-endian WAV",
+      "compression": "NONE",
+      "frames": 26400,
+      "duration_seconds": 1.1,
+      "peak_linear": 0.59997559,
+      "peak_dbfs": -4.4373,
+      "rms_linear": 0.099361,
+      "rms_dbfs": -20.0557,
+      "dc_offset_linear": -2.1624e-05,
+      "maximum_adjacent_step_linear": 0.087677,
+      "first_nonzero_at_seconds": 8.333333333333333e-05,
+      "silent_tail_samples": 548,
+      "silent_tail_seconds": 0.022833333333333334,
+      "finite_synthesis": true,
+      "clipped_samples": 0,
+      "events": [
+        {
+          "at_seconds": 0.0,
+          "event": "seal impact",
+          "following_120ms_peak_linear": 0.59997559
+        },
+        {
+          "at_seconds": 0.045,
+          "event": "seal seats",
+          "following_120ms_peak_linear": 0.47341919
+        },
+        {
+          "at_seconds": 0.08,
+          "event": "clear bell",
+          "following_120ms_peak_linear": 0.47341919
+        }
+      ],
+      "sha256": "e1e9a6548b1794032e5a3edc7c9818623af5afc4eed1476c1be091ed2eb9309e"
+    },
+    {
+      "file": "gallery-complete.wav",
+      "seed": 2026090708,
+      "channels": 1,
+      "sample_rate_hz": 24000,
+      "sample_width_bits": 16,
+      "format": "PCM16 little-endian WAV",
+      "compression": "NONE",
+      "frames": 57600,
+      "duration_seconds": 2.4,
+      "peak_linear": 0.59997559,
+      "peak_dbfs": -4.4373,
+      "rms_linear": 0.14215418,
+      "rms_dbfs": -16.9448,
+      "dc_offset_linear": -1e-08,
+      "maximum_adjacent_step_linear": 0.1131897,
+      "first_nonzero_at_seconds": 0.00016666666666666666,
+      "silent_tail_samples": 523,
+      "silent_tail_seconds": 0.021791666666666668,
+      "finite_synthesis": true,
+      "clipped_samples": 0,
+      "events": [
+        {
+          "at_seconds": 0.0,
+          "event": "collection tone 1",
+          "following_120ms_peak_linear": 0.31091309
+        },
+        {
+          "at_seconds": 0.24,
+          "event": "collection tone 2",
+          "following_120ms_peak_linear": 0.40386963
+        },
+        {
+          "at_seconds": 0.48,
+          "event": "collection tone 3",
+          "following_120ms_peak_linear": 0.45401001
+        },
+        {
+          "at_seconds": 0.72,
+          "event": "collection tone 4",
+          "following_120ms_peak_linear": 0.54934692
+        },
+        {
+          "at_seconds": 0.96,
+          "event": "collection tone 5",
+          "following_120ms_peak_linear": 0.51904297
+        },
+        {
+          "at_seconds": 1.2,
+          "event": "collection tone 6",
+          "following_120ms_peak_linear": 0.59997559
+        }
+      ],
+      "sha256": "d86418ff78b1486fe740a25300d1443f49e68669af0a132db04793631879daed"
+    },
+    {
+      "file": "gallery-unseal.wav",
+      "seed": 2026090709,
+      "channels": 1,
+      "sample_rate_hz": 24000,
+      "sample_width_bits": 16,
+      "format": "PCM16 little-endian WAV",
+      "compression": "NONE",
+      "frames": 105600,
+      "duration_seconds": 4.4,
+      "peak_linear": 0.59997559,
+      "peak_dbfs": -4.4373,
+      "rms_linear": 0.09435873,
+      "rms_dbfs": -20.5044,
+      "dc_offset_linear": -1.1741e-05,
+      "maximum_adjacent_step_linear": 0.14639282,
+      "first_nonzero_at_seconds": 8.333333333333333e-05,
+      "silent_tail_samples": 540,
+      "silent_tail_seconds": 0.0225,
+      "finite_synthesis": true,
+      "clipped_samples": 0,
+      "events": [
+        {
+          "at_seconds": 0.0,
+          "event": "metal clasp 1",
+          "following_120ms_peak_linear": 0.53128052
+        },
+        {
+          "at_seconds": 0.35,
+          "event": "metal clasp 2",
+          "following_120ms_peak_linear": 0.55435181
+        },
+        {
+          "at_seconds": 0.7,
+          "event": "metal clasp 3",
+          "following_120ms_peak_linear": 0.54049683
+        },
+        {
+          "at_seconds": 1.05,
+          "event": "metal clasp 4",
+          "following_120ms_peak_linear": 0.59997559
+        },
+        {
+          "at_seconds": 1.4,
+          "event": "metal clasp 5",
+          "following_120ms_peak_linear": 0.55957031
+        },
+        {
+          "at_seconds": 1.75,
+          "event": "metal clasp 6",
+          "following_120ms_peak_linear": 0.53234863
+        },
+        {
+          "at_seconds": 2.5,
+          "event": "low room resonance",
+          "following_120ms_peak_linear": 0.51620483
+        },
+        {
+          "at_seconds": 3.2,
+          "event": "warm bell chord",
+          "following_120ms_peak_linear": 0.54138184
+        }
+      ],
+      "sha256": "27af8b97c1afa453e619d0bef9590a093cc44bf51d6ad0c9610379cf9d662d3b"
+    },
+    {
+      "file": "gallery-door.wav",
+      "seed": 2026090710,
+      "channels": 1,
+      "sample_rate_hz": 24000,
+      "sample_width_bits": 16,
+      "format": "PCM16 little-endian WAV",
+      "compression": "NONE",
+      "frames": 43200,
+      "duration_seconds": 1.8,
+      "peak_linear": 0.59997559,
+      "peak_dbfs": -4.4373,
+      "rms_linear": 0.07350076,
+      "rms_dbfs": -22.6742,
+      "dc_offset_linear": -7.86e-06,
+      "maximum_adjacent_step_linear": 0.14761353,
+      "first_nonzero_at_seconds": 0.000125,
+      "silent_tail_samples": 923,
+      "silent_tail_seconds": 0.03845833333333333,
+      "finite_synthesis": true,
+      "clipped_samples": 0,
+      "events": [
+        {
+          "at_seconds": 0.0,
+          "event": "latch weight",
+          "following_120ms_peak_linear": 0.59997559
+        },
+        {
+          "at_seconds": 0.065,
+          "event": "hinge begins",
+          "following_120ms_peak_linear": 0.26281738
+        },
+        {
+          "at_seconds": 0.34,
+          "event": "timber creak",
+          "following_120ms_peak_linear": 0.21875
+        },
+        {
+          "at_seconds": 0.86,
+          "event": "hinge releases",
+          "following_120ms_peak_linear": 0.20965576
+        },
+        {
+          "at_seconds": 1.12,
+          "event": "hall air",
+          "following_120ms_peak_linear": 0.18136597
+        }
+      ],
+      "sha256": "5e8821466a876d23bfff3bcc6915ab0581a2694b3605337c86260b44171051ca"
+    }
+  ]
+}

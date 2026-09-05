@@ -1,4 +1,4 @@
-const EFFECT_NAMES = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal', 'truth-denied'];
+const EFFECT_NAMES = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal', 'truth-denied', 'gallery-reveal', 'gallery-collect', 'gallery-complete', 'gallery-unseal', 'gallery-door'];
 const CROSSFADE_SECONDS = .9;
 const clamp = (value, low = 0, high = 1) => Math.max(low, Math.min(high, Number.isFinite(Number(value)) ? Number(value) : low));
 

@@ -1,6 +1,6 @@
 # Manzokukyo corridor: original sound effects
 
-The nine corridor effects, five offering effects and one truth-chamber effect are **procedurally synthesized sounds, not recordings**. The corridor sounds use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
+The nine corridor effects, five offering effects, one truth-chamber effect and five gallery effects are **procedurally synthesized sounds, not recordings**. The corridor sounds use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
 
 Corridor files are 44.1 kHz stereo PCM16 WAV. The short, damped room reflections are already rendered into the assets; additional Web Audio reverb is unnecessary. Sources have generous headroom, no clipping, click-free fades, and a short silent terminal guard. `validation.json` contains format, duration, peak and RMS measurements from reopening the written WAVs.
 
@@ -18,8 +18,17 @@ The five offering files are 24 kHz mono PCM16 WAV, synthesized with Python's sta
 | `door-open.wav` | Double latch, low timber creak, hinge friction, hall air | Door begins opening | 2.25 s |
 | `enter.wav` | Soft low room resonance with an airy upper tail | Sound consent / arrival | 1.10 s |
 | `truth-denied.wav` | Low impact, taut bronze and held breath, slow retreat | Truth chamber eye lunges after a wrong word | 2.80 s |
+| `gallery-reveal.wav` | Dry paper fold, fine gold-leaf friction and a faint frame shimmer | Reveal a gallery record | 0.64 s |
+| `gallery-collect.wav` | Immediate heavy seal impact, followed by one clear bell | Collect a seal | 1.10 s |
+| `gallery-complete.wav` | Six ascending, softly resonant bell notes | All six seals are collected | 2.40 s |
+| `gallery-unseal.wav` | Six metal clasps, low room resonance, warm bell chord | The collected seals release the lock | 4.40 s |
+| `gallery-door.wav` | Weighty latch, uneven timber and hinge creaks, hall air | Open the red door | 1.80 s |
 
 The truth-chamber effect is 24 kHz mono PCM16, synthesized with Python's standard library. It reaches its attack in the first 180 ms, holds tension until about 0.6 s and decays with the eye's retreat. Reproduce it with `python generate_truth_sound.py`; `truth-validation.json` records a measured peak below 0.60 and a silent tail longer than 20 ms. Only the truth page requests this extra sound. Repeated mistakes, success, the guestbook and page hiding cancel its previous playback; the existing consent, volume and mute controls still apply.
+
+The gallery files are original 24 kHz mono PCM16 WAVs. Reproduce them with `python generate_gallery_sounds.py`; only Python's standard library is required. Dry filtered noise, damped material modes, hand-composed bell tones and quiet generated wall reflections suggest a restrained, slightly unsettling museum. The reveal is intentionally short and dry. The collection impact begins immediately, with its bell at 0.080 s. The completion's six notes begin at 0, 0.24, 0.48, 0.72, 0.96 and 1.20 s. The unlock sound releases six clasps at exactly 0, 0.35, 0.70, 1.05, 1.40 and 1.75 s; low resonance enters at 2.50 s and the warm bell chord at 3.20 s. Keep the unlock playback rate at 1 when synchronizing these events with animation.
+
+`gallery-validation.json` measures the written files, including each event's following 120 ms, peak/RMS, DC offset, format, first onset, silent tail and SHA-256. Each file targets a 0.60 peak, has no clipped samples, fades smoothly and ends with at least 20 ms of digital silence. No recordings, sampled instruments, external sound libraries or third-party impulse responses are used. Gallery actions use the shared session's effect gain and existing sound consent/mute controls; adding these files does not change the listener's setting.
 
 ## Integration
 

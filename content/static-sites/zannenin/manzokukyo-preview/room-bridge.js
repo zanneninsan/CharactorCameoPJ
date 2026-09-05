@@ -56,6 +56,8 @@
       }
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
     if (!document.body.hasAttribute('data-session-legacy')) return;
+    // The gallery has its own consent, volume and precisely timed sound controls.
+    if (document.querySelector('[data-gallery-experience]')) return;
     document.addEventListener('click', event => {
       const target = event.target.closest('[data-sfx],button,a');
       if (target && target.getAttribute('aria-disabled') !== 'true') window.ManzokukyoSfx.play(target.dataset.sfx || 'tap');

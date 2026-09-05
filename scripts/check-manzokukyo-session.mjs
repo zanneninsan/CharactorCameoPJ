@@ -128,7 +128,9 @@ for (const room of rooms) {
     await checkAssetReferences(view, viewTags, viewUrl, deployment, `${room.id} view`);
   }
   if (room.id === 'gallery') {
-    assert.match(view, /window\.ManzokukyoRoom\.navigate\(\s*exit\.href\s*\)/, 'Gallery delayed door must use the persistent session');
+    assert.match(view, /assets\/site\/manzokukyo-gallery\.js/, 'Gallery must load its shared controller');
+    const galleryController = await readFile(path.join(dist, 'zannenin/assets/site/manzokukyo-gallery.js'), 'utf8');
+    assert.match(galleryController, /room\.navigate\(destination\)/, 'Gallery delayed door must use the persistent session');
     assert.doesNotMatch(view, /window\.location\.href\s*=\s*exit\.href/, 'Gallery must not discard the audio owner');
   }
 }
