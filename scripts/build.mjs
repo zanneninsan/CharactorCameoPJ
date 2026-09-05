@@ -835,7 +835,7 @@ function renderCharacter(character) {
   const hasRandomVideos = randomDriveVideoSets(character.randomVideoPlayer).length > 0;
   const hasMusicVideos = Boolean(character.musicVideoPlayer);
   const includeGuestbook = shouldRenderGuestbook(character);
-  const pageOverride = resolveCharacterPageOverride(character, { escapeHtml });
+  const pageOverride = resolveCharacterPageOverride(character, { escapeHtml, assetVersionQuery });
 
   return htmlPage({
     title: character.displayName,

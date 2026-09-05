@@ -1,7 +1,7 @@
-export function createEriseVoogaPageOverride({ character, escapeHtml }) {
+export function createEriseVoogaPageOverride({ character, escapeHtml, assetVersionQuery }) {
   return {
     headExtra: `
-      <link rel="stylesheet" href="./assets/site/erise-home.css?v=20260905-3">`,
+      <link rel="stylesheet" href="./assets/site/erise-home.css?${escapeHtml(assetVersionQuery)}">`,
     bodyClass: "erise-home",
     mainClass: "erise-page",
     beforeHero: renderMasthead(character, escapeHtml),
