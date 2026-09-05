@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 
 const STATES = new Set(['waiting', 'listening', 'denied', 'accepted']);
+const DENIAL_DURATION = 2.8;
 const clamp01 = value => Math.max(0, Math.min(1, value));
 const smooth = value => { const t = clamp01(value); return t * t * (3 - 2 * t); };
 
@@ -26,6 +27,7 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
   let reduceMotion = motionQuery.matches;
   let disposed = false, lost = false, active = true, frameId = 0;
   let previousTime = null, elapsed = 0, stateAt = 0, state = 'waiting', denials = 0;
+  let denialAt = -Infinity, denialFrom = 0, denialPeak = 1;
   let pointerX = 0, pointerY = 0, orbitAngle = 0, runes = ['', ''];
   const runeChangedAt = [-100, -100];
   const geometrySet = new Set(), materialSet = new Set(), textureSet = new Set();
@@ -126,7 +128,8 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
 
   // The eye hangs above the line of travel, leaving the upper half readable behind the form.
   const eye = new THREE.Group(); eye.position.set(0, 4.9, -5); scene.add(eye);
-  for (const x of [-1.38, 1.38]) cylinder(scene, .022, 2.45, [x, 7.05, -5], brass, 10);
+  const eyeSupports = [-1.38, 1.38].map(x => ({ x, anchor: new THREE.Vector3(x, 8.275, -5), mesh: cylinder(scene, .022, 1, [x, 7.05, -5], brass, 10) }));
+  const supportEnd = new THREE.Vector3(), supportDirection = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const outerRing = ring(eye, 1.53, .06, [0, 0, -.04], brass);
   const orbit = new THREE.Group(); eye.add(orbit);
   ring(orbit, 1.3, .024, [0, 0, .02], cyan);
@@ -238,6 +241,13 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
     object.getWorldPosition(projected); projected.project(camera);
     return { x: (projected.x * .5 + .5) * viewport.width, y: (-projected.y * .5 + .5) * viewport.height, visible: projected.z > -1 && projected.z < 1 && Math.abs(projected.x) <= 1 && Math.abs(projected.y) <= 1 };
   }
+  function denialPressure() {
+    const age = elapsed - denialAt;
+    if (age < 0 || age >= DENIAL_DURATION) return 0;
+    if (age < .18) return THREE.MathUtils.lerp(denialFrom, denialPeak, 1 - (1 - age / .18) ** 3);
+    if (age < .64) return denialPeak;
+    return denialPeak * (1 - smooth((age - .64) / (DENIAL_DURATION - .64)));
+  }
   function draw(emit = true) {
     if (disposed || lost) return;
     const age = Math.max(0, elapsed - stateAt);
@@ -252,21 +262,39 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
     doorwayLight.intensity = 28 + open * 9;
     orbit.rotation.z = reduceMotion ? 0 : orbitAngle;
     outerRing.rotation.z = reduceMotion ? 0 : -elapsed * .035;
-    const deniedAge = state === 'denied' ? age : 100;
-    const denialEnvelope = !reduceMotion && deniedAge < 1.35 ? Math.sin(Math.PI * clamp01(deniedAge / 1.35)) : 0;
+    const deniedAge = elapsed - denialAt;
+    const denialActive = deniedAge >= 0 && deniedAge < DENIAL_DURATION;
+    const pressure = denialPressure();
+    const motionPressure = reduceMotion ? 0 : pressure;
+    const gaze = reduceMotion ? Number(denialActive) : clamp01(pressure * 1.6);
     const blinkPhase = elapsed % 5.7;
-    const blink = !reduceMotion && state !== 'accepted' && blinkPhase > 5.42 ? Math.sin((blinkPhase - 5.42) / .28 * Math.PI) : 0;
-    eyeFace.scale.y = Math.max(.07, (1 - denialEnvelope * .26) * (1 - blink * .93));
-    irisMaterial.color.lerpColors(restingIrisColor, deniedIrisColor, reduceMotion && state === 'denied' ? .3 : denialEnvelope * .8);
-    iris.position.x = reduceMotion ? 0 : pointerX * .12 + Math.sin(elapsed * .56) * .085;
-    iris.position.y = reduceMotion ? 0 : -pointerY * .06 + Math.sin(elapsed * .37) * .032;
+    const blink = !reduceMotion && !denialActive && state !== 'accepted' && blinkPhase > 5.42 ? Math.sin((blinkPhase - 5.42) / .28 * Math.PI) : 0;
+    const openness = reduceMotion ? (denialActive ? 1.4 : 1) : 1 + motionPressure * 1.35;
+    eyeFace.scale.y = Math.max(.07, openness * (1 - blink * .93));
+    iris.scale.y = 1 / openness;
+    pupil.scale.x = THREE.MathUtils.lerp(.64, .3, gaze);
+    irisMaterial.color.lerpColors(restingIrisColor, deniedIrisColor, reduceMotion ? gaze * .6 : clamp01(pressure));
+    irisMaterial.emissiveIntensity = .22 + gaze * .38;
+    iris.position.x = reduceMotion ? 0 : (pointerX * .12 + Math.sin(elapsed * .56) * .085) * (1 - gaze);
+    iris.position.y = reduceMotion ? 0 : (-pointerY * .06 + Math.sin(elapsed * .37) * .032) * (1 - gaze);
     const listeningScale = !reduceMotion && state === 'listening' ? 1 + Math.sin(age * 2.1) * .018 : 1;
-    eye.scale.setScalar(listeningScale);
+    const approachScale = camera.aspect < .85 ? .1 : .68;
+    eye.scale.setScalar(THREE.MathUtils.lerp(listeningScale, 1, gaze) + motionPressure * approachScale);
+    eye.position.set(0, 4.9 - motionPressure * .62, -5 + motionPressure * 5.4);
+    outerRing.rotation.x = motionPressure * .13;
+    orbit.rotation.y = motionPressure * .2;
+    for (const support of eyeSupports) {
+      supportEnd.set(support.x * eye.scale.x, eye.position.y + .925 * eye.scale.y, eye.position.z);
+      supportDirection.subVectors(supportEnd, support.anchor);
+      support.mesh.position.copy(support.anchor).add(supportEnd).multiplyScalar(.5);
+      support.mesh.scale.y = supportDirection.length();
+      support.mesh.quaternion.setFromUnitVectors(up, supportDirection.normalize());
+    }
     highlight.visible = state !== 'accepted';
-    denialWave.visible = denialEnvelope > .005;
-    denialWave.scale.setScalar(1 + clamp01(deniedAge / 1.35) * .42);
-    denialMaterial.opacity = denialEnvelope * (.16 + Math.min(denials, 3) * .025);
-    roseLight.intensity = 21 + denialEnvelope * 4;
+    denialWave.visible = motionPressure > .005;
+    denialWave.scale.setScalar(1 + clamp01(deniedAge / DENIAL_DURATION) * .65);
+    denialMaterial.opacity = motionPressure * .32;
+    roseLight.intensity = 21 + (reduceMotion ? gaze * 6 : motionPressure * 30);
     tealLight.intensity = 26 + (!reduceMotion && state === 'listening' ? Math.sin(age * 1.3) * .6 : 0);
     for (let index = 0; index < runeGroups.length; index++) {
       const t = elapsed - runeChangedAt[index];
@@ -276,7 +304,7 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
     }
     scene.updateMatrixWorld(true); camera.updateMatrixWorld(true);
     renderer.render(scene, camera);
-    if (emit) onFrame?.({ elapsed, state, denials, acceptedProgress, doorOpen: open, runestones: runeGroups.map(screenPoint), eye: screenPoint(eye) });
+    if (emit) onFrame?.({ elapsed, state, denials, acceptedProgress, doorOpen: open, denial: { active: denialActive, pressure: motionPressure, openness, scale: eye.scale.x }, runestones: runeGroups.map(screenPoint), eye: screenPoint(eye) });
   }
   function tick(now) {
     if (!active || disposed || lost) return;
@@ -322,8 +350,11 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
     setState(nextState, nextDenials = 0) {
       if (disposed) return;
       if (!STATES.has(nextState)) throw TypeError('Unknown truth chamber state');
-      state = nextState; stateAt = elapsed;
       denials = Number.isFinite(nextDenials) ? Math.max(0, Math.floor(nextDenials)) : 0;
+      if (nextState === 'denied') {
+        denialFrom = denialPressure(); denialPeak = 1 + Math.max(0, Math.min(denials, 3) - 1) * .06; denialAt = elapsed;
+      } else if (nextState === 'accepted' || nextState === 'waiting') denialAt = -Infinity;
+      state = nextState; stateAt = elapsed;
       draw(false);
     },
     setPointer(x, y) {
@@ -343,6 +374,7 @@ export function createTruthChamber(canvas, { onUnavailable, onFrame } = {}) {
     reset() {
       if (disposed) return;
       state = 'waiting'; denials = 0; elapsed = 0; stateAt = 0; previousTime = null;
+      denialAt = -Infinity; denialFrom = 0; denialPeak = 1;
       pointerX = 0; pointerY = 0; orbitAngle = 0; runeChangedAt.fill(-100);
       draw(false);
     },

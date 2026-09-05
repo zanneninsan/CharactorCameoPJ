@@ -17,9 +17,12 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const destination = new URL('../../manzokukyo/truth/gallery/', window.location.href).href;
 const indices = [0, 0];
 let scene, state = 'waiting', denials = 0, rejectionTimer, navigationTimer, fadeTimer, navigationStarted = 0, remaining = 2400;
+let cancelDenialSound;
+let reaction = { active: false, pressure: 0, openness: 1, scale: 1 };
 
 const sound = createSound(document.querySelector('#ambient-audio'), {
   soundPath: '../sounds/',
+  extraSounds: ['truth-denied'],
   onChange({ enabled }) {
     soundToggle.setAttribute('aria-pressed', String(enabled));
     soundToggle.setAttribute('aria-label', enabled ? '音をオフにする' : '音をオンにする');
@@ -29,12 +32,13 @@ const sound = createSound(document.querySelector('#ambient-audio'), {
 });
 const guestbook = connectGuestbook({
   onChange(open) {
-    if (open) { scene?.setPointer(0, 0); scene?.pause(); pauseNavigation(); }
+    if (open) { stopDenialSound(); scene?.setPointer(0, 0); scene?.pause(); pauseNavigation(); }
     else if (!document.hidden) { scene?.resume(); resumeNavigation(); }
   },
   onTap() { sound.play('tap', { level: .7 }); }
 });
 
+function stopDenialSound() { cancelDenialSound?.(); cancelDenialSound = undefined; }
 function setState(next) {
   state = next; document.body.dataset.truthState = next; scene?.setState(next, denials);
 }
@@ -78,6 +82,7 @@ function submitPassphrase(value) {
   input.value = value;
   const normalized = value.replace(/[\u3000\s]+/g, '').trim();
   clearTimeout(rejectionTimer);
+  stopDenialSound();
   if (ANSWERS.includes(normalized)) {
     setState('accepted');
     message.textContent = '受理しました。次の部屋が、あなたを待っています。';
@@ -92,12 +97,15 @@ function submitPassphrase(value) {
   meter.textContent = `${String(denials).padStart(2, '0')} / 03`;
   setState('denied');
   message.textContent = BAD_MESSAGES[Math.floor(Math.random() * BAD_MESSAGES.length)];
-  sound.play('transmission', { level: .6, rate: .82 });
-  rejectionTimer = setTimeout(() => { if (state === 'denied') setState('listening'); }, reducedMotion.matches ? 200 : 1280);
+  cancelDenialSound = sound.play('truth-denied', { level: .85 });
+  // A working 3D chamber finishes the reaction using its paused animation clock.
+  if (!scene) rejectionTimer = setTimeout(() => { if (state === 'denied') setState('listening'); }, 2800);
   return { accepted: false, denials, message: message.textContent };
 }
 function resetAfterReturn() {
-  pauseNavigation(); clearTimeout(rejectionTimer);
+  pauseNavigation(); clearTimeout(rejectionTimer); stopDenialSound();
+  reaction = { active: false, pressure: 0, openness: 1, scale: 1 };
+  document.body.style.setProperty('--truth-pressure', '0');
   remaining = 2400; denials = 0; indices.fill(0);
   document.body.classList.remove('is-leaving');
   guestbookRoot.inert = false;
@@ -139,13 +147,13 @@ document.addEventListener('click', event => {
   if (index === 0 || index === 1) advanceRune(index);
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { sound.silence(); scene?.pause(); pauseNavigation(); }
+  if (document.hidden) { stopDenialSound(); sound.silence(); scene?.pause(); pauseNavigation(); }
   else {
     if (!guestbook.isOpen()) { scene?.resume(); resumeNavigation(); }
     if (sound.enabled) void sound.resumeMusic();
   }
 });
-window.addEventListener('pagehide', () => { sound.silence(); scene?.pause(); pauseNavigation(); clearTimeout(rejectionTimer); });
+window.addEventListener('pagehide', () => { stopDenialSound(); sound.silence(); scene?.pause(); pauseNavigation(); clearTimeout(rejectionTimer); });
 window.addEventListener('pageshow', event => {
   if (event.persisted) resetAfterReturn();
   if (!document.hidden && !guestbook.isOpen()) scene?.resume();
@@ -156,12 +164,22 @@ reducedMotion.addEventListener('change', () => {
 });
 function showFallback() {
   scene?.dispose(); scene = undefined; document.body.classList.add('scene-unavailable');
+  reaction = { active: false, pressure: 0, openness: 1, scale: 1 };
+  document.body.style.setProperty('--truth-pressure', '0');
+  if (state === 'denied') { clearTimeout(rejectionTimer); rejectionTimer = setTimeout(() => { if (state === 'denied') setState('listening'); }, 2800); }
   status.textContent = '立体表示を利用できません。下の印と合言葉の仕掛けは、そのまま遊べます。';
 }
 renderRunes();
 try {
   const { createTruthChamber } = await import('./chamber.js');
-  scene = createTruthChamber(document.querySelector('#truth-canvas'), { onUnavailable: showFallback });
+  scene = createTruthChamber(document.querySelector('#truth-canvas'), {
+    onUnavailable: showFallback,
+    onFrame({ denial }) {
+      reaction = denial;
+      document.body.style.setProperty('--truth-pressure', Math.min(1, denial.pressure).toFixed(3));
+      if (state === 'denied' && !denial.active) setState('listening');
+    }
+  });
   if (scene) {
     scene.setRunes(selectedRunes()); scene.setState(state, denials);
     if (document.hidden || guestbook.isOpen()) scene.pause();
@@ -173,7 +191,7 @@ if (document.modelContext?.registerTool) {
   const register = tool => { try { Promise.resolve(document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {} };
   register({ name: 'read_truth_state', description: 'Read the altar seals, passphrase, reaction count, room state, sound and guestbook state.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: args => {
     if (!args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length) throw Error('Expected an empty object');
-    return { state, denials, runes: selectedRunes(), passphrase: input.value, sceneAvailable: Boolean(scene), sound: sound.state(), guestbookOpen: guestbook.isOpen(), message: message.textContent };
+    return { state, denials, runes: selectedRunes(), passphrase: input.value, sceneAvailable: Boolean(scene), reaction, sound: sound.state(), guestbookOpen: guestbook.isOpen(), message: message.textContent };
   } });
   register({ name: 'cycle_truth_rune', description: 'Turn the first or second seal once, using the same action as touching its stone or button. Does not submit the word.', inputSchema: { type: 'object', properties: { index: { type: 'integer', enum: [0, 1] } }, required: ['index'], additionalProperties: false }, execute: input => {
     if (!input || Object.keys(input).length !== 1) throw Error('Expected one seal index');

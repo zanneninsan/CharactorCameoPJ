@@ -1,6 +1,6 @@
 # Manzokukyo corridor: original sound effects
 
-The nine corridor effects and five offering effects are **procedurally synthesized sounds, not recordings**. The corridor sounds use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
+The nine corridor effects, five offering effects and one truth-chamber effect are **procedurally synthesized sounds, not recordings**. The corridor sounds use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
 
 Corridor files are 44.1 kHz stereo PCM16 WAV. The short, damped room reflections are already rendered into the assets; additional Web Audio reverb is unnecessary. Sources have generous headroom, no clipping, click-free fades, and a short silent terminal guard. `validation.json` contains format, duration, peak and RMS measurements from reopening the written WAVs.
 
@@ -17,6 +17,9 @@ The five offering files are 24 kHz mono PCM16 WAV, synthesized with Python's sta
 | `portrait.wav` | Touched glass and delicate frame resonance | Character portrait activation | 0.80 s |
 | `door-open.wav` | Double latch, low timber creak, hinge friction, hall air | Door begins opening | 2.25 s |
 | `enter.wav` | Soft low room resonance with an airy upper tail | Sound consent / arrival | 1.10 s |
+| `truth-denied.wav` | Low impact, taut bronze and held breath, slow retreat | Truth chamber eye lunges after a wrong word | 2.80 s |
+
+The truth-chamber effect is 24 kHz mono PCM16, synthesized with Python's standard library. It reaches its attack in the first 180 ms, holds tension until about 0.6 s and decays with the eye's retreat. Reproduce it with `python generate_truth_sound.py`; `truth-validation.json` records a measured peak below 0.60 and a silent tail longer than 20 ms. Only the truth page requests this extra sound. Repeated mistakes, success, the guestbook and page hiding cancel its previous playback; the existing consent, volume and mute controls still apply.
 
 ## Integration
 

@@ -1,11 +1,12 @@
 const soundFiles = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal'];
 
-export function createSound(audio, { onChange, onError, soundPath = './sounds/' }) {
+export function createSound(audio, { onChange, onError, soundPath = './sounds/', extraSounds = [] }) {
+  const requestedFiles = [...new Set([...soundFiles, ...extraSounds])];
   let context, effectsGain, enabled = false, requested = false, musicLevel = .28, effectsLevel = .65, decoded;
   let revision = 0;
   const buffers = new Map();
   const activeSources = new Set();
-  const downloads = new Map(soundFiles.map(name => [name, fetch(`${soundPath}${name}.wav`).then(response => {
+  const downloads = new Map(requestedFiles.map(name => [name, fetch(`${soundPath}${name}.wav`).then(response => {
     if (!response.ok) throw Error(`Sound ${name}: ${response.status}`);
     return response.arrayBuffer();
   }).catch(() => null)]));
@@ -21,7 +22,7 @@ export function createSound(audio, { onChange, onError, soundPath = './sounds/' 
     limiter.threshold.value = -12; limiter.knee.value = 12; limiter.ratio.value = 4; limiter.attack.value = .005; limiter.release.value = .2;
     effectsGain.connect(limiter).connect(context.destination);
     context.addEventListener('statechange', notify);
-    decoded = Promise.all(soundFiles.map(async name => {
+    decoded = Promise.all(requestedFiles.map(async name => {
       const bytes = await downloads.get(name);
       if (!bytes) return;
       try { buffers.set(name, await context.decodeAudioData(bytes)); } catch {}
@@ -63,7 +64,7 @@ export function createSound(audio, { onChange, onError, soundPath = './sounds/' 
     if (decoded) {
       await decoded;
       if (enabled && attempt === revision && !document.hidden) {
-        if (buffers.size < soundFiles.length) onError?.('一部の効果音を読み込めませんでした。ページを再読み込みしてください。');
+        if (buffers.size < requestedFiles.length) onError?.('一部の効果音を読み込めませんでした。ページを再読み込みしてください。');
         play('enter', { level: .6 });
       }
     } else if (enabled) onError?.('BGMはオンです。この環境では効果音を再生できません。');
