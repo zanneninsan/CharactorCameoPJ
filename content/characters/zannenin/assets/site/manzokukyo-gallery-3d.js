@@ -20,11 +20,12 @@ function fallback() {
   for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.disabled = true;
 }
 function updateSelection(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
   selected = index;
   stage.querySelector('[data-gallery-3d-room]').textContent = `展示室 ${['I', 'II', 'III', 'IV'][Math.floor(index / 6)]} / IV`;
   stage.querySelector('[data-gallery-3d-record]').textContent = `記録 ${String(index + 1).padStart(2, '0')} / 24`;
   stage.querySelector('[data-gallery-3d-inspect]').textContent = `記録 ${String(index + 1).padStart(2, '0')} を大きく見る`;
-  for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.setAttribute('aria-pressed', String(Number(button.dataset.gallery3dRoomJump) === Math.floor(index / 6)));
+  for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.setAttribute('aria-pressed', String(Number(button.getAttribute('data-gallery-3d-room-jump')) === Math.floor(index / 6)));
   for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.classList.toggle('is-current', Number(button.dataset.galleryIndex) === index);
 }
 function inspect(index = selected) {
@@ -39,7 +40,7 @@ stage.querySelector('[data-gallery-3d-next]').addEventListener('click', () => { 
 stage.querySelector('[data-gallery-3d-inspect]').addEventListener('click', () => inspect());
 stage.querySelector('[data-gallery-3d-overview]').addEventListener('click', () => exhibition?.overview(Math.floor(selected / 6)));
 listButton.addEventListener('click', () => { setCatalog(catalog.hidden); if (!catalog.hidden) catalog.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'start' }); });
-for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener('click', () => { exhibition?.overview(Number(button.dataset.gallery3dRoomJump)); gallery.play('step-1', { level: .35 }); });
+for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener('click', () => { exhibition?.overview(Number(button.getAttribute('data-gallery-3d-room-jump'))); gallery.play('step-1', { level: .35 }); });
 for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.addEventListener('click', () => { const index = Number(button.dataset.galleryIndex); updateSelection(index); exhibition?.select(index); });
 for (const button of document.querySelectorAll('[data-gallery-restart]')) button.addEventListener('click', () => {
   exhibition?.overview(0, true); canvas.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'center' }); canvas.focus({ preventScroll: true });
@@ -196,6 +197,7 @@ function createExhibition(T) {
     wake();
   }
   function select(index, immediate = false) {
+    if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
     selectedIndex = index; mode = 'artwork'; updateSelection(index);
     const frame = frames[index]; loadRoom(frame.roomIndex);
     const vertical = frame.height / (2 * Math.tan(T.MathUtils.degToRad(camera.fov / 2)));
@@ -204,6 +206,7 @@ function createExhibition(T) {
     destination(new T.Vector3(frame.side * (5.13 - Math.min(distance, 9.1)), 2.82, frame.z), new T.Vector3(frame.side * 5.13, 2.82, frame.z), immediate);
   }
   function overview(r, immediate = false) {
+    if (!Number.isInteger(r) || r < 0 || r >= 4) return false;
     mode = 'overview'; selectedIndex = r * 6; updateSelection(selectedIndex); loadRoom(r);
     destination(new T.Vector3(0, 2.32, 2 - r * 16), new T.Vector3(0, 2.6, -10 - r * 16), immediate);
   }
