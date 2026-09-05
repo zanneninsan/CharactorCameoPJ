@@ -2,7 +2,12 @@ export function createEriseVoogaPageOverride({ character, escapeHtml, assetVersi
   return {
     headExtra: `
       <link rel="stylesheet" href="./assets/site/erise-home.css?${escapeHtml(assetVersionQuery)}">`,
-    bodyClass: "erise-home",
+    bodyClass: [
+      "erise-home",
+      character.fanworkGuidelines?.status !== "official"
+        ? "erise-guidelines-draft"
+        : ""
+    ].filter(Boolean).join(" "),
     mainClass: "erise-page",
     beforeHero: renderMasthead(character, escapeHtml),
     heroDetails: renderHeroDetails(character, escapeHtml, assetVersionQuery),
@@ -21,7 +26,7 @@ function renderMasthead(character, escapeHtml) {
         </a>
         <nav aria-label="エリセ・ヴーガ ページナビゲーション">
           <a href="../">Character Canon</a>
-          ${socialUrl ? `<a href="${escapeHtml(socialUrl)}" target="_blank" rel="noopener noreferrer">Official X</a>` : ""}
+          ${socialUrl ? `<a href="${escapeHtml(socialUrl)}" target="_blank" rel="noopener noreferrer">X</a>` : ""}
         </nav>
       </div>
     </header>

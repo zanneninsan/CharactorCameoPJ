@@ -14,7 +14,7 @@
   },
   "brandAssets": {
     "banner": {
-      "source": "assets/brand/banner-source.png",
+      "source": "assets/brand/banner-source-v2.png",
       "alt": "エリセ・ヴーガのバナーイラスト"
     }
   },
@@ -56,9 +56,9 @@
     "holderUrl": "https://x.com/Gabrietta_Seri"
   },
   "fanworkGuidelines": {
-    "title": "エリセ・ヴーガ 二次創作ガイドライン",
-    "summary": "エリセ・ヴーガの二次創作、AI生成、ファンアート、動画、配信、記事化を歓迎するためのガイドラインです。公式設定への敬意と、公式と誤認させない表記を前提に、創作しやすい運用を目指します。",
-    "status": "official",
+    "title": "エリセ・ヴーガ 二次創作ガイドライン（案）",
+    "summary": "二次創作に関するルールは検討中です。掲載内容はガイドライン案であり、確定したルールではありません。",
+    "status": "draft",
     "contact": "商用利用、法人利用、大規模企画、判断に迷う利用は事前に相談してください。",
     "sections": [
       {
@@ -221,6 +221,10 @@
     {
       "label": "ヘッドホン詳細図",
       "note": "ユーザー提供画像 erise_headphone_.png を公式ヘッドホン詳細資料として使用。"
+    },
+    {
+      "label": "新ヘッドホン対応バナー",
+      "note": "既存バナーを基に、ユーザー提供の新ヘッドホン資料を参照して装着アクセサリー部分のみ更新。"
     },
     {
       "label": "XアカウントURL",
