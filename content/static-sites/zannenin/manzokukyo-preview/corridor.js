@@ -221,6 +221,25 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   const picture = new THREE.Mesh(new THREE.PlaneGeometry(1.49, 1.95), portraitMaterial); picture.position.set(0, 2.27, .014); portrait.add(picture);
   for (const x of [-.8, .8]) box(portrait, [.09, 2.15, .13], [x, 2.27, .025], brass);
   for (const y of [1.23, 3.31]) box(portrait, [1.69, .09, .13], [0, y, .025], brass);
+
+  // A small slotted box sits opposite the portrait, outside the numbered route stops.
+  const offering = new THREE.Group(); offering.position.set(2.1, 0, -57); scene.add(offering);
+  objects.offering = { group: offering, position: new THREE.Vector3(2.1, 1, -57), labelHeight: 1, meshes: [] };
+  box(offering, [1.36, .1, 1.02], [0, .07, 0], blackMetal);
+  box(offering, [1.2, .05, .86], [0, .145, 0], brass);
+  for (const z of [-.3575, .3575]) box(offering, [1.15, .815, .065], [0, .5775, z], blackMetal);
+  for (const x of [-.5425, .5425]) box(offering, [.065, .815, .65], [x, .5775, 0], blackMetal);
+  box(offering, [1.02, .05, .65], [0, .2, 0], blackMetal);
+  for (const x of [-.55, .55]) for (const z of [-.37, .4]) box(offering, [.03, .71, .035], [x, .54, z], brass);
+  box(offering, [.86, .42, .018], [0, .54, .402], darkStone);
+  for (const x of [-.26, 0, .26]) box(offering, [.015, .3, .016], [x, .54, .419], brass);
+  // Four separate lid pieces leave a real central slot above the dark box interior.
+  for (const z of [-.255, .255]) box(offering, [1.28, .055, .34], [0, 1.01, z], blackMetal);
+  for (const x of [-.505, .505]) box(offering, [.27, .055, .17], [x, 1.01, 0], blackMetal);
+  for (const z of [-.425, .425]) box(offering, [1.31, .035, .028], [0, 1.035, z], brass);
+  for (const x of [-.64, .64]) box(offering, [.028, .035, .85], [x, 1.035, 0], brass);
+  for (const z of [-.085, .085]) box(offering, [.74, .016, .018], [0, 1.043, z], brass);
+
   for (const object of Object.values(objects)) object.group.traverse(mesh => {
     if (mesh.isMesh) { mesh.userData.objectId = Object.keys(objects).find(id => objects[id] === object); pickables.push(mesh); }
   });
@@ -243,9 +262,16 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
     const diagonal = box(hinge, [.024, 3.1, .04], [cx, 2.52, .14], brass); diagonal.rotation.z = side * .35;
   }
   box(door, [3.8, .21, .43], [0, 5.15, .24], stone);
-  torus(door, .42, .035, [0, 5.85, .2], brass);
-  box(door, [.04, .72, .03], [0, 5.85, .24], brass);
-  box(door, [.62, .04, .03], [0, 5.85, .24], brass);
+  const emblemMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, alphaTest: .02, depthWrite: false, toneMapped: false });
+  materials.push(emblemMaterial);
+  const emblem = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.15), emblemMaterial);
+  emblem.position.set(0, 5.95, .26); emblem.visible = false; door.add(emblem);
+  loader.load('./assets/emblem.webp', texture => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    emblemMaterial.map = texture; emblemMaterial.needsUpdate = true;
+    emblem.scale.y = texture.image.height / texture.image.width;
+    emblem.visible = true;
+  }, undefined, () => {});
 
   // Sparse, low contrast airborne dust provides depth without a full-screen image overlay.
   let seed = 17;
@@ -275,7 +301,7 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
     current = reducedMotion.matches ? target : THREE.MathUtils.lerp(current, target, 1 - Math.exp(-dt * 8));
     if (Math.abs(current - target) < .00002) current = target;
     const z = 4 - current * TRAVEL_DISTANCE;
-    const nearest = Object.entries(objects).map(([id, object]) => ({ id, object, distance: z - object.position.z })).filter(o => o.distance > 1 && o.distance < 15).sort((a, b) => Math.abs(a.distance - 7) - Math.abs(b.distance - 7))[0];
+    const nearest = STOPS.map(({ id }) => ({ id, object: objects[id], distance: z - objects[id].position.z })).filter(o => o.distance > 1 && o.distance < 15).sort((a, b) => Math.abs(a.distance - 7) - Math.abs(b.distance - 7))[0];
     const attention = nearest ? Math.exp(-Math.pow((nearest.distance - 7) / 4.3, 2)) : 0;
     const side = nearest ? nearest.object.position.x * attention : 0;
     const moving = Math.abs(current - old) > .00003;
@@ -307,7 +333,7 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
     camera.updateMatrixWorld();
     const labels = {};
     for (const [id, object] of Object.entries(objects)) {
-      projected.copy(object.position); projected.y = 1.05; projected.project(camera);
+      projected.copy(object.position); projected.y = object.labelHeight ?? 1.05; projected.project(camera);
       const distance = z - object.position.z;
       labels[id] = { x: (projected.x * .5 + .5) * viewport.width, y: (-projected.y * .5 + .5) * viewport.height, visible: distance > 1.5 && distance < 13.5 && projected.z < 1 && Math.abs(projected.x) < 1.5 };
     }

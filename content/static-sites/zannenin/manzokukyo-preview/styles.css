@@ -40,6 +40,8 @@ button:disabled { opacity: .6; cursor: wait; }
 input[type="range"] { width: 100%; accent-color: var(--gold); }
 .invitation { min-height: 100svh; position: relative; padding: max(165px, 22svh) 9% 135px; background: linear-gradient(90deg, #090c10dc, transparent 70%); }
 .invitation-copy { max-width: 520px; }
+.invitation-brand { display: flex; align-items: center; gap: 20px; }
+.invitation-brand img { display: block; width: 68px; height: auto; filter: drop-shadow(0 4px 15px #0006); }
 .eyebrow { font: 12px/1.5 var(--latin); letter-spacing: .25em; color: var(--gold); }
 .invitation-note { margin-top: 35px; line-height: 2.15; letter-spacing: .17em; font-size: 18px; }
 h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em; line-height: 1.5; }
@@ -61,6 +63,10 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
 .object-number { font: 26px/1.2 var(--latin); color: var(--gold); }
 .object-link strong { display: block; font-size: 18px; font-weight: 400; letter-spacing: .15em; }
 .object-link small { display: block; margin-top: 3px; font-size: 12px; color: #cec3ae; }
+.offering-link { min-width: 205px; text-align: left; border-color: #c9ac7799; }
+.offering-mark { color: var(--gold); font: 32px/1 var(--latin); }
+.offering-footer { min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); background: transparent; font-size: 13px; }
+.offering-footer small { display: block; margin: 0; font-size: 11px; }
 .has-scene .object-links { position: fixed; inset: 0; padding: 0; pointer-events: none; z-index: 6; }
 .has-scene .object-link { position: absolute; top: 0; left: 0; pointer-events: auto; opacity: 0; visibility: hidden; will-change: transform; }
 .has-scene .object-link.is-visible { opacity: 1; visibility: visible; }
@@ -91,7 +97,7 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
 .games-note { margin: 16px 0 24px; color: var(--muted); font-size: 13px; }
 .sound-invitation { position: fixed; max-width: min(470px, calc(100vw - 36px)); width: 470px; max-height: calc(100svh - 36px); overflow: auto; padding: 45px 40px 30px; border: 1px solid #ac916466; background: #11151bef; color: var(--paper); text-align: center; box-shadow: 0 20px 100px #0008; }
 .sound-invitation::backdrop { background: #04070bc9; backdrop-filter: blur(8px); }
-.sound-emblem { display: block; font-size: 38px; color: var(--gold); margin: 14px 0; }
+.sound-emblem { display: block; width: 58px; height: auto; margin: 14px auto; }
 .sound-invitation h2 { font-weight: 400; font-size: 30px; line-height: 1.7; letter-spacing: .16em; }
 .sound-invitation>p:not(.eyebrow) { font-size: 14px; color: #c4bdae; line-height: 2; margin: 22px 0 28px; }
 .sound-invitation button { width: 100%; min-height: 50px; border: 0; font-size: 15px; letter-spacing: .05em; }
@@ -129,7 +135,8 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
   .sound-toggle[aria-pressed="false"] .sound-bars { opacity: .5; }
   .guestbook-launch { top: max(18px, env(safe-area-inset-top)); width: 118px; font-size: 14px; letter-spacing: .03em; }
   .guestbook-body { padding: 18px; }
-  .invitation { padding: 27svh 8% 120px; background: linear-gradient(90deg, #090c10cf, #090c1033); min-height: max(710px, 100svh); }
+  .invitation { padding: 23svh 8% 120px; background: linear-gradient(90deg, #090c10cf, #090c1033); min-height: max(710px, 100svh); }
+  .invitation-brand img { width: 54px; }
   .invitation-note { font-size: 16px; margin-top: 30px; }
   h1 { font-size: clamp(62px, 19vw, 90px); letter-spacing: .08em; margin: 10px 0; }
   .invitation-description { font-size: 14px; }
@@ -138,6 +145,7 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
   .journey { --walk-length: 840svh; }
   .threshold { padding-top: 22svh; }
   .object-link { min-width: 225px; padding: 13px 18px; }
+  .offering-link { min-width: 205px; }
   .journey-nav { width: 92%; bottom: 14px; padding: 12px 14px 5px; }
   .journey-stops>a { font-size: 12px; }
   .journey-stops { grid-template-columns: repeat(3, 1fr); gap: 0 12px; }
@@ -146,6 +154,12 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
   .sound-invitation { padding: 32px 24px 22px; }
   .sound-invitation h2 { font-size: 27px; }
   .sound-invitation>p:not(.eyebrow) { font-size: 14px; }
+}
+@media (max-height: 500px) {
+  .object-link { padding: 5px 14px; gap: 12px; }
+  .object-link strong { font-size: 15px; line-height: 1.6; }
+  .object-link small { margin-top: 1px; font-size: 11px; line-height: 1.4; }
+  .object-number, .offering-mark { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

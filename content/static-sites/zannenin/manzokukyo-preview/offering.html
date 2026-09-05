@@ -1,0 +1,34 @@
+<dialog class="offering-dialog" aria-labelledby="offering-title" aria-describedby="offering-description offering-free-note">
+  <header class="offering-header">
+    <div><p class="offering-eyebrow">JUST FOR FUN</p><h2 id="offering-title">お布施ごっこ</h2></div>
+    <button class="offering-close" type="button" data-offering-close aria-label="お布施ごっこを閉じる">×</button>
+  </header>
+  <p id="offering-description" class="offering-invitation">ほんの気持ちを、どうかひとつ。<br>もちろん、0円でも歓迎……です。</p>
+  <p id="offering-free-note" class="offering-free-note">実際のお金はかかりません</p>
+  <form method="dialog" data-offering-form>
+    <fieldset class="offering-amounts">
+      <legend>今日のお気持ちは？</legend>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="0" checked autofocus><span><strong>0<small>円</small></strong><em>来ただけ</em></span></label>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="5"><span><strong>5<small>円</small></strong><em>ご縁だけ</em></span></label>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="100"><span><strong>100<small>円</small></strong><em>小銭をひとつ</em></span></label>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="1000"><span><strong>1,000<small>円</small></strong><em>お札、登場</em></span></label>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="10000"><span><strong>10,000<small>円</small></strong><em>ちょっと太っ腹</em></span></label>
+      <label class="offering-choice"><input type="radio" name="offering-amount" value="1000000"><span><strong>1,000,000<small>円</small></strong><em>桁が増えた</em></span></label>
+      <label class="offering-choice offering-choice-grand"><input type="radio" name="offering-amount" value="100000000"><span><strong>100,000,000<small>円</small></strong><em>石油王コース</em></span></label>
+    </fieldset>
+    <button class="offering-submit" type="submit" data-offering-submit>お布施する <span aria-hidden="true">→</span></button>
+  </form>
+  <section class="offering-announcement" aria-live="polite" aria-atomic="true">
+    <div class="offering-result" data-offering-result hidden>
+      <p class="offering-receipt" data-offering-receipt></p>
+      <p class="offering-result-label">本日の仮称号</p>
+      <h3 class="offering-result-title" data-offering-result-title tabindex="-1"></h3>
+      <p class="offering-reaction" data-offering-reaction></p>
+    </div>
+  </section>
+  <div class="offering-result-actions" data-offering-result-actions hidden>
+    <button type="button" class="offering-again" data-offering-again>もう一度お布施する</button>
+    <button type="button" class="offering-done" data-offering-close>閉じる</button>
+  </div>
+  <p class="offering-footnote">金額も称号も、その場限りのお遊びです。</p>
+</dialog>

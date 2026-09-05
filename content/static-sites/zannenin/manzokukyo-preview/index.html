@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/guestbook/guestbook.css">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./offering.css">
   <noscript><style>.journey { padding-top: 0; } .waypoint { display: none; }</style></noscript>
   <script src="../../assets/guestbook/guestbook.js" defer></script>
   <script type="module" src="./site.js"></script>
@@ -30,7 +31,7 @@
   <main id="top">
     <section class="invitation" aria-labelledby="page-title">
       <div class="invitation-copy">
-        <p class="eyebrow">SATISFACTION CULT</p>
+        <div class="invitation-brand"><img src="./assets/emblem.webp" alt="満足教エンブレム" width="600" height="657"><p class="eyebrow">SATISFACTION CULT</p></div>
         <p class="invitation-note">あなたの満足、<br>私たちがお手伝いします。</p>
         <h1 id="page-title">満足教</h1>
         <p class="invitation-description">黒は沈黙、金は祝福。</p>
@@ -58,6 +59,7 @@
       <a class="object-link" data-object="tiktok" data-sfx="projector" href="{{TIKTOK_URL}}" target="_blank" rel="noopener noreferrer"><span class="object-number">03</span><span><strong>縦型スクリーン</strong><small>TikTokを見る ↗</small><span class="sr-only">（新しいタブ）</span></span></a>
       <a class="object-link" data-object="games" data-sfx="tap" href="#game-list" data-open-games><span class="object-number">04</span><span><strong>ゲーム機</strong><small>ゲーム・アプリを選ぶ →</small></span></a>
       <a class="object-link" data-object="portrait" data-sfx="portrait" href="../" target="_blank" rel="noopener noreferrer"><span class="object-number">05</span><span><strong>肖像</strong><small>残念院さんを知る ↗</small><span class="sr-only">（新しいタブ）</span></span></a>
+      <button type="button" class="object-link offering-link" data-object="offering" data-open-offering hidden><span class="offering-mark" aria-hidden="true">¥</span><span><strong>お布施箱</strong><small>お気持ち、ください。</small></span></button>
     </nav>
     <nav class="journey-nav" aria-label="回廊内を移動" hidden>
       <p><span data-location>入口</span><span data-distance>00 / 64 m</span></p>
@@ -70,6 +72,7 @@
       <a href="{{TIKTOK_URL}}" target="_blank" rel="noopener noreferrer" data-sfx="projector">TikTok ↗<span class="sr-only">（新しいタブ）</span></a>
       <a href="../" target="_blank" rel="noopener noreferrer" data-sfx="portrait">残念院さん紹介 ↗<span class="sr-only">（新しいタブ）</span></a>
       <a href="../manzokukyo/" data-sfx="tap">現在のティザー ↗</a>
+      <button type="button" class="offering-footer" data-open-offering hidden>お布施ごっこ · 0円から<small>実際のお金はかかりません</small></button>
       <section id="game-list" class="game-list" aria-labelledby="game-list-title"><h2 id="game-list-title">ゲーム・アプリ</h2><div class="game-grid">{{GAME_LINKS}}</div></section>
       <small>入口デザイン仮案 · オブジェ・演出は試作です。</small>
     </nav>
@@ -80,9 +83,10 @@
     <p class="games-note">各作品は新しいタブで開きます。</p>
     <div class="game-grid">{{GAME_LINKS}}</div>
   </dialog>
+  {{OFFERING_DIALOG}}
   <dialog class="sound-invitation" aria-labelledby="sound-title" aria-describedby="sound-description">
     <p class="eyebrow">BEFORE YOU ENTER</p>
-    <span class="sound-emblem" aria-hidden="true">◈</span>
+    <img class="sound-emblem" src="./assets/emblem.webp" alt="満足教エンブレム" width="600" height="657">
     <h2 id="sound-title">音とともに、<br>回廊の奥へ。</h2>
     <p id="sound-description">足音、かすかな響き、扉のきしみ。<br>この回廊は、音とともに楽しめます。</p>
     <button class="enter-with-sound" type="button">音をオンにして入る <span aria-hidden="true">→</span></button>

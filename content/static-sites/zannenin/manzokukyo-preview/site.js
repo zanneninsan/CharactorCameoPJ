@@ -1,5 +1,6 @@
 import { createSound } from './audio.js';
 import { connectGuestbook } from './guestbook-adapter.js';
+import { createOffering } from './offering.js';
 import { STOPS, TRAVEL_DISTANCE } from './route.js';
 
 const clamp = value => Math.max(0, Math.min(1, value));
@@ -35,6 +36,19 @@ const guestbook = connectGuestbook({
   },
   onTap() { sound.play('tap', { level: .7 }); }
 });
+const offering = createOffering({
+  canOpen: () => consentGiven && !departing && !guestbook.isOpen(),
+  onChange(open) {
+    lastScroll = 0; stepDistance = 0;
+    if (open) { scene?.setPointer(0, 0); scene?.pause(); }
+    else { scheduleUpdate(); if (!document.hidden && !guestbook.isOpen()) scene?.resume(); }
+  },
+  onSound(id) { sound.play(id, { level: .8 }); }
+});
+for (const button of document.querySelectorAll('[data-open-offering]')) {
+  button.hidden = false;
+  button.addEventListener('click', () => offering.open(button));
+}
 toggle.hidden = false;
 document.querySelector('.sound-settings').hidden = false;
 function chooseSound(enabled) {
@@ -72,7 +86,7 @@ gamesDialog.addEventListener('close', () => {
 
 function updateTravel() {
   queued = false;
-  if (guestbook.isOpen()) return;
+  if (guestbook.isOpen() || offering.isOpen()) return;
   const start = journey.getBoundingClientRect().top + window.scrollY;
   const end = threshold.getBoundingClientRect().top + window.scrollY;
   travel = clamp((window.scrollY - start) / Math.max(1, end - start));
@@ -109,20 +123,35 @@ try {
     onFrame({ labels, moved, nearest, now }) {
       for (const link of objectLinks) {
         const id = link.dataset.object, point = labels[id];
-        const visible = point.visible && !departing && !dialog.open && !gamesDialog.open && !guestbook.isOpen() && travel > .025;
+        const visible = point?.visible && !departing && !dialog.open && !gamesDialog.open && !guestbook.isOpen() && !offering.isOpen() && travel > .025;
         link.classList.toggle('is-visible', visible);
         link.setAttribute('aria-hidden', String(!visible)); link.tabIndex = visible ? 0 : -1;
         if (visible) {
           const width = link.offsetWidth || 245, height = link.offsetHeight || 80;
           const x = Math.max(16, Math.min(window.innerWidth - width - 16, point.x - width / 2));
-          const y = Math.max(105, Math.min(window.innerHeight - height - 155, point.y + 15));
+          let y = Math.max(105, Math.min(window.innerHeight - height - 155, point.y + 15));
+          // Separate both labels whenever their projected rectangles overlap, including landscape screens.
+          if (id === 'offering' && labels.portrait?.visible) {
+            const portraitLink = objectLinks.find(item => item.dataset.object === 'portrait');
+            const portraitHeight = portraitLink.offsetHeight || 80;
+            const portraitY = Math.max(105, Math.min(window.innerHeight - portraitHeight - 155, labels.portrait.y + 15));
+            const portraitWidth = portraitLink.offsetWidth || 245;
+            const portraitX = Math.max(16, Math.min(window.innerWidth - portraitWidth - 16, labels.portrait.x - portraitWidth / 2));
+            if (x < portraitX + portraitWidth + 12 && x + width + 12 > portraitX && y < portraitY + portraitHeight + 12 && y + height + 12 > portraitY) {
+              y = portraitY - height - 12;
+              if (y < 85) {
+                y = 85;
+                portraitLink.style.transform = `translate(${Math.round(portraitX)}px, ${Math.round(y + height + 12)}px)`;
+              }
+            }
+          }
           link.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
           if (!found.has(id) && consentGiven && performance.now() - lastScroll < 250) {
-            found.add(id); sound.play('discover', { level: .32, pan: STOPS.find(stop => stop.id === id).x > 0 ? .35 : -.35 });
+            found.add(id); sound.play('discover', { level: .32, pan: (STOPS.find(stop => stop.id === id)?.x ?? 2.1) > 0 ? .35 : -.35 });
           }
         }
       }
-      if (consentGiven && !departing && !dialog.open && !gamesDialog.open && !guestbook.isOpen() && now - lastScroll < 220 && travel > .01 && travel < .995) {
+      if (consentGiven && !departing && !dialog.open && !gamesDialog.open && !guestbook.isOpen() && !offering.isOpen() && now - lastScroll < 220 && travel > .01 && travel < .995) {
         stepDistance += moved;
         if (stepDistance > .7 && now - lastStep > 360) {
           stepDistance = 0; lastStep = now; stepIndex++;
@@ -132,16 +161,16 @@ try {
     }
   });
   document.body.classList.add('has-scene');
-  if (guestbook.isOpen() || document.hidden) scene.pause();
+  if (guestbook.isOpen() || offering.isOpen() || document.hidden) scene.pause();
 } catch { showFallback(); }
 updateTravel();
 
 window.addEventListener('pointermove', event => {
-  if (guestbook.isOpen() || dialog.open || gamesDialog.open) return;
+  if (guestbook.isOpen() || offering.isOpen() || dialog.open || gamesDialog.open) return;
   if (event.pointerType === 'mouse') scene?.setPointer(event.clientX / window.innerWidth * 2 - 1, event.clientY / window.innerHeight * 2 - 1);
 }, { passive: true });
 document.addEventListener('click', event => {
-  if (event.target.closest('[data-guestbook-widget]') || guestbook.isOpen()) return;
+  if (event.target.closest('[data-guestbook-widget], .offering-dialog') || guestbook.isOpen() || offering.isOpen()) return;
   const actionable = event.target.closest('a, button, summary, input, dialog');
   if (actionable) {
     if (actionable.matches('[data-sfx]')) sound.play(actionable.dataset.sfx, { level: .8 });
@@ -170,12 +199,12 @@ window.addEventListener('pageshow', event => {
   departing = false; navigationTimer = undefined; fadeTimer = undefined;
   document.body.classList.remove('is-leaving');
   document.querySelector('[data-guestbook-widget]').inert = false;
-  scene?.resetDoor(); if (!guestbook.isOpen()) scene?.resume(); updateTravel();
+  scene?.resetDoor(); if (!guestbook.isOpen() && !offering.isOpen()) scene?.resume(); updateTravel();
   if (event.persisted && sound.enabled) void sound.resumeMusic();
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { sound.silence(); scene?.pause(); }
-  else { if (!guestbook.isOpen()) scene?.resume(); if (consentGiven && sound.enabled) void sound.resumeMusic(); }
+  else { if (!guestbook.isOpen() && !offering.isOpen()) scene?.resume(); if (consentGiven && sound.enabled) void sound.resumeMusic(); }
 });
 
 // Optional browser integration uses the same controls and never enables audio without a click.
@@ -184,11 +213,12 @@ if (document.modelContext?.registerTool) {
   const register = tool => {
     try { Promise.resolve(document.modelContext.registerTool(tool, { signal: lifecycle.signal })).catch(() => {}); } catch {}
   };
-  register({ name: 'read_corridor_state', description: 'Read corridor position, rendering availability, sound and guestbook state.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: () => ({ position: travel, sceneAvailable: Boolean(scene), sound: sound.state(), consentRequired: dialog.open, gamesOpen: gamesDialog.open, guestbookOpen: guestbook.isOpen(), guestbookReady: guestbook.isReady() }) });
+  register({ name: 'read_corridor_state', description: 'Read corridor position, rendering availability, sound, guestbook and pretend offering game state.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: () => ({ position: travel, sceneAvailable: Boolean(scene), sound: sound.state(), consentRequired: dialog.open, gamesOpen: gamesDialog.open, guestbookOpen: guestbook.isOpen(), guestbookReady: guestbook.isReady(), offering: offering.state() }) });
   register({ name: 'navigate_corridor', description: 'Move within the corridor to a chosen exhibit or the door. Does not open an external page or enable sound.', inputSchema: { type: 'object', properties: { stop: { type: 'string', enum: stopIds } }, required: ['stop'], additionalProperties: false }, execute: async input => {
     if (!input || Object.keys(input).length !== 1 || !stopIds.includes(input.stop)) throw Error('Invalid corridor stop');
     if (dialog.open) throw Error('Choose sound on or off in the entrance dialog first');
     if (guestbook.isOpen()) throw Error('Close the guestbook before moving through the corridor');
+    if (offering.isOpen()) throw Error('Close the offering game before moving through the corridor');
     if (gamesDialog.open) gamesDialog.close();
     document.getElementById(input.stop).scrollIntoView({ behavior: 'instant' }); updateTravel();
     return { stop: input.stop, position: travel };
@@ -198,10 +228,24 @@ if (document.modelContext?.registerTool) {
     if (input.open) {
       if (dialog.open) throw Error('Choose sound on or off in the entrance dialog first');
       if (departing) throw Error('The door transition is in progress');
+      if (offering.isOpen()) throw Error('Close the offering game before opening the guestbook');
       if (gamesDialog.open) gamesDialog.close();
       if (!guestbook.open()) throw Error('Guestbook is not ready');
     } else guestbook.close();
     return { guestbookOpen: guestbook.isOpen(), guestbookReady: guestbook.isReady() };
+  } });
+  register({ name: 'set_offering_open', description: 'Open or close the pretend offering game. No actual money, payment, data submission or storage is involved.', inputSchema: { type: 'object', properties: { open: { type: 'boolean' } }, required: ['open'], additionalProperties: false }, execute: input => {
+    if (!input || Object.keys(input).length !== 1 || typeof input.open !== 'boolean') throw Error('Expected a boolean open value');
+    if (input.open) {
+      if (!offering.open(document.querySelector('.offering-footer'))) throw Error('Choose sound on or off and close other dialogs before opening the offering game');
+    } else offering.close();
+    return offering.state();
+  } });
+  register({ name: 'play_offering', description: 'Choose a displayed pretend yen amount and show its joke reaction in the open offering game. This never sends money or data. Close and reopen, or use the visible try-again button, for another round.', inputSchema: { type: 'object', properties: { amount: { type: 'integer', enum: [0, 5, 100, 1000, 10000, 1000000, 100000000] } }, required: ['amount'], additionalProperties: false }, execute: input => {
+    if (!input || Object.keys(input).length !== 1) throw Error('Expected one amount value');
+    if (!offering.isOpen()) throw Error('Open the offering game first');
+    if (!offering.choose(input.amount) || !offering.submit()) throw Error('Start another round before offering again');
+    return offering.state();
   } });
   window.addEventListener('pagehide', event => { if (!event.persisted) lifecycle.abort(); });
 }
