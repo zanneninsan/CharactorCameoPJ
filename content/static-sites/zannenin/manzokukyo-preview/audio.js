@@ -1,11 +1,11 @@
 const soundFiles = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal'];
 
-export function createSound(audio, { onChange, onError }) {
+export function createSound(audio, { onChange, onError, soundPath = './sounds/' }) {
   let context, effectsGain, enabled = false, requested = false, musicLevel = .28, effectsLevel = .65, decoded;
   let revision = 0;
   const buffers = new Map();
   const activeSources = new Set();
-  const downloads = new Map(soundFiles.map(name => [name, fetch(`./sounds/${name}.wav`).then(response => {
+  const downloads = new Map(soundFiles.map(name => [name, fetch(`${soundPath}${name}.wav`).then(response => {
     if (!response.ok) throw Error(`Sound ${name}: ${response.status}`);
     return response.arrayBuffer();
   }).catch(() => null)]));

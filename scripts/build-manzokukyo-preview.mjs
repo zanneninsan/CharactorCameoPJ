@@ -25,6 +25,8 @@ export async function buildManzokukyoPreview() {
   const html = (await readFile(path.join(source, 'index.html'), 'utf8')).replaceAll('{{TIKTOK_URL}}', escapeHtml(tiktok.url)).replaceAll('{{GAME_LINKS}}', gameLinks).replace('{{OFFERING_DIALOG}}', offeringDialog);
   await writeFile(path.join(output, 'index.html'), html, 'utf8');
   for (const name of ['styles.css', 'site.js', 'corridor.js', 'audio.js', 'route.js', 'guestbook-adapter.js', 'offering.js', 'offering.css']) await cp(path.join(source, name), path.join(output, name));
+  await mkdir(path.join(output, 'truth'), { recursive: true });
+  for (const name of ['index.html', 'styles.css', 'site.js', 'chamber.js']) await cp(path.join(source, 'truth', name), path.join(output, 'truth', name));
   const guestbookOutput = path.join(root, 'dist/assets/guestbook');
   await mkdir(guestbookOutput, { recursive: true });
   for (const name of ['guestbook.css', 'guestbook.js']) await cp(path.join(root, 'content/shared/guestbook', name), path.join(guestbookOutput, name));

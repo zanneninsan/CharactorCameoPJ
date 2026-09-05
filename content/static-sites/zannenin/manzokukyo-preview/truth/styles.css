@@ -1,0 +1,77 @@
+@charset "UTF-8";
+.truth-page { background: #121922; min-height: 100svh; }
+.truth-page .vignette { background: linear-gradient(180deg, #090e16a6, transparent 30%, transparent 50%, #090e1680); }
+.truth-main { min-height: 100svh; display: flex; align-items: center; flex-direction: column; padding: 100px 24px 20px; }
+.truth-heading { align-self: flex-start; margin: 10px 0 18px max(0px, 5vw - 24px); max-width: 520px; text-shadow: 0 3px 20px #000a; }
+.truth-heading h1 { margin: 8px 0 10px; font-size: clamp(36px, 5vw, 68px); line-height: 1.35; letter-spacing: .2em; }
+.truth-heading>p:last-child { color: #dadbd4; font-size: 14px; line-height: 1.9; }
+.truth-audio-invite { position: absolute; right: 4%; top: 103px; z-index: 10; max-width: 255px; padding: 14px 16px; border: 1px solid #c9ac7766; background: #101921ed; box-shadow: 0 8px 30px #0003; }
+.truth-audio-invite p { color: #dfddcd; font-size: 14px; }
+.truth-audio-invite>div { display: flex; gap: 12px; margin-top: 8px; }
+.truth-audio-invite button { min-height: 40px; padding: 7px 10px; border: 1px solid #c9ac77; background: #d6ba83; color: #20232a; font-size: 13px; }
+.truth-audio-invite [data-stay-silent] { background: transparent; color: #d2d5d2; border-color: #65706b; }
+.truth-console { width: min(570px, 100%); margin-top: max(200px, 26svh); padding: 18px 24px 14px; border: 1px solid #c9ac7780; border-top: 2px solid #d9bb82; border-radius: 3px; background: linear-gradient(130deg, #1b3035eb, #101721f2 45%, #30222ded); box-shadow: 0 16px 65px #0005; backdrop-filter: blur(14px); }
+.truth-console-head { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.truth-console-head h2 { font-size: 18px; font-weight: 500; letter-spacing: .12em; }
+.truth-console-head>span { color: #c4bba9; font-size: 12px; }
+.truth-console-head output { margin-left: 7px; color: #e4ca98; font: 17px/1 var(--latin); white-space: nowrap; }
+.truth-seal-note { margin-top: 5px; font-size: 13px; color: #c4cec9; }
+.truth-runes { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 12px 0 14px; }
+.truth-rune { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 12px; min-height: 72px; width: 175px; padding: 9px 15px; border: 1px solid #80bfb5; border-radius: 3px; background: linear-gradient(140deg, #31504e, #1b343b); box-shadow: inset 0 0 0 3px #80bfb520; }
+.truth-rune:nth-of-type(2) { border-color: #c495c7; background: linear-gradient(140deg, #503e57, #2b2a40); box-shadow: inset 0 0 0 3px #c495c720; }
+.truth-rune>span { color: #e1ece7; font-size: 12px; text-align: left; }
+.truth-rune>strong { grid-column: 2; grid-row: 1 / 3; font-size: 34px; font-weight: 500; line-height: 1.4; color: #fff1d2; }
+.truth-rune>small { text-align: left; font-size: 12px; color: #c3d1ce; }
+.truth-rune:hover { filter: brightness(1.17); }
+.truth-rune-join { color: #c9ac77; }
+.truth-passphrase-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.truth-passphrase-row input { width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; border: 1px solid #778d8c; border-radius: 2px; color: #f0eee3; background: #09121ab8; font: 16px/1.5 var(--serif); }
+.truth-passphrase-row input::placeholder { color: #a8b6b5; font-size: 13px; }
+.truth-passphrase-row button { min-width: 106px; padding: 10px 17px; border: 1px solid #d9bc80; background: #dbc18e; color: #20232a; font-size: 15px; font-weight: 600; }
+.truth-passphrase-row button:hover { background: #f2d9a7; }
+.truth-message { min-height: 24px; margin-top: 12px; color: #c6e0d7; font-size: 14px; line-height: 1.7; }
+.truth-clue { margin-top: 4px; color: #c0b49c; font-size: 12px; }
+.truth-backlinks { width: min(570px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 12px 0 0; }
+.truth-backlinks a { display: flex; align-items: center; min-height: 44px; padding: 6px 0; font-size: 13px; color: #d1ccc0; text-shadow: 0 2px 5px #000; }
+.truth-page[data-truth-state="denied"] .truth-console { border-color: #e3928f; }
+.truth-page[data-truth-state="denied"] .truth-message { color: #ffb5af; }
+.truth-page[data-truth-state="accepted"] .truth-console { border-color: #ade9d4; transition: opacity .6s; opacity: .2; pointer-events: none; }
+.truth-page[data-truth-state="accepted"] .truth-audio-invite { display: none; }
+.truth-exit { position: fixed; inset: 0; z-index: 45; background: #e9eedc; opacity: 0; pointer-events: none; transition: opacity .65s; }
+.truth-page.is-leaving .truth-exit { opacity: 1; }
+.truth-page .sound-status { bottom: 20px; z-index: 35; }
+.truth-noscript { padding: 20px; color: #f2e6c9; }
+.truth-noscript a { text-decoration: underline; }
+.truth-page.scene-unavailable .world { background: radial-gradient(ellipse at 50% 35%, #2b5558, #17202a 55%, #111720); }
+.truth-page.scene-unavailable .truth-console { margin-top: 40px; }
+@media (min-width: 901px) and (min-height: 760px) {
+  .truth-console { margin-top: auto; }
+  .truth-main { padding-bottom: 25px; }
+}
+@media (max-width: 650px) {
+  .truth-main { padding: 90px 16px 14px; }
+  .truth-heading { margin: 6px 0 0; max-width: 100%; }
+  .truth-heading h1 { font-size: 36px; }
+  .truth-heading>p:last-child { max-width: 300px; font-size: 12px; line-height: 1.8; }
+  .truth-audio-invite { position: relative; align-self: flex-end; right: auto; top: auto; max-width: none; padding: 7px 10px; margin-top: 10px; }
+  .truth-audio-invite p { display: none; }
+  .truth-audio-invite>div { margin-top: 0; gap: 8px; }
+  .truth-audio-invite button { min-height: 36px; font-size: 12px; padding: 5px 9px; }
+  .truth-console { margin-top: max(210px, 27svh); padding: 14px 15px 12px; }
+  .truth-console-head h2 { font-size: 16px; }
+  .truth-runes { gap: 12px; margin-top: 10px; }
+  .truth-rune { width: 145px; padding: 8px 10px; column-gap: 8px; }
+  .truth-rune>strong { font-size: 30px; }
+  .truth-passphrase-row { gap: 7px; }
+  .truth-passphrase-row button { min-width: 84px; padding: 10px; font-size: 14px; }
+  .truth-message { font-size: 13px; }
+  .truth-backlinks a { font-size: 12px; }
+}
+@media (max-height: 500px) {
+  .truth-main { padding-top: 88px; }
+  .truth-heading h1 { font-size: 34px; }
+  .truth-console { margin-top: 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .truth-exit, .truth-console { transition: none !important; }
+}

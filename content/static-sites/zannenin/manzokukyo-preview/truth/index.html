@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121922">
+  <meta name="robots" content="noindex, nofollow">
+  <title>真理の扉｜満足教</title>
+  <meta name="description" content="扉は開いた。答えはまだない。満足教の祭壇に、二つの印と言葉を捧げる。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/guestbook/guestbook.css">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="../../../assets/guestbook/guestbook.js" defer></script>
+  <script type="module" src="./site.js"></script>
+</head>
+<body class="truth-page" data-truth-state="waiting">
+  <a class="skip-link" href="#truth-console">合言葉を捧げる</a>
+  <div class="world" aria-hidden="true"><canvas id="truth-canvas"></canvas></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="wordmark" href="../#threshold" data-sfx="tap"><span>満足教</span><small>THE INNER CHAMBER</small></a>
+    <div class="header-actions">
+      <button type="button" class="sound-toggle" aria-label="音をオンにする" aria-pressed="false" hidden><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span data-sound-label>SOUND OFF</span></button>
+      <details class="sound-settings" hidden><summary aria-label="音量設定">音量</summary><div><label>BGM<input id="music-volume" type="range" min="0" max="100" value="28"></label><label>効果音<input id="effects-volume" type="range" min="0" max="100" value="65"></label></div></details>
+    </div>
+  </header>
+  <main class="truth-main">
+    <section class="truth-heading" aria-labelledby="truth-title">
+      <p class="eyebrow">SATISFACTION CULT / AREA 01</p>
+      <h1 id="truth-title">真理の扉</h1>
+      <p>扉は開いた。答えはまだない。<br>ここでは、あなたが満たされたものだけが言葉になる。</p>
+    </section>
+    <aside class="truth-audio-invite" hidden>
+      <p>この部屋も、音とともに。</p>
+      <div><button type="button" data-start-sound>音をオン</button><button type="button" data-stay-silent>音なしで進む</button></div>
+    </aside>
+    <form id="truth-console" class="truth-console" aria-labelledby="console-title">
+      <div class="truth-console-head"><h2 id="console-title">祭壇に、言葉を。</h2><span>反響 <output data-denial-meter>00 / 03</output></span></div>
+      <p class="truth-seal-note">二つの印に触れて、言葉を合わせる。</p>
+      <div class="truth-runes" aria-label="合言葉の二つの印">
+        <button type="button" class="truth-rune" data-rune="0" aria-label="第一の印、現在は未"><span>第一の印</span><strong>未</strong><small>次の印へ ↻</small></button>
+        <span class="truth-rune-join" aria-hidden="true">＋</span>
+        <button type="button" class="truth-rune" data-rune="1" aria-label="第二の印、現在は定"><span>第二の印</span><strong>定</strong><small>次の印へ ↻</small></button>
+      </div>
+      <label class="sr-only" for="truth-passphrase">合言葉</label>
+      <div class="truth-passphrase-row"><input id="truth-passphrase" name="passphrase" type="text" maxlength="64" autocomplete="off" placeholder="文字で合言葉を捧げる" aria-describedby="truth-message truth-clue"><button type="submit">捧げる <span aria-hidden="true">→</span></button></div>
+      <p id="truth-message" class="truth-message" role="status" aria-live="polite">祭壇は、あなたの言葉を待っている。</p>
+      <p id="truth-clue" class="truth-clue">hint / 満たすべきものを、一語で</p>
+    </form>
+    <nav class="truth-backlinks" aria-label="部屋の移動"><a href="../#threshold" data-sfx="tap">← 回廊へ</a><a href="../../" data-sfx="tap">残念院さん公式設定 ↗</a></nav>
+    <noscript><p class="truth-noscript">印の操作にはJavaScriptが必要です。<a href="../../manzokukyo/truth/">従来の真理の扉へ</a></p></noscript>
+  </main>
+  <div data-guestbook-widget data-guestbook-scope="zannenin:guestbook" data-guestbook-title="満足教のあしあと帳" data-guestbook-description="真理の扉まで来た記念に、ひとこと残していけます。" data-guestbook-button-label="あしあと帳" data-guestbook-default-name="満足教徒" data-guestbook-max-length="80" data-guestbook-direct="true"></div>
+  <p class="sound-status" role="status" aria-live="polite"></p>
+  <div class="truth-exit" aria-hidden="true"></div>
+  <audio id="ambient-audio" src="../assets/satisfaction-bgm.m4a" preload="none" loop></audio>
+</body>
+</html>
