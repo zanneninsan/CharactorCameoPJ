@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { buildAnimeTeaserCute } from "./build-anime-teaser-cute.mjs";
+import { buildManzokukyoPreview } from "./build-manzokukyo-preview.mjs";
 import { resolveCharacterPageOverride } from "./page-overrides/index.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -124,6 +126,9 @@ async function build() {
         await writeFile(path.join(promptDir, "video-outfit-change.md"), renderVideoPrompt(character, { outfitMode: "outfit-change" }), "utf8");
       }
 
+      await buildAnimeTeaser();
+      await buildAnimeTeaserCute();
+      await buildManzokukyoPreview();
       await copyPublishedDocs();
       await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
       await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
@@ -134,6 +139,112 @@ async function build() {
   }
 
   console.log(`Loaded ${characters.length} character(s).`);
+}
+
+async function buildAnimeTeaser() {
+  const sourceDir = path.join(staticSitesDir, "series", "manzokukyo-zannenin");
+  const targetDir = path.join(distDir, "anime", "manzokukyo-zannenin");
+  const assetDir = path.join(targetDir, "assets");
+  const pilotPackageDir = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "video-prompts",
+    "packages",
+    "pilot-vtuber-proposal-seedance20-15s-v2",
+  );
+  const teaserCharacterDir = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "website-assets",
+    "manzokukyo-zannenin",
+  );
+  const titleLogoSourcePath = path.join(teaserCharacterDir, "zannenin-title-logo.png");
+  const emblemSourcePath = path.join(
+    rootDir,
+    "content",
+    "inbox",
+    "_series",
+    "untitled-short-anime",
+    "world-setting-assets",
+    "manzokukyo-emblem-v2.png",
+  );
+
+  await stat(path.join(sourceDir, "index.html"));
+  await mkdir(targetDir, { recursive: true });
+  await cp(sourceDir, targetDir, { recursive: true });
+  await mkdir(assetDir, { recursive: true });
+  await cp(titleLogoSourcePath, path.join(assetDir, "zannenin-title-logo.png"));
+
+  const characterAssets = [
+    { input: "believer-f-cutout.png", output: "bad-nori.webp" },
+    { input: "zannenin-cutout.png", output: "zannenin.webp" },
+    { input: "believer-b-cutout.png", output: "tsukkomi.webp" },
+  ];
+
+  for (const asset of characterAssets) {
+    const inputPath = path.join(teaserCharacterDir, asset.input);
+    await sharp(inputPath)
+      .resize({ height: 1500, withoutEnlargement: true })
+      .webp({ quality: 88, alphaQuality: 100, smartSubsample: true })
+      .toFile(path.join(assetDir, asset.output));
+  }
+
+  await sharp(emblemSourcePath)
+    .resize({ width: 420, withoutEnlargement: true })
+    .png()
+    .toFile(path.join(assetDir, "manzokukyo-emblem.png"));
+
+  const environmentPath = path.join(pilotPackageDir, "04-reused-community-hall-reference.png");
+  await sharp(environmentPath)
+    .resize({ width: 1800, withoutEnlargement: true })
+    .webp({ quality: 84, smartSubsample: true })
+    .toFile(path.join(assetDir, "community-room.webp"));
+
+  const zanneninLayer = await sharp(path.join(assetDir, "zannenin.webp"))
+    .resize({ height: 620 })
+    .png()
+    .toBuffer();
+  const badNoriLayer = await sharp(path.join(assetDir, "bad-nori.webp"))
+    .resize({ height: 560 })
+    .png()
+    .toBuffer();
+  const tsukkomiLayer = await sharp(path.join(assetDir, "tsukkomi.webp"))
+    .resize({ height: 560 })
+    .png()
+    .toBuffer();
+  const emblemLayer = await sharp(emblemSourcePath)
+    .resize({ width: 58, withoutEnlargement: true })
+    .png()
+    .toBuffer();
+  const ogpTypography = Buffer.from(`
+    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <rect x="45" y="70" width="545" height="486" rx="6" fill="#fff" fill-opacity=".92" stroke="#28242b" stroke-width="5"/>
+      <rect x="61" y="86" width="513" height="454" rx="2" fill="none" stroke="#f34d83" stroke-width="3"/>
+      <text x="139" y="134" fill="#f34d83" font-family="Yu Gothic, sans-serif" font-size="17" font-weight="800" letter-spacing="4">SHORT ANIME PROJECT</text>
+      <text x="82" y="240" fill="#28242b" font-family="Yu Mincho, serif" font-size="51" font-weight="700" letter-spacing="10">満足教の</text>
+      <text x="74" y="352" fill="#28242b" font-family="Yu Mincho, serif" font-size="98" font-weight="700" letter-spacing="-7">残念院さん</text>
+      <rect x="82" y="379" width="425" height="48" fill="#fff14d" stroke="#28242b" stroke-width="3"/>
+      <text x="104" y="411" fill="#28242b" font-family="Yu Gothic, sans-serif" font-size="20" font-weight="800" letter-spacing="4">サティスファクション計画</text>
+      <text x="83" y="475" fill="#f34d83" font-family="Yu Gothic, sans-serif" font-size="22" font-weight="800" letter-spacing="1">満足を求めて、今日も会議はだいたい脱線。</text>
+      <text x="84" y="512" fill="#9175e9" font-family="Yu Gothic, sans-serif" font-size="14" font-weight="800" letter-spacing="3">PILOT FILM IN PRODUCTION</text>
+    </svg>`);
+  await sharp(path.join(sourceDir, "social-background.png"))
+    .resize(1200, 630, { fit: "cover" })
+    .composite([
+      { input: badNoriLayer, left: 610, top: 110, blend: "over" },
+      { input: tsukkomiLayer, left: 935, top: 115, blend: "over" },
+      { input: zanneninLayer, left: 765, top: 30, blend: "over" },
+      { input: emblemLayer, left: 66, top: 94, blend: "over" },
+      { input: ogpTypography, left: 0, top: 0, blend: "over" },
+    ])
+    .jpeg({ quality: 90, chromaSubsampling: "4:4:4" })
+    .toFile(path.join(assetDir, "ogp.jpg"));
 }
 
 async function acquireBuildLock() {
@@ -6068,6 +6179,37 @@ function renderManzokukyoTeaser(character) {
           transform: translateY(0);
         }
 
+        .mk-preview-link {
+          position: fixed;
+          top: max(14px, env(safe-area-inset-top));
+          right: max(14px, env(safe-area-inset-right));
+          z-index: 90;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          max-width: calc(100vw - 28px);
+          padding: 10px 16px;
+          border: 1px solid var(--cult-gold);
+          border-radius: 999px;
+          background: #18131ef2;
+          color: #fff0b8;
+          font: 700 14px/1.6 var(--font-ui);
+          text-decoration: none;
+          touch-action: manipulation;
+        }
+
+        .mk-preview-link:hover,
+        .mk-preview-link:focus-visible {
+          background: #382c20;
+          outline: 2px solid #fff0b8;
+          outline-offset: 3px;
+        }
+
+        .mk-page .mk-depth-hud {
+          top: max(72px, calc(env(safe-area-inset-top) + 58px));
+        }
+
         .mk-bgm-toggle {
           position: fixed;
           left: clamp(22px, 4vw, 72px);
@@ -7255,6 +7397,7 @@ function renderManzokukyoTeaser(character) {
         }
 
         @media (max-width: 820px) {
+          .mk-page .mk-scroll-cue { top: max(110px, calc(env(safe-area-inset-top) + 96px)); }
           .mk-hero {
             min-height: 100svh;
             height: 100svh;
@@ -7593,6 +7736,7 @@ function renderManzokukyoTeaser(character) {
         }
       </style>
       <main class="mk-page" data-ritual-state="running">
+        <a class="mk-preview-link" href="../manzokukyo-preview/">新ティザーを試す（仮） →</a>
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <section class="mk-hero">
           <div class="mk-banner" aria-hidden="true"></div>

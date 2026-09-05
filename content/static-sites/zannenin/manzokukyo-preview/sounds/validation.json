@@ -1,0 +1,101 @@
+[
+  {
+    "file": "tap.wav",
+    "durationSeconds": 0.24,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -9.9,
+    "rmsDbFS": -28.67,
+    "bytes": 42380,
+    "silentTailMs": 4
+  },
+  {
+    "file": "step-1.wav",
+    "durationSeconds": 0.8,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -10.46,
+    "rmsDbFS": -32.61,
+    "bytes": 141164,
+    "silentTailMs": 4
+  },
+  {
+    "file": "step-2.wav",
+    "durationSeconds": 0.8,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -10.46,
+    "rmsDbFS": -31.33,
+    "bytes": 141164,
+    "silentTailMs": 4
+  },
+  {
+    "file": "discover.wav",
+    "durationSeconds": 0.88,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -12.04,
+    "rmsDbFS": -27.72,
+    "bytes": 155276,
+    "silentTailMs": 4
+  },
+  {
+    "file": "projector.wav",
+    "durationSeconds": 0.86,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -10.46,
+    "rmsDbFS": -25.68,
+    "bytes": 151748,
+    "silentTailMs": 4
+  },
+  {
+    "file": "transmission.wav",
+    "durationSeconds": 0.78,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -12.4,
+    "rmsDbFS": -33.66,
+    "bytes": 137636,
+    "silentTailMs": 4
+  },
+  {
+    "file": "portrait.wav",
+    "durationSeconds": 0.8,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -12.4,
+    "rmsDbFS": -27.58,
+    "bytes": 141164,
+    "silentTailMs": 4
+  },
+  {
+    "file": "door-open.wav",
+    "durationSeconds": 2.25,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -6.2,
+    "rmsDbFS": -25.97,
+    "bytes": 396944,
+    "silentTailMs": 4
+  },
+  {
+    "file": "enter.wav",
+    "durationSeconds": 1.1,
+    "sampleRateHz": 44100,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "peakDbFS": -11.06,
+    "rmsDbFS": -24.64,
+    "bytes": 194084,
+    "silentTailMs": 4
+  }
+]
