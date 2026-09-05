@@ -1,0 +1,241 @@
+{
+  "title": "Truth Chamber — The Word Behind the Eye",
+  "seed": 20260906,
+  "bpm": 64,
+  "bars": 16,
+  "time_signature": "4/4",
+  "nominal_duration_seconds": 60.0,
+  "synthesis": "Original additive instruments and circular synthetic reverberation; no external samples or impulse responses.",
+  "normalization": {
+    "type": "linear gain, no limiter",
+    "target_lufs": -19,
+    "gain_db": 6.949999999999999
+  },
+  "arrangement": [
+    {
+      "bar": 1,
+      "chord": "Dm(add9)",
+      "midi_voices": [
+        50,
+        57,
+        60,
+        64,
+        65
+      ],
+      "bass_midi": 38
+    },
+    {
+      "bar": 3,
+      "chord": "Bbmaj9",
+      "midi_voices": [
+        46,
+        53,
+        57,
+        60,
+        62
+      ],
+      "bass_midi": 34
+    },
+    {
+      "bar": 5,
+      "chord": "Dm(add9)",
+      "midi_voices": [
+        50,
+        57,
+        64,
+        65,
+        69
+      ],
+      "bass_midi": 38
+    },
+    {
+      "bar": 7,
+      "chord": "C(add9)",
+      "midi_voices": [
+        48,
+        55,
+        62,
+        64,
+        67
+      ],
+      "bass_midi": 36
+    },
+    {
+      "bar": 9,
+      "chord": "Gm9",
+      "midi_voices": [
+        43,
+        50,
+        53,
+        57,
+        58
+      ],
+      "bass_midi": 31
+    },
+    {
+      "bar": 11,
+      "chord": "Bbmaj7(#11)",
+      "midi_voices": [
+        46,
+        53,
+        57,
+        62,
+        64
+      ],
+      "bass_midi": 34
+    },
+    {
+      "bar": 13,
+      "chord": "A7sus4(b9)",
+      "midi_voices": [
+        45,
+        52,
+        55,
+        58,
+        62
+      ],
+      "bass_midi": 33
+    },
+    {
+      "bar": 15,
+      "chord": "Dm(add9)",
+      "midi_voices": [
+        50,
+        57,
+        60,
+        64,
+        65
+      ],
+      "bass_midi": 38
+    }
+  ],
+  "formats": [
+    {
+      "file": "truth-chamber-bgm.wav",
+      "bytes": 10584044,
+      "codec": "pcm_s16le",
+      "sample_rate": 44100,
+      "channels": 2,
+      "decoded_frames": 2646000,
+      "decoded_duration_seconds": 60.0,
+      "container_duration_seconds": 60.0,
+      "sample_peak_dbfs": -6.742700002551163,
+      "rms_dbfs": -21.25542360794657,
+      "silent_frames": 0,
+      "loudness": {
+        "integrated_lufs": -18.99,
+        "true_peak_dbfs": -6.74,
+        "loudness_range_lu": 3.8,
+        "method": "ffmpeg loudnorm EBU R128 input measurement"
+      },
+      "loop_seam": {
+        "boundary_delta_left_right": [
+          -0.003814697265625,
+          -0.009613037109375
+        ],
+        "ordinary_delta_abs_p99_left_right": [
+          0.018402099609375,
+          0.018798828125
+        ],
+        "boundary_derivative_change_left_right": [
+          -0.000823974609375,
+          -0.0020751953125
+        ],
+        "ordinary_derivative_change_abs_p99_left_right": [
+          0.002716064453125,
+          0.00286865234375
+        ],
+        "max_delta_abs": 0.04632568359375,
+        "pass": true,
+        "criterion": "Boundary value step and derivative change each below 3x ordinary 99th percentile (PCM quantization floors 0.00015 / 0.0002)."
+      }
+    },
+    {
+      "file": "truth-chamber-bgm.flac",
+      "bytes": 2275061,
+      "codec": "flac",
+      "sample_rate": 44100,
+      "channels": 2,
+      "decoded_frames": 2646000,
+      "decoded_duration_seconds": 60.0,
+      "container_duration_seconds": 60.0,
+      "sample_peak_dbfs": -6.742700002551163,
+      "rms_dbfs": -21.25542360794657,
+      "silent_frames": 0,
+      "loudness": {
+        "integrated_lufs": -18.99,
+        "true_peak_dbfs": -6.74,
+        "loudness_range_lu": 3.8,
+        "method": "ffmpeg loudnorm EBU R128 input measurement"
+      },
+      "loop_seam": {
+        "boundary_delta_left_right": [
+          -0.003814697265625,
+          -0.009613037109375
+        ],
+        "ordinary_delta_abs_p99_left_right": [
+          0.018402099609375,
+          0.018798828125
+        ],
+        "boundary_derivative_change_left_right": [
+          -0.000823974609375,
+          -0.0020751953125
+        ],
+        "ordinary_derivative_change_abs_p99_left_right": [
+          0.002716064453125,
+          0.00286865234375
+        ],
+        "max_delta_abs": 0.04632568359375,
+        "pass": true,
+        "criterion": "Boundary value step and derivative change each below 3x ordinary 99th percentile (PCM quantization floors 0.00015 / 0.0002)."
+      }
+    },
+    {
+      "file": "truth-chamber-bgm.mp3",
+      "bytes": 1441544,
+      "codec": "mp3",
+      "sample_rate": 44100,
+      "channels": 2,
+      "decoded_frames": 2646000,
+      "decoded_duration_seconds": 60.0,
+      "container_duration_seconds": 60.029388,
+      "sample_peak_dbfs": -7.007588127792655,
+      "rms_dbfs": -21.521024398208066,
+      "silent_frames": 0,
+      "loudness": {
+        "integrated_lufs": -19.26,
+        "true_peak_dbfs": -7.01,
+        "loudness_range_lu": 3.9,
+        "method": "ffmpeg loudnorm EBU R128 input measurement"
+      },
+      "loop_seam": {
+        "boundary_delta_left_right": [
+          2.1165831640246324e-05,
+          -3.0468588192889e-05
+        ],
+        "ordinary_delta_abs_p99_left_right": [
+          0.017849469557404518,
+          0.01822675809264183
+        ],
+        "boundary_derivative_change_left_right": [
+          -1.9572565634007333e-05,
+          2.8237128390173893e-05
+        ],
+        "ordinary_derivative_change_abs_p99_left_right": [
+          0.0026220977306365967,
+          0.002770476881414646
+        ],
+        "max_delta_abs": 0.044922977685928345,
+        "pass": true,
+        "criterion": "Boundary value step and derivative change each below 3x ordinary 99th percentile (PCM quantization floors 0.00015 / 0.0002)."
+      }
+    }
+  ],
+  "auditioned": false,
+  "notes": [
+    "WAV and FLAC are exact 60-second gapless PCM loops. HTMLMediaElement loop timing remains browser-dependent.",
+    "MP3 is the compatibility fallback, carries encoder delay/padding metadata; container duration can exceed decoded duration.",
+    "MP3 only: a 16 ms smoothstep window at each boundary prevents MDCT edge transients. No duration or silence is added; the primary FLAC and master are unchanged.",
+    "Seam validation tests decoded values and slopes; it is not a substitute for listening."
+  ]
+}

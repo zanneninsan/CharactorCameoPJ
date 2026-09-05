@@ -27,6 +27,8 @@ export async function buildManzokukyoPreview() {
   for (const name of ['styles.css', 'site.js', 'corridor.js', 'audio.js', 'route.js', 'guestbook-adapter.js', 'offering.js', 'offering.css']) await cp(path.join(source, name), path.join(output, name));
   await mkdir(path.join(output, 'truth'), { recursive: true });
   for (const name of ['index.html', 'styles.css', 'site.js', 'chamber.js']) await cp(path.join(source, 'truth', name), path.join(output, 'truth', name));
+  await mkdir(path.join(output, 'music'), { recursive: true });
+  for (const name of ['truth-chamber-bgm.flac', 'truth-chamber-bgm.mp3']) await cp(path.join(source, 'music', name), path.join(output, 'music', name));
   const guestbookOutput = path.join(root, 'dist/assets/guestbook');
   await mkdir(guestbookOutput, { recursive: true });
   for (const name of ['guestbook.css', 'guestbook.js']) await cp(path.join(root, 'content/shared/guestbook', name), path.join(guestbookOutput, name));
