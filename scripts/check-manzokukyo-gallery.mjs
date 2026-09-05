@@ -73,16 +73,27 @@ class Element {
   scrollIntoView() { this.scrolled = true; }
 }
 
-function createHarness({ saved = {}, blockedStorage = false, reduced = false } = {}) {
+function createHarness({ saved = {}, blockedStorage = false, reduced = false, soundEnabled = true } = {}) {
   const store = new Map(Object.entries(saved));
   const writes = [], sounds = [], navigation = [], listeners = new Map(), frames = new Map();
   let frameId = 0, now = 1000, soundEnables = 0, soundSilences = 0;
   const elements = Object.fromEntries(['page', 'dialog', 'collect', 'imprint', 'note', 'form', 'answer', 'submit', 'message', 'exit', 'ledger', 'wordTray', 'undo', 'ceremony', 'stage', 'continueButton', 'skipButton'].map(name => [name, new Element()]));
   const root = new Element();
-  const document = { hidden: false, body: new Element(), documentElement: new Element(), querySelector: selector => root.querySelector(selector), addEventListener: (type, callback) => listeners.set(`document:${type}`, callback) };
-  const sharedSound = { enabled: true, state: () => ({ enabled: true, musicVolume: .37, effectsVolume: .52, consentGiven: true }),
-    play(name, options) { const sound = { name, options, cancelled: false }; sounds.push(sound); return () => { sound.cancelled = true; }; },
-    enable() { soundEnables++; return Promise.resolve(true); }, silence() { soundSilences++; }, resumeMusic() { return Promise.resolve(true); } };
+  const galleryFrames = records.map(record => root.querySelector(`[data-gallery-index="${record.number - 1}"]`));
+  const document = { hidden: false, body: new Element(), documentElement: new Element(),
+    querySelector: selector => selector === '[data-gallery-index]' ? galleryFrames[0] : root.querySelector(selector),
+    querySelectorAll: selector => selector === '[data-gallery-index]' ? galleryFrames : [],
+    addEventListener: (type, callback) => listeners.set(`document:${type}`, callback) };
+  const audioState = { enabled: soundEnabled, musicPlaying: soundEnabled, musicVolume: .37, effectsVolume: .52, consentGiven: true, track: { id: 'truth', label: 'Truth chamber' } };
+  const soundMutations = [];
+  const sharedSound = { get enabled() { return audioState.enabled; }, state: () => structuredClone(audioState),
+    play(name, options) { if (!audioState.enabled) return; const sound = { name, options, cancelled: false }; sounds.push(sound); return () => { sound.cancelled = true; }; },
+    enable() { soundEnables++; audioState.enabled = true; audioState.musicPlaying = true; return Promise.resolve(true); },
+    mute() { soundMutations.push('mute'); audioState.enabled = false; audioState.musicPlaying = false; },
+    silence() { soundSilences++; audioState.musicPlaying = false; },
+    resumeMusic() { soundMutations.push('resume'); audioState.musicPlaying = audioState.enabled; return Promise.resolve(true); },
+    setMusicVolume(value) { soundMutations.push('musicVolume'); audioState.musicVolume = value; },
+    setEffectsVolume(value) { soundMutations.push('effectsVolume'); audioState.effectsVolume = value; } };
   const sandbox = {
     console, ...elements, records, assetVersionQuery,
     seals: records.filter(record => record.seal).sort((a, b) => a.seal.order - b.seal.order),
@@ -97,11 +108,11 @@ function createHarness({ saved = {}, blockedStorage = false, reduced = false } =
   const stateStart = source.indexOf('const storageKey =');
   const stateEnd = source.indexOf('const playing =', stateStart);
   assert.ok(stateStart > -1 && stateEnd > stateStart);
-  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery'];
+  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery', 'resetGallery'];
   const executable = [source.slice(stateStart, stateEnd), declaration('const playing ='), declaration('const solved ='), declaration('const exitHref ='),
     ...functionNames.map(name => declaration(`function ${name}(`)),
     declaration("document.addEventListener('visibilitychange'"), declaration("window.addEventListener('pagehide'"), declaration("window.addEventListener('pageshow'"),
-    'globalThis.readState = () => ({found:[...found], count:found.size, cleared, phase, elapsed:timeline?.elapsed ?? null, currentRecord:dialog.open ? records[current].number : null});',
+    'globalThis.readState = () => ({found:[...found], viewed:[...viewed], count:found.size, cleared, phase, elapsed:timeline?.elapsed ?? null, currentIndex:current, currentRecord:dialog.open ? records[current].number : null});',
     'renderPuzzle();'].join('\n');
   new vm.Script(executable, { filename: 'gallery-shipped-functions.js' }).runInContext(context);
   const call = (name, ...args) => context[name](...args);
@@ -118,7 +129,7 @@ function createHarness({ saved = {}, blockedStorage = false, reduced = false } =
     const event = { button: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...modifiers };
     call('leaveGallery', event); return event;
   }
-  return { call, run, visibility, event, clickExit, elements, store, writes, sounds, navigation, frames,
+  return { call, run, visibility, event, clickExit, elements, galleryFrames, store, writes, sounds, navigation, frames, soundMutations, soundState: () => sharedSound.state(),
     state: () => JSON.parse(JSON.stringify(context.readState())), counters: () => ({ soundEnables, soundSilences }) };
 }
 
@@ -235,9 +246,74 @@ restoredRelease.event('pagehide'); restoredRelease.event('pageshow', { persisted
 assert.equal(restoredRelease.state().cleared, true);
 assert.equal(restoredRelease.frames.size, 0);
 
+const otherRoomProgress = { 'manzokukyo-red-house-cleared': '1', 'manzokukyo-archive-progress-v1': '8', unrelated: 'keep this entry' };
+function assertReplayReset(harness, { writable = true } = {}) {
+  const soundBefore = harness.soundState();
+  const previousEffects = [...harness.sounds];
+  const writeCount = harness.writes.length;
+  harness.call('resetGallery');
+  assert.equal(harness.state().count, 0);
+  assert.deepEqual(harness.state().viewed, []);
+  assert.equal(harness.state().cleared, false);
+  assert.equal(harness.state().currentIndex, 0);
+  assert.equal(harness.state().phase, 'idle');
+  assert.equal(harness.elements.answer.value, '');
+  assert.equal(harness.elements.answer.disabled, true);
+  assert.equal(harness.elements.dialog.open, false);
+  assert.equal(harness.elements.ceremony.open, false);
+  assert.equal(harness.elements.exit.getAttribute('aria-disabled'), 'true');
+  assert.equal(harness.elements.exit.getAttribute('href'), null);
+  for (const className of ['is-cleared', 'is-door-opening', 'is-gallery-denied']) {
+    assert.equal(harness.elements.page.classList.contains(className), false, `replay removes ${className}`);
+  }
+  assert.ok(harness.galleryFrames.every(frame => !frame.classList.contains('is-viewed') && !frame.classList.contains('is-collected')), 'replay removes old viewed/collected frame markers');
+  assert.ok(harness.galleryFrames[0].focused && harness.galleryFrames[0].scrolled, 'replay returns focus and scroll to the first frame');
+  assert.equal(harness.frames.size, 0, 'reset cancels the pending animation clock');
+  assert.ok(previousEffects.every(effect => effect.cancelled), 'reset cancels only the previous gallery effects');
+  if (writable) {
+    assert.equal(harness.store.get(sealsKey), '[]');
+    assert.equal(harness.store.get(clearedKey), '0');
+  }
+  assert.ok(harness.writes.slice(writeCount).every(([key]) => [sealsKey, clearedKey].includes(key)), 'replay writes only its two gallery progress keys');
+  for (const [key, value] of Object.entries(otherRoomProgress)) assert.equal(harness.store.get(key), value, 'other rooms and unrelated session entries survive');
+  assert.deepEqual(harness.soundState(), soundBefore, 'replay preserves sound consent, ON/OFF, BGM state, current track and both volume settings');
+  assert.deepEqual(harness.counters(), { soundEnables: 0, soundSilences: 0 });
+  assert.deepEqual(harness.soundMutations, []);
+  harness.run(12000);
+  assert.equal(harness.state().cleared, false, 'a cancelled release cannot reopen the reset exit');
+  assert.equal(harness.state().count, 0, 'a cancelled imprint cannot restore a reset seal');
+  assert.equal(harness.navigation.length, 0, 'a cancelled door transition cannot navigate after replay');
+  assert.equal(harness.call('submitWord', 'あかいとびら').unavailable, true, 'replay requires collecting all six seals again');
+  harness.call('showRecord', 1);
+  assert.equal(harness.call('collectSeal'), true, 'a previously collected seal can be acquired again after replay');
+  harness.run(1300);
+  assert.equal(harness.state().count, 1);
+}
+
+const resetPartial = createHarness({ saved: otherRoomProgress });
+resetPartial.call('showRecord', 0); resetPartial.call('showRecord', 4); resetPartial.call('collectSeal'); resetPartial.run(100);
+resetPartial.elements.answer.value = 'partial';
+assertReplayReset(resetPartial);
+const resetUnseal = createHarness({ saved: { ...allSeals, ...otherRoomProgress } });
+resetUnseal.call('submitWord', 'ちがう'); resetUnseal.call('submitWord', 'あかいとびら'); resetUnseal.run(900);
+assert.equal(resetUnseal.state().phase, 'releasing');
+assertReplayReset(resetUnseal);
+const resetSolved = createHarness({ saved: { ...allSeals, ...otherRoomProgress }, soundEnabled: false });
+resetSolved.call('submitWord', 'あかいとびら'); resetSolved.run(4500);
+assert.equal(resetSolved.state().cleared, true);
+assert.equal(resetSolved.elements.ceremony.open, true);
+assertReplayReset(resetSolved);
+const resetLeaving = createHarness({ saved: { ...allSeals, ...otherRoomProgress, [clearedKey]: '1' } });
+resetLeaving.clickExit(); resetLeaving.run(100);
+assert.equal(resetLeaving.state().phase, 'leaving');
+assertReplayReset(resetLeaving);
+const resetWithoutStorage = createHarness({ saved: otherRoomProgress, blockedStorage: true });
+resetWithoutStorage.call('showRecord', 1); resetWithoutStorage.call('collectSeal'); resetWithoutStorage.run(100);
+assertReplayReset(resetWithoutStorage, { writable: false });
+
 assert.doesNotMatch(source, /new\s+(?:window\.)?(?:AudioContext|webkitAudioContext)\b/, 'gallery never creates a private audio context');
 assert.doesNotMatch(source, /\baudio\.play\(/, 'gallery never starts its own HTML audio element');
 assert.match(source, /createSound\(audio,/);
 for (const name of ['gallery-reveal', 'gallery-collect', 'gallery-complete', 'gallery-unseal', 'gallery-door']) assert.ok(source.includes(`'${name}'`));
 assert.match(css, /\.gallery-paused\s+\.gallery-ceremony\s+\*\s*\{[^}]*animation-play-state:\s*paused/, 'background CSS animations pause with the JavaScript clock');
-console.log('PASS: 24 records; original six seals and answer; duplicate/early collection guards; storage recovery; close/skip; timed release; background; reduced motion; BFCache; guarded exit; shared audio.');
+console.log('PASS: 24 records; original six seals and answer; duplicate/early collection guards; storage recovery; close/skip; timed release; background; reduced motion; BFCache; guarded exit; replay reset; shared audio.');

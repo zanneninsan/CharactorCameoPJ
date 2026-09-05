@@ -198,6 +198,21 @@ body.gallery-modal-open { overflow: hidden; scrollbar-gutter: stable; }
 .gallery-ledger-slot strong { min-height: 1.2em; font: 500 1.35rem/1.2 "Yu Mincho", Georgia, serif; }
 .gallery-ledger-slot.is-found { color: #efd899; border-color: #c3a35e96; background: linear-gradient(155deg, #58442640, #14251d42); }
 .gallery-ledger-slot.is-found .slot-number { color: #b2cbb6; }
+.gallery-puzzle-form .gallery-restart,
+.gallery-ledger-panel .gallery-restart {
+  min-height: 44px;
+  padding: .65rem .85rem;
+  border: 1px solid #b9a77c70;
+  border-radius: 4px;
+  background: #211d24;
+  color: #d8cbaa;
+  font: inherit;
+  font-size: .78rem;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.gallery-restart:not(:disabled):hover { background: #39302a; color: #fff0cc; }
+.gallery-restart:disabled { opacity: .35; cursor: default; }
 .gallery-ledger [data-ledger-puzzle] {
   grid-column: 1 / -1;
   min-height: 44px;

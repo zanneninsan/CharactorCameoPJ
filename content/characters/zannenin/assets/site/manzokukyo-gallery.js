@@ -63,6 +63,12 @@ const stage = ceremony.querySelector('.gallery-ceremony-stage');
 const continueButton = ceremony.querySelector('[data-ceremony-continue]');
 const skipButton = ceremony.querySelector('[data-ceremony-skip]');
 
+for (const host of [form, ledger.querySelector('.gallery-ledger-panel')]) {
+  const restart = document.createElement('button'); restart.type = 'button'; restart.className = 'gallery-restart'; restart.dataset.galleryRestart = '';
+  restart.textContent = '↺ もう一度遊ぶ'; restart.title = 'この画廊の検印と解錠状態をリセットして、最初から遊ぶ';
+  restart.addEventListener('click', resetGallery); host.append(restart);
+}
+
 const audioPanel = document.createElement('aside'); audioPanel.className = 'gallery-sound'; audioPanel.setAttribute('aria-label', '画廊の音');
 audioPanel.innerHTML = '<p data-gallery-sound-invite>紙の擦れ、印の響き。音も一緒に楽しみますか？</p><button type="button" data-gallery-sound-toggle aria-pressed="false">SOUND OFF</button><button type="button" data-gallery-silent>音なしで進む</button><details><summary>音量</summary><label>BGM <input data-gallery-music type="range" min="0" max="100" value="28" aria-label="BGMの音量"></label><label>効果音 <input data-gallery-effects type="range" min="0" max="100" value="65" aria-label="効果音の音量"></label></details><p data-gallery-sound-status role="status"></p>';
 document.body.append(audioPanel);
@@ -116,6 +122,7 @@ function scrollToArea(target) {
 }
 function renderPuzzle() {
   const complete = found.size === 6;
+  for (const button of document.querySelectorAll('[data-gallery-restart]')) button.disabled = found.size === 0 && !cleared;
   page.classList.toggle('is-cleared', cleared);
   ledger.querySelector('[data-ledger-count]').textContent = `${String(found.size).padStart(2, '0')} / 06`;
   for (const record of seals) {
@@ -139,6 +146,18 @@ function renderPuzzle() {
   exit.setAttribute('aria-disabled', String(!cleared)); exit.tabIndex = cleared ? 0 : -1;
   if (cleared) exit.href = exitHref; else exit.removeAttribute('href');
   exit.textContent = cleared ? '赤い懺悔室へ進む →' : '検印を照合すると扉が開く';
+}
+function resetGallery() {
+  stopTimeline(); stopSounds();
+  dialog.close(); ceremony.close(); syncModalLock();
+  found.clear(); viewed.clear(); cleared = false; current = 0; phase = 'idle'; ceremonyKind = undefined; opener = null;
+  save(storageKey, '[]'); save(clearedKey, '0'); answer.value = '';
+  page.classList.remove('is-door-opening', 'is-gallery-denied');
+  for (const frame of document.querySelectorAll('[data-gallery-index]')) frame.classList.remove('is-viewed');
+  imprint.dataset.stage = 'idle'; collect.disabled = false; stage.dataset.phase = 'gather';
+  renderPuzzle(); message.textContent = '画廊の記録を白紙に戻しました。もう一度、六つの検印を探そう。';
+  play('gallery-reveal', { level: .45 });
+  scrollToArea(document.querySelector('[data-gallery-index="0"]'));
 }
 function showRecord(index, openingButton) {
   if (phase !== 'idle' || ceremony.open) return false;
