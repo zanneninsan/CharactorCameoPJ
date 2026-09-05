@@ -119,7 +119,7 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   }
   box(scene, [8.7, .25, corridorLength], [0, 6.95, corridorCenter], darkStone);
 
-  // Small wall ornaments remain separate from the interactive exhibit meshes.
+  // Living wall ornaments remain separate from the interactive exhibit meshes.
   const watchers = [];
   const eyeOutline = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-.22, 0, .052), new THREE.Vector3(-.11, .085, .052),
@@ -131,16 +131,17 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   for (let z = 4.8; z > doorZ + 2; z -= 13.2) {
     for (const side of [-1, 1]) {
       const medallion = new THREE.Group(); medallion.position.set(side * 3.955, 2.65, z);
-      medallion.rotation.y = -side * Math.PI / 2; scene.add(medallion);
+      medallion.rotation.y = -side * Math.PI / 2; medallion.scale.setScalar(1.65); scene.add(medallion);
       const plate = cylinder(medallion, .31, .035, [0, 0, 0], blackMetal, 32); plate.rotation.x = Math.PI / 2;
       torus(medallion, .285, .012, [0, 0, .025], brass);
-      medallion.add(new THREE.Mesh(eyeOutlineGeometry, brass));
-      const eye = sphere(medallion, .105, [0, 0, .053], ivory); eye.scale.set(1, .66, .19);
-      const pupil = new THREE.Group(); pupil.position.z = .079; medallion.add(pupil);
-      const center = sphere(pupil, .04, [0, 0, 0], blackMetal); center.scale.z = .45;
+      const aperture = new THREE.Group(); medallion.add(aperture);
+      aperture.add(new THREE.Mesh(eyeOutlineGeometry, brass));
+      const eye = sphere(aperture, .185, [0, 0, .053], ivory); eye.scale.set(1, .52, .13);
+      const pupil = new THREE.Group(); pupil.position.z = .088; aperture.add(pupil);
+      const center = sphere(pupil, .042, [0, 0, 0], blackMetal); center.scale.z = .45;
       torus(pupil, .045, .006, [0, 0, .003], brass);
       sphere(pupil, .008, [-.012, .014, .019], ivory);
-      watchers.push({ medallion, pupil });
+      watchers.push({ medallion, aperture, pupil, phase: watchers.length * 1.73 });
     }
   }
   const gaze = new THREE.Vector3();
@@ -217,7 +218,12 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   const portrait = station('portrait');
   box(portrait, [1.72, 2.19, .17], [0, 2.27, -.08], blackMetal);
   const portraitMaterial = new THREE.MeshBasicMaterial({ color: 0xd4cabb }); materials.push(portraitMaterial);
-  loader.load('./assets/profile.webp', texture => { texture.colorSpace = THREE.SRGBColorSpace; portraitMaterial.map = texture; portraitMaterial.needsUpdate = true; }, undefined, () => {});
+  loader.load('./assets/profile.webp', texture => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    // Move the profile within the frame; the unused right margin supplies the space.
+    texture.offset.x = -.12;
+    portraitMaterial.map = texture; portraitMaterial.needsUpdate = true;
+  }, undefined, () => {});
   const picture = new THREE.Mesh(new THREE.PlaneGeometry(1.49, 1.95), portraitMaterial); picture.position.set(0, 2.27, .014); portrait.add(picture);
   for (const x of [-.8, .8]) box(portrait, [.09, 2.15, .13], [x, 2.27, .025], brass);
   for (const y of [1.23, 3.31]) box(portrait, [1.69, .09, .13], [0, y, .025], brass);
@@ -282,7 +288,7 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
   const dust = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: 0xc8b58f, size: .017, transparent: true, opacity: .32, depthWrite: false })); scene.add(dust);
 
-  let target = 0, current = 0, pointerX = 0, pointerY = 0, frame = 0, previousTime = 0, openingAt = 0, active = true;
+  let target = 0, current = 0, pointerX = 0, pointerY = 0, frame = 0, previousTime = 0, openingAt = 0, active = true, watcherTime = 0;
   const raycaster = new THREE.Raycaster();
   const projected = new THREE.Vector3();
   const viewport = { width: 1, height: 1 };
@@ -317,15 +323,22 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
     lanterns.forEach((light, index) => {
       light.intensity = reducedMotion.matches ? 18 : 18 + Math.sin(now * .00055 + index * .45) * .65;
     });
-    for (const { medallion, pupil } of watchers) {
-      if (reducedMotion.matches) { pupil.position.set(0, 0, .079); continue; }
-      const nearby = medallion.position.distanceTo(camera.position) < 11;
+    if (!reducedMotion.matches) watcherTime += dt;
+    for (const { medallion, aperture, pupil, phase } of watchers) {
+      if (reducedMotion.matches) { pupil.position.set(0, 0, .088); aperture.scale.y = 1; continue; }
+      const nearby = medallion.position.distanceTo(camera.position) < 16;
+      // The camera and cursor attract the eye, while independent glances keep it alive on touch screens.
       gaze.copy(camera.position); medallion.worldToLocal(gaze);
-      const x = nearby ? THREE.MathUtils.clamp(gaze.x / 8, -1, 1) * .027 : 0;
-      const y = nearby ? THREE.MathUtils.clamp(gaze.y / 3, -1, 1) * .012 : 0;
-      const ease = 1 - Math.exp(-dt * 3.5);
+      const glance = Math.tanh(Math.sin(watcherTime * 1.45 + phase) * 3);
+      const x = THREE.MathUtils.clamp((nearby ? gaze.x / 5 * .045 + pointerX * .025 : 0) + glance * .078, -.09, .09);
+      const y = THREE.MathUtils.clamp((nearby ? gaze.y / 2 * .014 - pointerY * .012 : 0) + Math.sin(watcherTime * 1.9 + phase) * .025, -.023, .023);
+      const ease = 1 - Math.exp(-dt * 9);
       pupil.position.x = THREE.MathUtils.lerp(pupil.position.x, x, ease);
       pupil.position.y = THREE.MathUtils.lerp(pupil.position.y, y, ease);
+      // A quick close and slower reopen, staggered per eye. Scene pauses also freeze this clock.
+      const blinkTime = (watcherTime + phase) % (4.1 + phase % 1.7);
+      const blink = blinkTime < .11 ? blinkTime / .11 : blinkTime < .34 ? 1 - (blinkTime - .11) / .23 : 0;
+      aperture.scale.y = 1 - THREE.MathUtils.smoothstep(blink, 0, 1) * .96;
     }
     const opening = openingAt ? THREE.MathUtils.smoothstep((now - openingAt) / 1650, 0, 1) : 0;
     hinges[0].rotation.y = -opening * 1.16; hinges[1].rotation.y = opening * 1.16;
