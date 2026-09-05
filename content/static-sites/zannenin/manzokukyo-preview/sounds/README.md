@@ -1,8 +1,10 @@
 # Manzokukyo corridor: original sound effects
 
-These nine effects are **procedurally synthesized sounds, not recordings**. They use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
+The nine corridor effects and five offering effects are **procedurally synthesized sounds, not recordings**. The corridor sounds use original layered noise, inharmonic material resonators, mechanical micro-impacts, and a generated stereo room response. No downloaded samples or third-party impulse responses are incorporated.
 
-All files are 44.1 kHz, stereo, uncompressed PCM16 WAV. The short, damped room reflections are already rendered into the assets; additional Web Audio reverb is unnecessary. Sources have generous headroom, no clipping, click-free fades, and a short silent terminal guard. `validation.json` contains format, duration, peak and RMS measurements from reopening the written WAVs.
+Corridor files are 44.1 kHz stereo PCM16 WAV. The short, damped room reflections are already rendered into the assets; additional Web Audio reverb is unnecessary. Sources have generous headroom, no clipping, click-free fades, and a short silent terminal guard. `validation.json` contains format, duration, peak and RMS measurements from reopening the written WAVs.
+
+The five offering files are 24 kHz mono PCM16 WAV, synthesized with Python's standard library. `offering-empty.wav` is a comic descending tone (0.60 s); `offering-coin.wav` is a coin dropping into a box (0.70 s); `offering-note.wav` is a paper flutter (0.60 s); `offering-blessing.wav` is a celebratory arpeggio (1.10 s); `offering-royal.wav` is a fanfare (1.80 s). Their measured peak is at most 0.62, with a silent 20 ms tail. Reproduce them with `python generate_offering_sounds.py`; `offering-validation.json` records the measurements. Closing the offering dialog cancels only its current effects, leaving the ambience under the existing sound controls.
 
 | File | Character | Suggested action | Duration |
 | --- | --- | --- | --- |

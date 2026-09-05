@@ -1,10 +1,27 @@
-<dialog class="offering-dialog" aria-labelledby="offering-title" aria-describedby="offering-description offering-free-note">
+<dialog class="offering-dialog" data-tier="empty" data-phase="choose" aria-labelledby="offering-title" aria-describedby="offering-description offering-free-note">
   <header class="offering-header">
     <div><p class="offering-eyebrow">JUST FOR FUN</p><h2 id="offering-title">お布施ごっこ</h2></div>
-    <button class="offering-close" type="button" data-offering-close aria-label="お布施ごっこを閉じる">×</button>
+    <div class="offering-tools">
+      <button class="offering-sound" type="button" data-offering-sound aria-pressed="false">効果音 OFF</button>
+      <button class="offering-close" type="button" data-offering-close aria-label="お布施ごっこを閉じる">×</button>
+    </div>
   </header>
+  <div class="offering-content">
   <p id="offering-description" class="offering-invitation">ほんの気持ちを、どうかひとつ。<br>もちろん、0円でも歓迎……です。</p>
   <p id="offering-free-note" class="offering-free-note">実際のお金はかかりません</p>
+  <div class="offering-stage" aria-hidden="true">
+    <span class="offering-stage-orbit"></span>
+    <span class="offering-stage-spark offering-stage-spark-a">✦</span><span class="offering-stage-spark offering-stage-spark-b">✧</span>
+    <div class="offering-altar"></div>
+    <div class="offering-box">
+      <div class="offering-box-side"></div>
+      <div class="offering-box-front"><img src="./assets/emblem.webp" alt="" width="600" height="657"></div>
+      <div class="offering-box-lid"><span class="offering-box-slot"></span></div>
+    </div>
+    <span class="offering-token">気</span>
+    <div class="offering-confetti"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <p class="offering-teaser" data-offering-teaser>0円から、気持ちを選んでください。</p>
   <form method="dialog" data-offering-form>
     <fieldset class="offering-amounts">
       <legend>今日のお気持ちは？</legend>
@@ -18,8 +35,13 @@
     </fieldset>
     <button class="offering-submit" type="submit" data-offering-submit>お布施する <span aria-hidden="true">→</span></button>
   </form>
+  <div class="offering-processing" data-offering-processing hidden>
+    <p data-offering-progress role="status" tabindex="-1">お布施中…</p>
+    <span class="offering-processing-track" aria-hidden="true"><i></i></span>
+  </div>
   <section class="offering-announcement" aria-live="polite" aria-atomic="true">
     <div class="offering-result" data-offering-result hidden>
+      <span class="offering-stamp" data-offering-stamp aria-hidden="true">満</span>
       <p class="offering-receipt" data-offering-receipt></p>
       <p class="offering-result-label">本日の仮称号</p>
       <h3 class="offering-result-title" data-offering-result-title tabindex="-1"></h3>
@@ -31,4 +53,5 @@
     <button type="button" class="offering-done" data-offering-close>閉じる</button>
   </div>
   <p class="offering-footnote">金額も称号も、その場限りのお遊びです。</p>
+  </div>
 </dialog>

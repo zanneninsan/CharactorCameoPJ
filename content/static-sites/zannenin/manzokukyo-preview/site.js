@@ -43,7 +43,9 @@ const offering = createOffering({
     if (open) { scene?.setPointer(0, 0); scene?.pause(); }
     else { scheduleUpdate(); if (!document.hidden && !guestbook.isOpen()) scene?.resume(); }
   },
-  onSound(id) { sound.play(id, { level: .8 }); }
+  onSound(id) { return sound.play(id, { level: .8 }); },
+  soundEnabled: () => sound.enabled,
+  onToggleSound() { if (sound.enabled) sound.mute(); else return sound.enable(); }
 });
 for (const button of document.querySelectorAll('[data-open-offering]')) {
   button.hidden = false;
@@ -241,10 +243,11 @@ if (document.modelContext?.registerTool) {
     } else offering.close();
     return offering.state();
   } });
-  register({ name: 'play_offering', description: 'Choose a displayed pretend yen amount and show its joke reaction in the open offering game. This never sends money or data. Close and reopen, or use the visible try-again button, for another round.', inputSchema: { type: 'object', properties: { amount: { type: 'integer', enum: [0, 5, 100, 1000, 10000, 1000000, 100000000] } }, required: ['amount'], additionalProperties: false }, execute: input => {
+  register({ name: 'play_offering', description: 'Choose a displayed pretend yen amount, play its short ceremony, and return the joke reaction in the open offering game. This never sends money or data or enables sound. Close and reopen, or use the visible try-again button, for another round.', inputSchema: { type: 'object', properties: { amount: { type: 'integer', enum: [0, 5, 100, 1000, 10000, 1000000, 100000000] } }, required: ['amount'], additionalProperties: false }, execute: async input => {
     if (!input || Object.keys(input).length !== 1) throw Error('Expected one amount value');
     if (!offering.isOpen()) throw Error('Open the offering game first');
-    if (!offering.choose(input.amount) || !offering.submit()) throw Error('Start another round before offering again');
+    if (!offering.choose(input.amount)) throw Error('Start another round before offering again');
+    if (!await offering.submit()) throw Error('Offering cancelled; open the game and start another round');
     return offering.state();
   } });
   window.addEventListener('pagehide', event => { if (!event.persisted) lifecycle.abort(); });

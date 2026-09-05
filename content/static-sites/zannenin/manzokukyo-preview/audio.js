@@ -1,4 +1,4 @@
-const soundFiles = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter'];
+const soundFiles = ['tap', 'step-1', 'step-2', 'discover', 'projector', 'transmission', 'portrait', 'door-open', 'enter', 'offering-empty', 'offering-coin', 'offering-note', 'offering-blessing', 'offering-royal'];
 
 export function createSound(audio, { onChange, onError }) {
   let context, effectsGain, enabled = false, requested = false, musicLevel = .28, effectsLevel = .65, decoded;
@@ -37,6 +37,14 @@ export function createSound(audio, { onChange, onError }) {
     source.connect(gain).connect(panner).connect(effectsGain);
     source.addEventListener('ended', () => { activeSources.delete(source); source.disconnect(); gain.disconnect(); panner.disconnect(); });
     activeSources.add(source); source.start();
+    let cancelled = false;
+    return () => {
+      if (cancelled || !activeSources.has(source)) return;
+      cancelled = true;
+      gain.gain.cancelScheduledValues(context.currentTime);
+      gain.gain.setTargetAtTime(0, context.currentTime, .006);
+      try { source.stop(context.currentTime + .03); } catch {}
+    };
   }
   async function enable() {
     requested = true;
