@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { buildAnimeTeaserCute } from "./build-anime-teaser-cute.mjs";
+import { buildManzokukyoPreview } from "./build-manzokukyo-preview.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageMetadata = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
@@ -126,6 +127,7 @@ async function build() {
 
       await buildAnimeTeaser();
       await buildAnimeTeaserCute();
+      await buildManzokukyoPreview();
       await copyPublishedDocs();
       await writeFile(path.join(distDir, "robots.txt"), renderRobotsTxt(), "utf8");
       await writeFile(path.join(distDir, "sitemap.xml"), renderSitemap(characters), "utf8");
@@ -6171,6 +6173,37 @@ function renderManzokukyoTeaser(character) {
           transform: translateY(0);
         }
 
+        .mk-preview-link {
+          position: fixed;
+          top: max(14px, env(safe-area-inset-top));
+          right: max(14px, env(safe-area-inset-right));
+          z-index: 90;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          max-width: calc(100vw - 28px);
+          padding: 10px 16px;
+          border: 1px solid var(--cult-gold);
+          border-radius: 999px;
+          background: #18131ef2;
+          color: #fff0b8;
+          font: 700 14px/1.6 var(--font-ui);
+          text-decoration: none;
+          touch-action: manipulation;
+        }
+
+        .mk-preview-link:hover,
+        .mk-preview-link:focus-visible {
+          background: #382c20;
+          outline: 2px solid #fff0b8;
+          outline-offset: 3px;
+        }
+
+        .mk-page .mk-depth-hud {
+          top: max(72px, calc(env(safe-area-inset-top) + 58px));
+        }
+
         .mk-bgm-toggle {
           position: fixed;
           left: clamp(22px, 4vw, 72px);
@@ -7358,6 +7391,7 @@ function renderManzokukyoTeaser(character) {
         }
 
         @media (max-width: 820px) {
+          .mk-page .mk-scroll-cue { top: max(110px, calc(env(safe-area-inset-top) + 96px)); }
           .mk-hero {
             min-height: 100svh;
             height: 100svh;
@@ -7696,6 +7730,7 @@ function renderManzokukyoTeaser(character) {
         }
       </style>
       <main class="mk-page" data-ritual-state="running">
+        <a class="mk-preview-link" href="../manzokukyo-preview/">新ティザーを試す（仮） →</a>
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <section class="mk-hero">
           <div class="mk-banner" aria-hidden="true"></div>
