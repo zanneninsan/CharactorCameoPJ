@@ -356,7 +356,7 @@ body.erise-home {
 
 .erise-home .erise-hero-portrait::after {
   right: 0;
-  bottom: 2.3rem;
+  bottom: 0;
   border-right: 2px solid var(--erise-mint);
   border-bottom: 2px solid var(--erise-mint);
 }
@@ -398,20 +398,6 @@ body.erise-home {
   font-weight: 700;
   line-height: 1.2;
   backdrop-filter: blur(8px);
-}
-
-.erise-home .erise-hero-portrait figcaption {
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.75rem 0.1rem 0;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.78rem;
-  line-height: 1.55;
-}
-
-.erise-home .erise-hero-portrait figcaption strong {
-  color: var(--erise-white);
-  font-size: 0.86rem;
 }
 
 /* Static identity strip; it intentionally has no ticker/live state. */
@@ -795,14 +781,6 @@ body.erise-home {
   color: var(--erise-muted);
 }
 
-.erise-home .erise-hero-portrait figcaption strong {
-  color: var(--erise-white);
-}
-
-.erise-home .erise-hero-portrait figcaption span {
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .erise-home .visual-archive {
   border-color: var(--erise-rule);
   border-radius: 0;
@@ -949,6 +927,12 @@ body.erise-home {
 .erise-home #rights,
 .erise-home .source-callout {
   box-shadow: none;
+}
+
+/* Erise has one public rights holder; management and contact rows are intentionally omitted. */
+.erise-home #rights .rights-list > div:nth-child(n + 2),
+.erise-home #rights > p:last-child {
+  display: none;
 }
 
 .erise-home .source-callout {

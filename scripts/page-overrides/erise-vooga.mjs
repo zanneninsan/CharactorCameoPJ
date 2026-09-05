@@ -1,7 +1,7 @@
 export function createEriseVoogaPageOverride({ character, escapeHtml }) {
   return {
     headExtra: `
-      <link rel="stylesheet" href="./assets/site/erise-home.css?v=20260905-2">`,
+      <link rel="stylesheet" href="./assets/site/erise-home.css?v=20260905-3">`,
     bodyClass: "erise-home",
     mainClass: "erise-page",
     beforeHero: renderMasthead(character, escapeHtml),
@@ -58,10 +58,6 @@ function renderHeroPortrait(escapeHtml) {
         <img src="./assets/generated/bust-up-headphone-thumb.webp" alt="新しいヘッドホンを装着したエリセ・ヴーガのバストアップ" width="1254" height="1254" loading="lazy" decoding="async">
         <span>タップで拡大</span>
       </a>
-      <figcaption>
-        <strong>バストアップ（新ヘッドホン）</strong>
-        <span>顔立ち、瞳、髪、ヘッドホンのディテール。</span>
-      </figcaption>
     </figure>
   `;
 }
