@@ -7,13 +7,15 @@ const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
+const { mountGalleryLoop, paintingAppearance, loopExit } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
-let exhibition, selected = 0;
+let exhibition, loop, selected = 0;
 function setCatalog(open) {
   catalog.hidden = !open; listButton.setAttribute('aria-expanded', String(open));
   listButton.textContent = open ? '一覧を閉じる' : '24枚の一覧';
 }
 function fallback() {
+  loop?.fallback();
   document.body.classList.remove('has-gallery-3d'); document.body.classList.add('gallery-3d-fallback');
   loading.hidden = false; loading.textContent = '3D展示を開けませんでした。下の一覧から、すべての絵を鑑賞できます。';
   setCatalog(true);
@@ -33,6 +35,7 @@ function updateSelection(index) {
 }
 function inspect(index = selected) {
   if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
+  if (loop?.active) return loop.inspect(index);
   exhibition?.stop();
   if (gallery.showRecord(index, stage.querySelector('[data-gallery-3d-inspect]'))) {
     updateSelection(index); return true;
@@ -62,6 +65,7 @@ try {
   exhibition = createExhibition(THREE);
   document.body.classList.add('has-gallery-3d'); setCatalog(false);
   loading.textContent = '絵を掛けています。';
+  loop = mountGalleryLoop({ stage, canvas, records, assetVersionQuery, gallery, exhibition });
 } catch { fallback(); }
 
 function createExhibition(T) {
@@ -139,6 +143,7 @@ function createExhibition(T) {
   const roomCache = [];
   const loaded = new Map(), failed = new Set(), pending = new Map();
   let activeRoom = 0, disposed = false, lost = false, inView = true, raf = 0, last = 0;
+  let anomaly = null, textureGeneration = 0, preparationResolve;
   let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
   let yaw = 0, pitch = 0, walked = 0;
   const heldKeys = new Set(), heldPointers = new Map();
@@ -161,6 +166,12 @@ function createExhibition(T) {
     box(group, [width + .36, height + .36, .1], [0, 0, 0], gold);
     box(group, [width + .2, height + .2, .08], [0, 0, .065], backing);
     const surface = basic({ color: 0xffffff, toneMapped: false, fog: true });
+    const inversion = { value: 0 };
+    surface.onBeforeCompile = shader => {
+      shader.uniforms.galleryNegative = inversion;
+      shader.fragmentShader = 'uniform float galleryNegative;\n' + shader.fragmentShader.replace('#include <colorspace_fragment>', '#include <colorspace_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0) - gl_FragColor.rgb, galleryNegative);');
+    };
+    surface.customProgramCacheKey = () => 'gallery-negative-v1';
     const painting = new T.Mesh(plane, surface); painting.scale.set(width, height, 1); painting.position.z = .118; painting.userData.index = index; group.add(painting); targets.push(painting);
     const plaque = new T.Mesh(plane, basic({ map: labelTexture(`ARCHIVE ${records[index].id}`, records[index].seal ? 'SEALED RECORD' : 'UNFILED IMAGE'), toneMapped: false }));
     plaque.scale.set(1.22, .46, 1); plaque.position.set(0, -height / 2 - .64, .11); group.add(plaque);
@@ -171,8 +182,13 @@ function createExhibition(T) {
       const shape = new T.TorusGeometry(.125, .025, 6, 28); geometry.add(shape);
       seal = new T.Mesh(shape, gold); seal.position.set(width / 2 + .12, height / 2 + .12, .17); group.add(seal);
     }
-    frames.push({ group, painting, surface, index, roomIndex, side, z, width, height, seal });
+    frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
+  let portalTexture = labelTexture('GALLERY', 'THE SAME CORRIDOR');
+  const portalLabels = [4.03, -63.93].map((z, index) => {
+    const sign = new T.Mesh(plane, basic({ map: portalTexture, toneMapped: false }));
+    sign.scale.set(2.3, .86, 1); sign.position.set(0, 5.3, z); sign.rotation.y = index === 0 ? Math.PI : 0; scene.add(sign); return sign;
+  });
   const skyPanels = [green, rose, warm, green];
   for (let r = 0; r < 4; r++) for (const side of [-1, 1]) box(scene, [.045, 1.6, .15], [side * 5.18, 3.4, -15 - r * 16], skyPanels[r]);
 
@@ -183,9 +199,12 @@ function createExhibition(T) {
     for (const [index, texture] of loaded) if (!roomCache.includes(frames[index].roomIndex)) { frames[index].surface.map = null; frames[index].surface.fog = true; frames[index].surface.needsUpdate = true; texture.dispose(); textures.delete(texture); loaded.delete(index); }
     for (const frame of frames.filter(frame => frame.roomIndex === r)) {
       if (loaded.has(frame.index) || pending.has(frame.index)) continue;
-      const url = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[frame.index].id}.webp?${assetVersionQuery}`, document.baseURI).href;
-      pending.set(frame.index, true);
+      const generation = textureGeneration;
+      const appearance = paintingAppearance(frame.index, anomaly);
+      const url = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.webp?${assetVersionQuery}`, document.baseURI).href;
+      pending.set(frame.index, generation);
       loader.load(url, texture => {
+        if (generation !== textureGeneration) { texture.dispose(); return; }
         pending.delete(frame.index);
         if (disposed || !roomCache.includes(frame.roomIndex)) { texture.dispose(); return; }
         texture.colorSpace = T.SRGBColorSpace; texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -194,7 +213,7 @@ function createExhibition(T) {
         const w = Math.min(frame.width, frame.height * aspect), h = w / aspect;
         frame.painting.scale.set(w, h, 1); frame.surface.map = texture; frame.surface.fog = false; frame.surface.needsUpdate = true;
         textures.add(texture); loaded.set(frame.index, texture); failed.delete(frame.index); refreshLoading(); wake();
-      }, undefined, () => { pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
+      }, undefined, () => { if (generation !== textureGeneration || disposed) return; pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
     }
     ambience.position.z = -6 - activeRoom * 16; refreshLoading();
   }
@@ -203,6 +222,29 @@ function createExhibition(T) {
     const count = roomFrames.filter(frame => loaded.has(frame.index)).length;
     loading.hidden = count === 6;
     loading.textContent = roomFrames.some(frame => failed.has(frame.index)) ? '読み込めない絵があります。「大きく見る」または一覧から開けます。' : `展示室の絵を掛けています。${count} / 6`;
+    if (preparationResolve && (frames.slice(0, 6).every(frame => loaded.has(frame.index)) || frames.slice(0, 6).some(frame => failed.has(frame.index)))) {
+      const resolve = preparationResolve; preparationResolve = null; resolve(!frames.slice(0, 6).some(frame => failed.has(frame.index)));
+    }
+  }
+  function prepareLoop(nextAnomaly, round) {
+    stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
+    preparationResolve?.(false); preparationResolve = null;
+    for (const texture of loaded.values()) { texture.dispose(); textures.delete(texture); }
+    loaded.clear(); failed.clear(); pending.clear(); roomCache.length = 0;
+    for (const frame of frames) {
+      const appearance = paintingAppearance(frame.index, anomaly);
+      frame.painting.rotation.z = appearance.upsideDown ? Math.PI : 0;
+      frame.inversion.value = appearance.negative ? 1 : 0;
+      frame.surface.map = null; frame.surface.fog = true; frame.surface.needsUpdate = true;
+      if (frame.seal) frame.seal.visible = !loop?.active;
+    }
+    portalTexture.dispose(); textures.delete(portalTexture);
+    portalTexture = labelTexture(loop?.active ? `ROUND ${String(round).padStart(2, '0')}` : 'GALLERY', 'THE SAME CORRIDOR');
+    for (const sign of portalLabels) { sign.material.map = portalTexture; sign.material.needsUpdate = true; }
+    const ready = new Promise(resolve => { preparationResolve = resolve; });
+    overview(0, true, true); camera.position.z = .8; endPosition.copy(camera.position); wake();
+    if (disposed || lost) { preparationResolve?.(false); preparationResolve = null; }
+    return ready;
   }
   function destination(position, target, immediate = false) {
     endPosition.copy(position); lookCamera.position.copy(position); lookCamera.lookAt(target); endQuaternion.copy(lookCamera.quaternion);
@@ -211,6 +253,7 @@ function createExhibition(T) {
     wake();
   }
   function select(index, immediate = false) {
+    if (loop?.active || loop?.busy) return false;
     if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
     stopWalk();
     aimedIndex = null; viewport.classList.remove('is-aiming');
@@ -221,7 +264,8 @@ function createExhibition(T) {
     const distance = Math.max(vertical, horizontal) * 1.26;
     destination(new T.Vector3(frame.side * (5.13 - Math.min(distance, 9.1)), 2.82, frame.z), new T.Vector3(frame.side * 5.13, 2.82, frame.z), immediate);
   }
-  function overview(r, immediate = false) {
+  function overview(r, immediate = false, internal = false) {
+    if (!internal && (loop?.active || loop?.busy)) return false;
     if (!Number.isInteger(r) || r < 0 || r >= 4) return false;
     stopWalk();
     aimedIndex = null; viewport.classList.remove('is-aiming');
@@ -232,7 +276,7 @@ function createExhibition(T) {
     heldKeys.clear(); heldPointers.clear(); walked = 0; down = null;
     for (const button of walkButtons) button.classList.remove('is-held');
   }
-  function canWalk() { return !disposed && !lost && !document.hidden && inView && !document.querySelector('dialog[open]'); }
+  function canWalk() { return !disposed && !lost && !loop?.busy && !document.hidden && inView && !document.querySelector('dialog[open]'); }
   function startWalk() {
     if (!canWalk()) return false;
     if (mode !== 'walking') {
@@ -277,6 +321,8 @@ function createExhibition(T) {
     endPosition.copy(camera.position); endQuaternion.copy(camera.quaternion);
     walked += next.distance;
     if (walked >= 1.75) { gallery.play('step-1', { level: .18 }); walked %= 1.75; }
+    const exit = loopExit(camera.position);
+    if (loop?.active && exit) { void loop.cross(exit); return; }
     syncWalkingSelection(direction); wake();
   }
   function syncSeals() {
@@ -289,7 +335,7 @@ function createExhibition(T) {
   function animate(time) {
     raf = 0;
     if (disposed || lost || document.hidden || !inView) { last = 0; return; }
-    const paused = document.querySelector('dialog[open]');
+    const paused = document.querySelector('dialog[open]') || loop?.busy;
     const dt = last ? Math.min((time - last) / 1000, .05) : 0; last = time;
     const walking = mode === 'walking' && (heldKeys.size || heldPointers.size) && !paused;
     if (walking) applyWalk(dt);
@@ -367,19 +413,21 @@ function createExhibition(T) {
   const visibility = () => { stopWalk(); last = 0; if (!document.hidden) wake(); };
   document.addEventListener('visibilitychange', visibility);
   motion.addEventListener('change', () => { if (motion.matches) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; wake(); } });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); stopWalk(); lost = true; cancelAnimationFrame(raf); fallback(); });
+  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); stopWalk(); lost = true; preparationResolve?.(false); preparationResolve = null; cancelAnimationFrame(raf); fallback(); });
   // Keep the accessible catalog after a graphics reset. Reloading just the
   // hosted iframe would leave the parent's old sound subscriptions attached.
   window.addEventListener('pagehide', event => {
     stopWalk();
     cancelAnimationFrame(raf); raf = 0; last = 0;
     if (event.persisted) return;
+    preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
   resize(); overview(0, true); syncSeals();
-  return { select, overview, stop: stopWalk, state: () => ({ ready: !disposed && !lost, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+  return { select, overview, prepareLoop, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
+    state: () => ({ ready: !disposed && !lost, loop: loop?.snapshot(), selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

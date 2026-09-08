@@ -62,7 +62,7 @@ const stage = new Control(), canvas = new Control(), window = new Control();
 const buttons = Object.values(walkKeys).map(action => new Control(action));
 const document = { hidden: false, modal: false, querySelector: () => document.modal };
 const heldKeys = new Set(), heldPointers = new Map(), steps = [];
-const context = vm.createContext({ stage, canvas, window, document, walkKeys, heldKeys, heldPointers, walkButtons: buttons, disposed: false, lost: false, inView: true, down: null, walked: 0, wake() {}, applyWalk: (dt, actions) => steps.push(actions || new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()]))) });
+const context = vm.createContext({ loop: null, stage, canvas, window, document, walkKeys, heldKeys, heldPointers, walkButtons: buttons, disposed: false, lost: false, inView: true, down: null, walked: 0, wake() {}, applyWalk: (dt, actions) => steps.push(actions || new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()]))) });
 vm.runInContext([
   declaration('function canWalk('), declaration('function stopWalk('),
   'function startWalk() { return canWalk(); }',

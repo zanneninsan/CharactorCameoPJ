@@ -17,14 +17,21 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
       </section>
       <section class="gallery-3d-catalog" id="gallery-3d-catalog" aria-label="24枚の記録一覧">${frames.join('')}</section>
       `;
-  let body = original.body.slice(0, introStart) + stage + original.body.slice(puzzleStart);
+  const loopPanel = `<div class="gallery-loop-ui" data-gallery-loop-ui hidden>
+        <div class="gallery-loop-modes" role="group" aria-label="画廊の遊び方"><button type="button" data-gallery-loop-mode="loop" aria-pressed="true">異変の回廊</button><button type="button" data-gallery-loop-mode="gallery" aria-pressed="false">作品鑑賞・検印集め</button></div>
+        <div class="gallery-loop-panel" data-gallery-loop-panel><div class="gallery-loop-rule"><strong>異変があれば、引き返せ。</strong><p data-gallery-loop-hint>まずは正常な24枚を覚えて、奥の扉へ。</p></div><div class="gallery-loop-count"><small data-gallery-loop-round>初回 / 正常な展示</small><span>連続正解 <b data-gallery-loop-streak>00</b><small>最高 <b data-gallery-loop-best>00</b></small></span></div><button type="button" data-gallery-loop-restart>最初から</button></div>
+      </div>`;
+  const transition = `<div class="gallery-loop-transition" data-gallery-loop-transition role="status" hidden><div class="gallery-loop-eye" aria-hidden="true"><i></i></div><span>MANZOKUKYO / RECURSION</span><strong data-gallery-loop-transition-title></strong><p data-gallery-loop-transition-note></p><button type="button" data-gallery-loop-retry hidden>展示を読み込み直す</button></div>`;
+  const exhibition = stage.replace('<div class="gallery-3d-viewport">', loopPanel + '<div class="gallery-3d-viewport">' + transition);
+  let body = original.body.slice(0, introStart) + exhibition + original.body.slice(puzzleStart);
   body = body.replace('<main class="gallery-page" data-gallery-experience>', '<main class="gallery-page gallery-3d-page" data-gallery-experience data-gallery-3d>');
   body = body.replace('<main class="gallery-page gallery-3d-page"', `<link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-3d.css?${assetVersionQuery}">\n      <main class="gallery-page gallery-3d-page"`);
   body += `\n      <script type="module" src="../../../assets/site/manzokukyo-gallery-3d.js?${assetVersionQuery}"></script>\n`;
+  body += `<dialog class="gallery-loop-inspection" data-gallery-loop-inspection aria-labelledby="gallery-loop-inspection-title"><div><img alt="展示中の記録"><footer><strong id="gallery-loop-inspection-title" data-gallery-loop-inspection-title></strong><span>違和感があれば、入口へ引き返してください。</span><button type="button">展示室へ戻る</button></footer></div></dialog>`;
   const options = {
     ...original,
     title: '記憶の画廊 | 満足教',
-    description: '四つの展示室を自由に歩き、24枚の記録から六つの検印を集める「記憶の画廊」。絵は一枚ずつ大きく鑑賞できます。',
+    description: '異変があれば引き返す、終わりのない「記憶の画廊」。24枚の絵に紛れた違和感を探す回廊と、作品鑑賞・検印集めを楽しめます。',
     urlPath: `${character.id}/manzokukyo/truth/gallery/`,
     robots: alias ? 'noindex,follow' : 'index,follow,max-image-preview:large',
     body,

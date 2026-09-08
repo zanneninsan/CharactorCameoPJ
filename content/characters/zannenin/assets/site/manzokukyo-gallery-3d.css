@@ -1,4 +1,61 @@
 /* The primary gallery. Artwork is never cropped here. */
+.gallery-loop-ui { width: min(1240px, calc(100% - 72px)); margin: 0 auto 16px; color: #eee3c9; }
+.gallery-loop-ui[hidden], .gallery-loop-panel[hidden], .gallery-loop-transition[hidden], .gallery-loop-transition button[hidden] { display: none !important; }
+.gallery-loop-modes { display: flex; gap: 6px; margin-bottom: 12px; }
+.gallery-loop-ui button { min-height: 40px; border: 1px solid #b9a67966; color: #ddceb0; background: #20282b; padding: 8px 14px; font: 12px/1.4 system-ui; cursor: pointer; border-radius: 4px; }
+.gallery-loop-ui button[aria-pressed="true"] { color: #201e17; background: #dcc794; border-color: #f6dda3; }
+.gallery-loop-ui button:disabled { cursor: wait; opacity: .55; }
+.gallery-loop-panel { display: flex; align-items: center; gap: 20px; padding: 13px 18px; border: 1px solid #bba47266; border-left: 3px solid #d8b66f; background: linear-gradient(110deg, #303626, #192a30 74%); }
+.gallery-loop-rule { flex: 1; }
+.gallery-loop-rule strong { font: 500 18px/1.5 "Yu Mincho", Georgia, serif; color: #f8e0aa; }
+.gallery-loop-rule p { margin: 4px 0 0; font: 11px/1.7 system-ui; color: #d2cbb9; }
+.gallery-loop-count { display: grid; gap: 4px; white-space: nowrap; }
+.gallery-loop-count small { font: 10px/1.5 system-ui; color: #b6c6bf; }
+.gallery-loop-count span { font: 11px/1.5 system-ui; }
+.gallery-loop-count span > b { padding: 0 10px 0 6px; font: 28px/1 Georgia, serif; color: #f4d990; }
+.gallery-loop-count span small b { padding-left: 4px; color: #e3dfcd; }
+.is-gallery-loop :is(.gallery-3d-room-jumps, .gallery-3d-catalog, #gallery-puzzle, .gallery-exit, .gallery-ledger, [data-gallery-3d-prev], [data-gallery-3d-next], [data-gallery-3d-overview], [data-gallery-3d-list]) { display: none !important; }
+.is-gallery-loop .gallery-3d-heading > p { display: none; }
+.is-gallery-loop .gallery-3d-heading { margin-bottom: 12px; }
+.is-gallery-loop .gallery-3d-viewport { height: 54svh; min-height: 300px; }
+.is-gallery-loop .gallery-3d-controls { padding-bottom: 20px; }
+.gallery-loop-transition { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; text-align: center; background: #ece6d7f5; color: #3a433a; }
+.gallery-loop-transition > span { font: 9px/1.6 system-ui; letter-spacing: .22em; color: #6b7164; }
+.gallery-loop-transition > strong { margin: 10px 0; font: 500 clamp(23px, 4vw, 42px)/1.4 "Yu Mincho", Georgia, serif; }
+.gallery-loop-transition > p { max-width: 560px; margin: 0; font: 12px/1.9 system-ui; }
+.gallery-loop-transition button { margin-top: 18px; padding: 10px 18px; background: #2c403b; color: #f6eacb; border: 1px solid #baa271; border-radius: 4px; cursor: pointer; }
+.gallery-loop-eye { width: 88px; height: 42px; border: 2px solid currentColor; border-radius: 70% 15%; transform: rotate(45deg); margin-bottom: 26px; display: grid; place-items: center; }
+.gallery-loop-eye i { width: 24px; height: 24px; background: currentColor; border-radius: 50%; box-shadow: 0 0 0 7px #b6ab8733; }
+.gallery-loop-transition[data-result="wrong"] { color: #743946; background: #f2d7cef5; }
+.gallery-loop-transition[data-result="wrong"] .gallery-loop-eye { animation: gallery-loop-stare 1.5s ease-out both; }
+.gallery-loop-transition[data-result="correct"] { color: #315b50; background: #e0ecdcf5; }
+@keyframes gallery-loop-stare { 0% { transform: rotate(45deg) scale(.6); } 45%,100% { transform: rotate(45deg) scale(1.8); } }
+.gallery-loop-inspection { width: min(96vw, 1200px); max-height: 94svh; padding: 0; border: 1px solid #d3b77e; background: #0d1013; color: #eee0c1; }
+.gallery-loop-inspection::backdrop { background: #080c0fdd; }
+.gallery-loop-inspection > div { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+.gallery-loop-inspection img { display: block; width: 100%; height: 77svh; object-fit: contain; }
+.gallery-loop-inspection footer { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid #c8ab6e44; }
+.gallery-loop-inspection footer strong { font: 17px/1.6 Georgia, "Yu Mincho", serif; }
+.gallery-loop-inspection footer span { flex: 1; font: 11px/1.7 system-ui; color: #b5baaa; }
+.gallery-loop-inspection button { min-height: 42px; padding: 9px 16px; border: 1px solid #d4b779; background: #3b4235; color: #f7e9c9; cursor: pointer; }
+@media (max-width: 760px) {
+  .gallery-loop-ui { width: calc(100% - 28px); margin-bottom: 12px; }
+  .gallery-loop-modes button { flex: 1; padding-inline: 8px; font-size: 11px; }
+  .gallery-loop-panel { gap: 10px; padding: 11px; flex-wrap: wrap; }
+  .gallery-loop-rule { flex: 0 0 100%; }
+  .gallery-loop-rule strong { font-size: 17px; }
+  .gallery-loop-rule p { font-size: 10px; }
+  .gallery-loop-count { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .gallery-loop-count span > b { font-size: 22px; }
+  .gallery-loop-panel > button { min-height: 36px; padding: 7px; font-size: 10px; }
+  .is-gallery-loop .gallery-3d-heading h1 { margin-bottom: 0; }
+  .is-gallery-loop .gallery-3d-viewport { height: 48svh; min-height: 310px; }
+  .gallery-loop-inspection img { height: 70svh; }
+  .gallery-loop-inspection footer { flex-wrap: wrap; gap: 8px; padding: 10px; }
+  .gallery-loop-inspection footer span { display: none; }
+  .gallery-loop-inspection footer strong { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .gallery-loop-eye { animation: none !important; } }
 @media (min-width: 761px) {
   .has-gallery-3d .gallery-sound:has([data-gallery-sound-invite]:not([hidden])) {
     bottom: calc(148px + env(safe-area-inset-bottom, 0px));

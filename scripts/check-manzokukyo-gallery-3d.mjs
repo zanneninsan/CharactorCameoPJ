@@ -64,7 +64,7 @@ function createHarness(text = source) {
   const camera = { fov: 49, aspect: 1.6 };
   const frames = records.map((record, index) => ({ roomIndex: Math.floor(index / 6), side: index % 2 === 0 ? -1 : 1, z: -3 - Math.floor((index % 6) / 2) * 4.5 - Math.floor(index / 6) * 16, width: 2.12, height: 2.12 * 1080 / 768 }));
   class Vector3 { constructor(x, y, z) { Object.assign(this, { x, y, z }); } }
-  const context = vm.createContext({ stage, catalog, canvas, records, frames, camera, aimedIndex: null, viewport: { classList: { remove() {} } },
+  const context = vm.createContext({ loop: null, stage, catalog, canvas, records, frames, camera, aimedIndex: null, viewport: { classList: { remove() {} } },
     canWalk: () => true, stopWalk: () => {}, document: { querySelectorAll: queryAll }, motion: { matches: false },
     listButton: query('[data-gallery-3d-list]'),
     gallery: { play: (name, options) => sounds.push({ name, options }), showRecord: index => { inspections.push(index); return true; } },

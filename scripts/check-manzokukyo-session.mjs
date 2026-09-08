@@ -153,7 +153,7 @@ for (const directory of [path.join(root, 'content/static-sites', previewPath), p
     assert.equal(result.status, 0, `${path.relative(root, filename)}: ${result.error?.message || result.stderr || result.stdout}`);
   }
 }
-const galleryScripts = ['manzokukyo-gallery.js', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js'];
+const galleryScripts = ['manzokukyo-gallery.js', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js'];
 for (const directory of [path.join(root, 'content/characters/zannenin/assets/site'), path.join(dist, 'zannenin/assets/site')]) {
   for (const script of galleryScripts) {
     const filename = path.join(directory, script);
