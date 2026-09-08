@@ -36,6 +36,7 @@ $env:REPORT_OUT = $reportFile
 $env:PLACEMENT_OUT = $placementFile
 $env:QC = if ($QualityControlOnly) { '1' } else { '0' }
 $env:ROOM_LAYOUT = '0'
+$env:RICH_ROOM = '0'
 
 & $blenderExe --background --python-exit-code 1 --python $sourceScript
 if ($LASTEXITCODE -ne 0) { throw "SCENE 5 Blender build failed with exit code $LASTEXITCODE" }

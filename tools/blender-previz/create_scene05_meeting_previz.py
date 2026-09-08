@@ -13,6 +13,9 @@ FRAMES = 168
 F_SHOT_2 = 90  # 3.70 seconds lands between frames 89 and 90 at 24 fps.
 QC = os.environ.get("QC", "0") == "1"
 ROOM_LAYOUT = os.environ.get("ROOM_LAYOUT", "0") == "1"
+RICH_ROOM = os.environ.get("RICH_ROOM", "0") == "1"
+if RICH_ROOM and not ROOM_LAYOUT:
+    raise RuntimeError("RICH_ROOM requires ROOM_LAYOUT=1")
 OUT = os.environ["OUTDIR"]
 BLEND_OUT = os.environ["BLEND_OUT"]
 REPORT_OUT = os.environ["REPORT_OUT"]
@@ -41,6 +44,13 @@ C_OLIVE = (0.30, 0.31, 0.20)
 C_AMBER = (0.82, 0.48, 0.08)
 C_SILVER = (0.83, 0.88, 0.92)
 C_LAVENDER = (0.59, 0.50, 0.73)
+C_BASEBOARD = (0.16, 0.15, 0.13)
+C_METAL = (0.34, 0.35, 0.34)
+C_FLOOR_LINE = (0.29, 0.37, 0.32)
+C_WALL_TRIM = (0.69, 0.65, 0.55)
+C_DOOR_PANEL = (0.22, 0.13, 0.075)
+C_SWITCH = (0.78, 0.77, 0.70)
+C_SWITCH_DARK = (0.36, 0.35, 0.32)
 
 
 def clamp(value, low=0.0, high=1.0):
@@ -85,6 +95,14 @@ def cube(name, loc, scale, color, parent=None, rot=(0, 0, 0)):
     set_color(obj, color)
     if parent:
         obj.parent = parent
+    return obj
+
+
+def bevel(obj, width=0.025, segments=2):
+    modifier = obj.modifiers.new(name="RichRoom_Bevel", type="BEVEL")
+    modifier.width = width
+    modifier.segments = segments
+    modifier.limit_method = "ANGLE"
     return obj
 
 
@@ -208,15 +226,16 @@ scene.display.shading.background_color = (0.12, 0.12, 0.11)
 scene.view_settings.look = "AgX - Medium High Contrast"
 
 # Room topology: north is +Y, east is +X.
-cube("Floor", (0, 0, -0.06), (4.2, 4.3, 0.06), C_FLOOR)
-cube("North_Wall", (0, 4.05, 1.55), (4.2, 0.08, 1.55), C_WALL)
-cube("West_Wall", (-4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
-cube("East_Wall", (4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
+floor = cube("Floor", (0, 0, -0.06), (4.2, 4.3, 0.06), C_FLOOR)
+north_wall = cube("North_Wall", (0, 4.05, 1.55), (4.2, 0.08, 1.55), C_WALL)
+west_wall = cube("West_Wall", (-4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
+east_wall = cube("East_Wall", (4.05, 0, 1.55), (0.08, 4.1, 1.55), C_WALL)
 ceiling = cube("Ceiling", (0, 0, 3.12), (4.2, 4.3, 0.06), (0.40, 0.38, 0.33))
 ceiling.hide_render = ROOM_LAYOUT
 ceiling.hide_viewport = ROOM_LAYOUT
 
 windows = []
+window_parts = []
 for index, y_pos in enumerate((-1.55, 1.30), 1):
     windows.append(
         cube(
@@ -226,36 +245,37 @@ for index, y_pos in enumerate((-1.55, 1.30), 1):
             C_WINDOW,
         )
     )
-    cube(
+    window_parts.append(cube(
         f"Window_Frame_{index}_Vertical",
         (-3.92, y_pos, 1.65),
         (0.035, 0.035, 0.76),
         C_TRIM,
-    )
-    cube(
+    ))
+    window_parts.append(cube(
         f"Window_Frame_{index}_Horizontal",
         (-3.92, y_pos, 1.65),
         (0.035, 0.76, 0.035),
         C_TRIM,
-    )
+    ))
 
 door = cube(
     "Door", (3.96, 2.55, 1.18), (0.05, 0.72, 1.18), (0.27, 0.17, 0.10)
 )
 # From the room interior/east-wall front view, north (+Y) is screen-left.
 # Keep the handle on the left leaf edge in the shared room blockout.
-cube("Door_Handle", (3.86, 2.75, 1.18), (0.06, 0.04, 0.04), C_GOLD)
+door_handle = cube("Door_Handle", (3.86, 2.75, 1.18), (0.06, 0.04, 0.04), C_GOLD)
+fluorescents = []
 for index, y_pos in enumerate((-1.15, 1.30), 1):
-    cube(
+    fluorescents.append(cube(
         f"Fluorescent_{index}",
         (0, y_pos, 3.02),
         (1.02, 0.16, 0.055),
         (0.92, 0.91, 0.79),
-    )
+    ))
 
 # North-wall banner and an upright proxy of the official diamond emblem.
-cube("Notice_Board", (0, 3.94, 2.15), (1.35, 0.035, 0.62), C_BOARD)
-cube("Black_Banner", (0, 3.86, 2.15), (1.05, 0.025, 0.48), C_BLACK)
+notice_board = cube("Notice_Board", (0, 3.94, 2.15), (1.35, 0.035, 0.62), C_BOARD)
+black_banner = cube("Black_Banner", (0, 3.86, 2.15), (1.05, 0.025, 0.48), C_BLACK)
 cube(
     "Emblem_Outer_Diamond",
     (0, 3.81, 2.15),
@@ -286,6 +306,127 @@ for x_pos in (-1.12, 1.12):
             0.028,
             C_TRIM,
         )
+
+
+if RICH_ROOM:
+    # Edge softness keeps the blockout readable while remaining non-photoreal.
+    for obj, width in (
+        (floor, 0.025),
+        (north_wall, 0.035),
+        (west_wall, 0.035),
+        (east_wall, 0.035),
+        (door, 0.025),
+        (door_handle, 0.018),
+        (notice_board, 0.025),
+        (black_banner, 0.015),
+        (tabletop, 0.045),
+    ):
+        bevel(obj, width)
+    for obj in windows + window_parts + fluorescents:
+        bevel(obj, 0.018)
+    for obj in fluorescents:
+        obj.scale.x = 0.68
+        obj.scale.y = 0.11
+
+    # Dark skirting and corner trim around the three fixed walls.
+    cube("Rich_Baseboard_North", (0, 3.90, 0.105), (3.92, 0.055, 0.105), C_BASEBOARD)
+    cube("Rich_Baseboard_West", (-3.90, 0, 0.105), (0.055, 3.90, 0.105), C_BASEBOARD)
+    cube("Rich_Baseboard_East", (3.90, 0, 0.105), (0.055, 3.90, 0.105), C_BASEBOARD)
+    cube("Rich_CornerTrim_NW", (-3.89, 3.89, 1.55), (0.055, 0.055, 1.45), C_WALL_TRIM)
+    cube("Rich_CornerTrim_NE", (3.89, 3.89, 1.55), (0.055, 0.055, 1.45), C_WALL_TRIM)
+
+    # Worn vinyl-tile seams, kept shallow so they never read as extra furniture.
+    for index, x_pos in enumerate((-3, -2, -1, 0, 1, 2, 3), 1):
+        cube(f"Rich_FloorSeam_X_{index}", (x_pos, 0, 0.008), (0.009, 4.0, 0.006), C_FLOOR_LINE)
+    for index, y_pos in enumerate((-3, -2, -1, 0, 1, 2, 3), 1):
+        cube(f"Rich_FloorSeam_Y_{index}", (0, y_pos, 0.009), (4.0, 0.009, 0.006), C_FLOOR_LINE)
+    for index, (x_pos, y_pos, length, yaw) in enumerate(
+        ((-2.8, -2.7, 0.34, 8), (2.9, -2.1, 0.27, -12), (-2.6, 2.7, 0.24, -5), (2.5, 1.8, 0.31, 10)),
+        1,
+    ):
+        cube(
+            f"Rich_FloorScuff_{index}",
+            (x_pos, y_pos, 0.021),
+            (length, 0.018, 0.005),
+            C_FLOOR_LINE,
+            rot=(0, 0, D(yaw)),
+        )
+
+    # Window casings, inner stops, and sills on the west wall.
+    for index, y_pos in enumerate((-1.55, 1.30), 1):
+        for side in (-1, 1):
+            bevel(cube(
+                f"Rich_Window_{index}_Side_{side:+d}",
+                (-3.84, y_pos + side * 0.79, 1.65),
+                (0.055, 0.045, 0.79),
+                C_WALL_TRIM,
+            ), 0.012)
+        bevel(cube(
+            f"Rich_Window_{index}_Top",
+            (-3.84, y_pos, 2.43),
+            (0.055, 0.84, 0.045),
+            C_WALL_TRIM,
+        ), 0.012)
+        bevel(cube(
+            f"Rich_Window_{index}_Sill",
+            (-3.78, y_pos, 0.88),
+            (0.12, 0.86, 0.045),
+            C_WALL_TRIM,
+        ), 0.015)
+
+    # Door frame, recessed panels, kick plate, hinges, and closer.
+    for y_pos in (1.76, 3.34):
+        bevel(cube(
+            f"Rich_DoorFrame_{y_pos:.2f}",
+            (3.84, y_pos, 1.22),
+            (0.055, 0.055, 1.25),
+            C_WALL_TRIM,
+        ), 0.014)
+    bevel(cube("Rich_DoorFrame_Top", (3.84, 2.55, 2.44), (0.055, 0.84, 0.055), C_WALL_TRIM), 0.014)
+    bevel(cube("Rich_DoorPanel_Upper", (3.84, 2.55, 1.66), (0.018, 0.48, 0.31), C_DOOR_PANEL), 0.012)
+    bevel(cube("Rich_DoorPanel_Lower", (3.84, 2.55, 0.75), (0.018, 0.48, 0.31), C_DOOR_PANEL), 0.012)
+    cube("Rich_Door_KickPlate", (3.80, 2.55, 0.20), (0.018, 0.40, 0.10), C_METAL)
+    cube("Rich_Door_Closer", (3.79, 2.55, 2.24), (0.035, 0.27, 0.045), C_METAL)
+    cylinder_between("Rich_Door_CloserArm", (3.74, 2.48, 2.24), (3.74, 2.18, 2.34), 0.016, C_METAL)
+    for index, z_pos in enumerate((0.42, 1.18, 1.94), 1):
+        cube(f"Rich_Door_Hinge_{index}", (3.79, 1.91, z_pos), (0.025, 0.035, 0.075), C_METAL)
+
+    # East-wall switch used by SCENE 2.
+    bevel(cube("Rich_LightSwitch_Plate", (3.82, 1.45, 1.40), (0.035, 0.13, 0.18), C_SWITCH), 0.012)
+    bevel(cube("Rich_LightSwitch_Toggle", (3.77, 1.45, 1.40), (0.018, 0.055, 0.085), C_SWITCH_DARK), 0.008)
+
+    # Fluorescent housings and twin tubes; the open ceiling view keeps them visible.
+    for index, y_pos in enumerate((-1.15, 1.30), 1):
+        bevel(cube(
+            f"Rich_Fluorescent_Housing_{index}",
+            (0, y_pos, 3.075),
+            (0.76, 0.17, 0.035),
+            C_METAL,
+        ), 0.018)
+        for tube_index, tube_y in enumerate((-0.075, 0.075), 1):
+            bevel(cube(
+                f"Rich_Fluorescent_{index}_Tube_{tube_index}",
+                (0, y_pos + tube_y, 3.015),
+                (0.62, 0.028, 0.022),
+                C_WHITE,
+            ), 0.012)
+
+    # Table understructure and modesty rails, without changing the tabletop footprint.
+    for y_pos in (-1.74, 2.44):
+        bevel(cube(
+            f"Rich_Table_EndApron_{y_pos:+.2f}",
+            (0, y_pos, 0.64),
+            (1.28, 0.035, 0.10),
+            C_TRIM,
+        ), 0.012)
+    for x_pos in (-1.33, 1.33):
+        bevel(cube(
+            f"Rich_Table_LongApron_{x_pos:+.2f}",
+            (x_pos, 0.35, 0.64),
+            (0.035, 2.02, 0.10),
+            C_TRIM,
+        ), 0.012)
+    cylinder_between("Rich_Table_CrossBrace", (-1.10, 0.35, 0.33), (1.10, 0.35, 0.33), 0.025, C_METAL)
 
 
 def build_chair(name, loc, yaw, executive=False):
@@ -677,6 +818,7 @@ report = {
     "qc_frames": [1, 9, 48, 89, 90, 96, 120, 168],
     "visual_qc_required": True,
     "room_layout_mode": ROOM_LAYOUT,
+    "rich_room_mode": RICH_ROOM,
     "shot_evaluation_applicable": not ROOM_LAYOUT,
     "room_layout": {
         "room_size_blender_units": [8.4, 8.6, 3.1],
@@ -690,6 +832,17 @@ report = {
         camera_layout_south.name,
         camera_layout_entrance.name,
     ],
+    "rich_room_details": {
+        "characters_modified": False,
+        "baseboards": 3 if RICH_ROOM else 0,
+        "floor_seams": 14 if RICH_ROOM else 0,
+        "floor_scuffs": 4 if RICH_ROOM else 0,
+        "window_casings_and_sills": 8 if RICH_ROOM else 0,
+        "door_frame_and_hardware_parts": 10 if RICH_ROOM else 0,
+        "light_switches": 1 if RICH_ROOM else 0,
+        "fluorescent_housings": 2 if RICH_ROOM else 0,
+        "table_aprons_and_braces": 5 if RICH_ROOM else 0,
+    },
 }
 with open(REPORT_OUT, "w", encoding="utf-8", newline="\n") as handle:
     json.dump(report, handle, ensure_ascii=False, indent=2)
@@ -743,6 +896,15 @@ if ROOM_LAYOUT:
 - `layout_0003.png`: 東壁の入口から室内を見た斜視。信者B側のPCと3席の関係を確認する。
 - 箱モデルの外形は幅8.4、奥行8.6、高さ3.1 Blender unit。南側はドールハウス表示のため開放し、天井は非表示にする。
 """
+if RICH_ROOM:
+    placement += """
+
+## リッチ部屋版
+
+- キャラクターの形状、色、位置、アニメーションは変更しない。
+- 巾木、床タイル目地と軽い擦れ、窓枠と窓台、ドア枠・パネル・蝶番・クローザー、照明スイッチ、蛍光灯筐体、机の幕板と補強を追加する。
+- 家具、窓、扉、壁、カメラの基本座標と個数は標準箱モデルから変更しない。
+"""
 with open(PLACEMENT_OUT, "w", encoding="utf-8", newline="\n") as handle:
     handle.write(placement)
 
@@ -752,8 +914,8 @@ def active_camera(frame):
 
 
 if ROOM_LAYOUT:
-    scene.render.resolution_x = 1280
-    scene.render.resolution_y = 720
+    scene.render.resolution_x = 1600 if RICH_ROOM else 1280
+    scene.render.resolution_y = 900 if RICH_ROOM else 720
     scene.render.resolution_percentage = 100
     scene.frame_set(1)
     layout_views = (

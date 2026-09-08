@@ -59,6 +59,18 @@ QCでは、各SHOTの人物数1、机1、黒い社長椅子1、パイプ椅子2�
 - 入口側: `previz/room-layout-v1/layout_0003.png`
 - 自動評価: `previz/room-layout-v1/evaluation-room-layout-v1.json`
 
+### 部屋だけリッチ化したv2
+
+キャラクターは標準箱モデルと同じまま、貸し会議室側へ巾木、床目地、窓枠・窓台、ドア造作、照明スイッチ、蛍光灯筐体、机の幕板と補強、面取りを追加する。配置・家具数・カメラはv1から変更しない。
+
+```powershell
+.\tools\blender-previz\build-scene05-room-layout-rich-v2.ps1
+```
+
+- Blend: `previz/room-layout-rich-v2/scene05-room-layout-rich-v2.blend`
+- 3方向確認: `previz/room-layout-rich-v2/room-layout-rich-contact-sheet-v2.jpg`
+- 自動評価: `previz/room-layout-rich-v2/evaluation-room-layout-rich-v2.json`
+
 ## SHOT 2静止画
 
 残念院さんへ切り返した第2ショットは、動きが落ち着いたフレーム120を1920×1080 PNGとして出力する。
