@@ -1,0 +1,59 @@
+{
+  "name": "scene01-impact-camera-previz-v2",
+  "passed": true,
+  "duration_seconds": 7.0,
+  "fps": 24,
+  "frames": 168,
+  "render_resolution": [
+    960,
+    540
+  ],
+  "camera": {
+    "wide_hold_frames": [
+      1,
+      77
+    ],
+    "crash_dolly_frames": [
+      78,
+      88
+    ],
+    "impact_jolt_frames": [
+      89,
+      92
+    ],
+    "close_hold_frames": [
+      92,
+      168
+    ],
+    "start_lens_mm": 35.0,
+    "end_lens_mm": 50.0
+  },
+  "effect_background": {
+    "starts_frame": 83,
+    "palette": "black, gold, cream, deep red",
+    "radial_rays": 24,
+    "visible_only_during_close": true
+  },
+  "performance": {
+    "zannenin": "fast rise, continuous high-energy body bounce, large right-arm declaration",
+    "believer_b": "seated silent reaction",
+    "believer_f": "seated silent reaction"
+  },
+  "fixed_layout": {
+    "characters": 3,
+    "zannenin": "north head position",
+    "believer_b": "east seat with one laptop",
+    "believer_f": "west window-side seat",
+    "door_handle": "left side from room interior front view"
+  },
+  "qc_frames": [
+    1,
+    18,
+    77,
+    83,
+    88,
+    120,
+    160,
+    168
+  ]
+}
