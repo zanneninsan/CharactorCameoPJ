@@ -73,7 +73,7 @@ class Element {
   scrollIntoView() { this.scrolled = true; }
 }
 
-function createHarness({ saved = {}, blockedStorage = false, reduced = false, soundEnabled = true } = {}) {
+export function createHarness({ saved = {}, blockedStorage = false, reduced = false, soundEnabled = true } = {}) {
   const store = new Map(Object.entries(saved));
   const writes = [], sounds = [], navigation = [], listeners = new Map(), frames = new Map();
   let frameId = 0, now = 1000, soundEnables = 0, soundSilences = 0;
@@ -108,7 +108,7 @@ function createHarness({ saved = {}, blockedStorage = false, reduced = false, so
   const stateStart = source.indexOf('const storageKey =');
   const stateEnd = source.indexOf('const playing =', stateStart);
   assert.ok(stateStart > -1 && stateEnd > stateStart);
-  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery', 'resetGallery'];
+  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery', 'resetGallery', 'setExpedition', 'confirmSeal', 'celebrateSeals'];
   const executable = [source.slice(stateStart, stateEnd), declaration('const playing ='), declaration('const solved ='), declaration('const exitHref ='),
     ...functionNames.map(name => declaration(`function ${name}(`)),
     declaration("document.addEventListener('visibilitychange'"), declaration("window.addEventListener('pagehide'"), declaration("window.addEventListener('pageshow'"),

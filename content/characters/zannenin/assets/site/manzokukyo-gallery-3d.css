@@ -14,7 +14,22 @@
 .gallery-loop-count span { font: 11px/1.5 system-ui; }
 .gallery-loop-count span > b { padding: 0 10px 0 6px; font: 28px/1 Georgia, serif; color: #f4d990; }
 .gallery-loop-count span small b { padding-left: 4px; color: #e3dfcd; }
-.is-gallery-loop :is(.gallery-3d-room-jumps, .gallery-3d-catalog, #gallery-puzzle, .gallery-exit, .gallery-ledger, [data-gallery-3d-prev], [data-gallery-3d-next], [data-gallery-3d-overview], [data-gallery-3d-list]) { display: none !important; }
+.is-gallery-loop :is(.gallery-3d-room-jumps, .gallery-3d-catalog, [data-gallery-3d-prev], [data-gallery-3d-next], [data-gallery-3d-overview], [data-gallery-3d-list]) { display: none !important; }
+.gallery-loop-bag { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border: 1px solid #bba47244; border-top: 0; background: #172022; }
+.gallery-loop-bag[hidden] { display: none; }
+.gallery-loop-slots { display: flex; gap: 5px; }
+.gallery-loop-slots span { display: grid; place-items: center; width: 30px; height: 32px; border: 1px solid #ac986644; color: #7f887f; font: 17px/1 "Yu Mincho", serif; }
+.gallery-loop-slots [data-status="filed"] { color: #f4df9e; border-color: #a6c396; background: #2d493d; }
+.gallery-loop-slots [data-status="held"] { color: #ffe8b6; border: 1px dashed #e7b770; background: #634721; }
+.gallery-loop-bag p { flex: 1; margin: 0; font: 11px/1.7 system-ui; color: #d1c3a2; }
+.gallery-loop-inspection [data-gallery-loop-seal-note] { flex: 0 0 100%; margin: 0; color: #c9c6b0; font: 12px/1.7 system-ui; }
+.gallery-loop-inspection footer { flex-wrap: wrap; }
+.gallery-loop-inspection footer strong { flex: 1; }
+.gallery-loop-inspection [data-gallery-loop-collect] { color: #211607; background: #edce8c; }
+.gallery-loop-inspection button:disabled { opacity: .55; cursor: default; }
+.gallery-loop-inspection button[hidden] { display: none; }
+.gallery-loop-inspection[data-held="true"] [data-gallery-loop-collect] { animation: gallery-carried-stamp .5s ease-out; border-color: #ffe6a3; }
+@keyframes gallery-carried-stamp { 0% { transform: scale(1.15); box-shadow: 0 0 30px #ffdf8588; } 100% { transform: scale(1); box-shadow: none; } }
 .is-gallery-loop .gallery-3d-heading > p { display: none; }
 .is-gallery-loop .gallery-3d-heading { margin-bottom: 12px; }
 .is-gallery-loop .gallery-3d-controls { padding-bottom: 20px; }
@@ -32,7 +47,7 @@
 .gallery-loop-inspection { width: min(96vw, 1200px); max-height: 94svh; padding: 0; border: 1px solid #d3b77e; background: #0d1013; color: #eee0c1; }
 .gallery-loop-inspection::backdrop { background: #080c0fdd; }
 .gallery-loop-inspection > div { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
-.gallery-loop-inspection img { display: block; width: 100%; height: 77svh; object-fit: contain; }
+.gallery-loop-inspection img { display: block; width: 100%; height: 70svh; object-fit: contain; }
 .gallery-loop-inspection footer { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid #c8ab6e44; }
 .gallery-loop-inspection footer strong { font: 17px/1.6 Georgia, "Yu Mincho", serif; }
 .gallery-loop-inspection footer span { flex: 1; font: 11px/1.7 system-ui; color: #b5baaa; }
@@ -47,13 +62,17 @@
   .gallery-loop-count { flex: 1; display: flex; align-items: center; gap: 12px; }
   .gallery-loop-count span > b { font-size: 22px; }
   .gallery-loop-panel > button { min-height: 36px; padding: 7px; font-size: 10px; }
+  .gallery-loop-bag { flex-wrap: wrap; gap: 8px; padding: 10px; }
+  .gallery-loop-bag p { order: 3; flex: 0 0 100%; font-size: 10px; }
+  .gallery-loop-bag > button { margin-left: auto; min-height: 34px; padding: 7px; font-size: 10px; }
+  .gallery-loop-slots span { width: 25px; height: 28px; font-size: 15px; }
   .is-gallery-loop .gallery-3d-heading h1 { margin-bottom: 0; }
-  .gallery-loop-inspection img { height: 70svh; }
+  .gallery-loop-inspection img { height: 62svh; }
   .gallery-loop-inspection footer { flex-wrap: wrap; gap: 8px; padding: 10px; }
   .gallery-loop-inspection footer span { display: none; }
-  .gallery-loop-inspection footer strong { flex: 1; }
+  .gallery-loop-inspection footer strong { flex: 0 0 100%; font-size: 15px; }
 }
-@media (prefers-reduced-motion: reduce) { .gallery-loop-eye { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .gallery-loop-eye, .gallery-loop-inspection button { animation: none !important; } }
 @media (min-width: 761px) {
   .has-gallery-3d .gallery-sound:has([data-gallery-sound-invite]:not([hidden])) {
     bottom: calc(148px + env(safe-area-inset-bottom, 0px));
@@ -168,6 +187,8 @@
 .is-aiming .gallery-3d-reticle { box-shadow: 0 0 0 5px #f9df954d, 0 0 0 6px #fff2c8b3; }
 .gallery-3d-walk-pad { position: absolute; z-index: 4; bottom: 16px; left: 16px; display: grid; grid-template-columns: repeat(3, 44px); gap: 5px; padding: 7px; border: 1px solid #dcc39166; border-radius: 8px; background: #1d252bba; backdrop-filter: blur(8px); }
 .gallery-3d-walk-pad button { display: grid; place-content: center; gap: 1px; width: 44px; height: 44px; padding: 2px; border: 1px solid #f1ddac55; border-radius: 4px; color: #fff0d1; background: #303a40d9; cursor: pointer; touch-action: none; user-select: none; }
+.gallery-3d-walk-pad .gallery-3d-sprint { grid-column: 1 / -1; width: 100%; height: 34px; font: 11px/1.4 system-ui; }
+.gallery-3d-walk-pad .gallery-3d-sprint[aria-pressed="true"] { background: #ddbd73; color: #211a0c; border-color: #ffe7a6; }
 .gallery-3d-walk-pad button b { font: 20px/1 system-ui; }
 .gallery-3d-walk-pad button small { font: 9px/1 system-ui; color: #d0bfa1; }
 .gallery-3d-walk-pad button:is(:hover, .is-held) { background: #6b5940; border-color: #f3d99d; }

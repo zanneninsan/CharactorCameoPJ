@@ -147,6 +147,8 @@ function createExhibition(T) {
   let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
   let yaw = 0, pitch = 0, walked = 0;
   const heldKeys = new Set(), heldPointers = new Map();
+  const sprintButton = stage.querySelector('[data-gallery-3d-sprint]');
+  let sprintLatched = false;
   const walkButtons = [...stage.querySelectorAll('[data-gallery-3d-walk]')];
   const orientation = new T.Euler(0, 0, 0, 'YXZ');
   const forwardVector = new T.Vector3(), toFrame = new T.Vector3();
@@ -236,7 +238,7 @@ function createExhibition(T) {
       frame.painting.rotation.z = appearance.upsideDown ? Math.PI : 0;
       frame.inversion.value = appearance.negative ? 1 : 0;
       frame.surface.map = null; frame.surface.fog = true; frame.surface.needsUpdate = true;
-      if (frame.seal) frame.seal.visible = !loop?.active;
+      if (frame.seal) frame.seal.visible = true;
     }
     portalTexture.dispose(); textures.delete(portalTexture);
     portalTexture = labelTexture(loop?.active ? `ROUND ${String(round).padStart(2, '0')}` : 'GALLERY', 'THE SAME CORRIDOR');
@@ -274,6 +276,8 @@ function createExhibition(T) {
   }
   function stopWalk() {
     heldKeys.clear(); heldPointers.clear(); walked = 0; down = null;
+    sprintLatched = false; sprintButton.setAttribute('aria-pressed', 'false');
+    sprintButton.textContent = 'ダッシュ OFF';
     for (const button of walkButtons) button.classList.remove('is-held');
   }
   function canWalk() { return !disposed && !lost && !loop?.busy && !document.hidden && inView && !document.querySelector('dialog[open]'); }
@@ -285,7 +289,14 @@ function createExhibition(T) {
     }
     return true;
   }
-  function walkActions() { return new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()])); }
+  function walkActions() { return new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()], sprintLatched ? ['sprint'] : [])); }
+  sprintButton.addEventListener('click', () => {
+    if (!startWalk()) return;
+    sprintLatched = !sprintLatched;
+    sprintButton.setAttribute('aria-pressed', String(sprintLatched));
+    sprintButton.textContent = sprintLatched ? 'ダッシュ ON' : 'ダッシュ OFF';
+    canvas.focus({ preventScroll: true }); wake();
+  });
   function syncWalkingSelection(direction = Math.cos(yaw) >= 0 ? 1 : -1) {
     const r = walkRoom(camera.position.z);
     if (r !== activeRoom) loadRoom(r);
@@ -320,7 +331,7 @@ function createExhibition(T) {
     camera.quaternion.setFromEuler(orientation.set(pitch, yaw, 0, 'YXZ'));
     endPosition.copy(camera.position); endQuaternion.copy(camera.quaternion);
     walked += next.distance;
-    if (walked >= 1.75) { gallery.play('step-1', { level: .18 }); walked %= 1.75; }
+    if (walked >= 1.75) { gallery.play('step-1', { level: actions.has('sprint') ? .25 : .18 }); walked %= 1.75; }
     const exit = loopExit(camera.position);
     if (loop?.active && exit) { void loop.cross(exit); return; }
     syncWalkingSelection(direction); wake();
@@ -401,7 +412,7 @@ function createExhibition(T) {
     });
     const release = event => { heldPointers.delete(event.pointerId); button.classList.remove('is-held'); };
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, release);
-    button.addEventListener('click', event => { if (event.detail === 0 && startWalk()) applyWalk(.05, new Set([action])); });
+    button.addEventListener('click', event => { if (event.detail === 0 && startWalk()) applyWalk(.05, new Set([action, ...(sprintLatched ? ['sprint'] : [])])); });
   }
   canvas.addEventListener('keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey || !canWalk()) return;

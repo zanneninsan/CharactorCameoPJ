@@ -11,6 +11,7 @@ const save = (key, value) => { try { sessionStorage.setItem(key, value); } catch
 let saved = [];
 try { const value = JSON.parse(readSaved(storageKey) || '[]'); if (Array.isArray(value)) saved = value; } catch {}
 const found = new Set(saved.filter(number => seals.some(record => record.number === number)));
+let expedition = null;
 const viewed = new Set();
 let cleared = readSaved(clearedKey) === '1', current = 0, phase = 'idle', opener, ceremonyKind, timeline, frameId, lastTime = 0;
 const playing = new Set();
@@ -157,10 +158,11 @@ function resetGallery() {
   imprint.dataset.stage = 'idle'; collect.disabled = false; stage.dataset.phase = 'gather';
   renderPuzzle(); message.textContent = '画廊の記録を白紙に戻しました。もう一度、六つの検印を探そう。';
   play('gallery-reveal', { level: .45 });
-  scrollToArea(document.querySelector('[data-gallery-index="0"]'));
+  if (expedition) expedition.reset(); else scrollToArea(document.querySelector('[data-gallery-index="0"]'));
 }
 function showRecord(index, openingButton) {
   if (phase !== 'idle' || ceremony.open) return false;
+  if (expedition?.active) return expedition.inspect(index);
   current = (index + records.length) % records.length;
   const record = records[current]; viewed.add(record.number);
   document.querySelector(`[data-gallery-index="${current}"]`).classList.add('is-viewed');
@@ -174,8 +176,9 @@ function showRecord(index, openingButton) {
   imprint.hidden = !record.seal; imprint.dataset.stage = collected ? 'collected' : 'idle';
   imprint.querySelector('strong').textContent = collected ? record.seal.fragment : '⊹';
   imprint.querySelector('small').textContent = collected ? 'FILED / 照合済' : 'UNFILED / 未照合';
-  collect.hidden = !record.seal || collected; collect.disabled = false;
+  collect.hidden = !record.seal || collected || Boolean(expedition); collect.disabled = false;
   note.textContent = record.seal ? collected ? `文字「${record.seal.fragment}」は検印帳に記録されています。` : '金箔の下に、ひとつの文字が眠っている。印を押して、写し取る。' : 'この記録に検印はない。ひと息置いて、次の額縁へ。';
+  if (expedition && record.seal && !collected) note.textContent = '検印は「異変と検印の回廊」で仮押しし、正しい判断で持ち帰ってください。';
   if (!dialog.open) { opener = openingButton || document.querySelector(`[data-gallery-index="${current}"]`); dialog.showModal(); syncModalLock(); }
   play(record.seal && !collected ? 'gallery-reveal' : 'tap', { level: .55 });
   return true;
@@ -185,6 +188,7 @@ function closeRecord({ restoreFocus = true } = {}) {
   dialog.close(); syncModalLock(); if (restoreFocus) opener?.focus({ preventScroll: true });
 }
 function collectSeal() {
+  if (expedition) return expedition.collect();
   const record = records[current];
   if (!dialog.open || phase !== 'idle' || !record.seal || found.has(record.number)) return false;
   phase = 'collecting'; found.add(record.number); save(storageKey, JSON.stringify([...found]));
@@ -284,8 +288,17 @@ const state = () => ({ found: [...found], count: found.size, cleared, phase, cur
 register({ name: 'read_gallery_state', description: 'Read collected seals, gallery ceremony and sound state. Does not change or clear saved progress.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: state });
 register({ name: 'open_gallery_record', description: 'Open one of the 24 displayed records using its normal lightbox. Does not collect a seal or enable sound.', inputSchema: { type: 'object', properties: { number: { type: 'integer', minimum: 1, maximum: 24 } }, required: ['number'], additionalProperties: false }, execute: input => { if (!Number.isInteger(input?.number) || input.number < 1 || input.number > 24) throw Error('Record must be 1–24'); if (!showRecord(input.number - 1)) throw Error('Finish or close the current ceremony first'); return state(); } });
 register({ name: 'collect_gallery_seal', description: 'Press the visible seal in the open record, with the normal imprint animation. Saves only local collection progress and never enables audio.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, execute: () => { if (!collectSeal()) throw Error('Open an uncollected marked record first'); return state(); } });
-register({ name: 'close_gallery_overlay', description: 'Close the record or finish/skip its ceremony using the same visible controls. Never skips collection or the passphrase.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, execute: () => { if (ceremony.open) closeCeremony(); else if (dialog.open) closeRecord(); return state(); } });
+register({ name: 'close_gallery_overlay', description: 'Close the record or finish/skip its ceremony using the same visible controls. Never skips collection or the passphrase.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, execute: () => { if (ceremony.open) closeCeremony(); else if (dialog.open) closeRecord(); else expedition?.closeInspection(); return state(); } });
 register({ name: 'submit_gallery_word', description: 'Try a word after collecting all six seals. The same normal puzzle and release ceremony apply. Does not enable audio.', inputSchema: { type: 'object', properties: { word: { type: 'string', maxLength: 32 } }, required: ['word'], additionalProperties: false }, execute: input => { const result = submitWord(input?.word); return { ...result, ...state() }; } });
 
-// The optional 3D exhibition uses the same viewer, puzzle and sound owner.
-export { showRecord, play };
+function setExpedition(controller) { expedition = controller; }
+function confirmSeal(number) {
+  const record = seals.find(record => record.number === number);
+  if (!record || found.has(number) || cleared) return null;
+  found.add(number); save(storageKey, JSON.stringify([...found])); renderPuzzle();
+  return { number, fragment: record.seal.fragment, count: found.size, complete: found.size === 6 };
+}
+function celebrateSeals() { if (found.size === 6 && !cleared && phase === 'idle') beginCeremony('gather'); }
+
+// The expedition commits only seals carried through a correctly chosen exit.
+export { showRecord, play, state, setExpedition, confirmSeal, celebrateSeals, resetGallery };

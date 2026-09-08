@@ -21,6 +21,13 @@ close(travel(['turnRight']).yaw, -1.45);
 close(travel(['forward', 'back']).z, 0);
 const diagonal = travel(['forward', 'right']);
 close(Math.hypot(diagonal.x, diagonal.z), 4.2);
+close(travel(['forward', 'sprint']).z, -8.4);
+close(travel(['sprint']).z, 0);
+close(travel(['turnLeft', 'sprint']).yaw, 1.45);
+const runningDiagonal = travel(['forward', 'right', 'sprint'], 0, 20);
+close(Math.hypot(runningDiagonal.x, runningDiagonal.z), 2.8);
+close(travel(['forward', 'sprint'], 0, 30, 1 / 30).z, travel(['forward', 'sprint'], 0, 144, 1 / 144).z);
+assert.equal(travel(['forward', 'sprint'], 0, 2400).z, -62.5);
 close(travel(['forward'], 0, 30, 1 / 30).z, travel(['forward'], 0, 144, 1 / 144).z);
 assert.equal(travel(['forward'], 0, 2400).z, -62.5);
 assert.equal(travel(['left'], 0, 2400).x, -4.3);
@@ -54,21 +61,24 @@ class Control {
   addEventListener(name, callback) { const listeners = this.events.get(name) || []; listeners.push(callback); this.events.set(name, listeners); }
   fire(name, data = {}) { const event = { code: '', target: { closest: () => null }, preventDefault() { this.prevented = true; }, ...data }; for (const callback of this.events.get(name) || []) callback(event); return event; }
   getAttribute() { return this.action; }
+  setAttribute(name, value) { this[name] = value; }
   setPointerCapture() {}
   focus() {}
   contains(target) { return target === this; }
 }
 const stage = new Control(), canvas = new Control(), window = new Control();
+const sprintButton = new Control('sprint');
 const buttons = Object.values(walkKeys).map(action => new Control(action));
 const document = { hidden: false, modal: false, querySelector: () => document.modal };
 const heldKeys = new Set(), heldPointers = new Map(), steps = [];
-const context = vm.createContext({ loop: null, stage, canvas, window, document, walkKeys, heldKeys, heldPointers, walkButtons: buttons, disposed: false, lost: false, inView: true, down: null, walked: 0, wake() {}, applyWalk: (dt, actions) => steps.push(actions || new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()]))) });
+const context = vm.createContext({ sprintButton, sprintLatched: false, loop: null, stage, canvas, window, document, walkKeys, heldKeys, heldPointers, walkButtons: buttons, disposed: false, lost: false, inView: true, down: null, walked: 0, wake() {}, applyWalk: (dt, actions) => steps.push(actions || new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()], context.sprintLatched ? ['sprint'] : []))) });
 vm.runInContext([
   declaration('function canWalk('), declaration('function stopWalk('),
   'function startWalk() { return canWalk(); }',
   declaration("stage.addEventListener('keydown'"), declaration("window.addEventListener('keyup'"),
   declaration("stage.addEventListener('focusout'"), declaration('for (const button of walkButtons) {'),
   declaration("window.addEventListener('blur'"),
+  declaration("sprintButton.addEventListener('click'"),
 ].join('\n'), context);
 for (const code of Object.keys(walkKeys)) {
   assert.equal(stage.fire('keydown', { code }).prevented, true, `${code} controls walking`);
@@ -91,6 +101,11 @@ for (const [pointerId, button] of buttons.entries()) {
 }
 buttons[0].fire('click', { detail: 0 }); assert.ok(steps.at(-1).has(buttons[0].action), 'keyboard activation of touch buttons also moves');
 stage.fire('keydown', { code: 'KeyW' }); stage.fire('focusout', { relatedTarget: null }); assert.equal(heldKeys.size, 0);
+sprintButton.fire('click'); assert.equal(context.sprintLatched, true);
+buttons.find(button => button.action === 'forward').fire('pointerdown', { pointerId: 100, button: 0 });
+assert.ok(steps.at(-1).has('sprint')); assert.ok(steps.at(-1).has('forward'));
+window.fire('blur'); assert.equal(context.sprintLatched, false); assert.equal(sprintButton['aria-pressed'], 'false');
+sprintButton.fire('click'); sprintButton.fire('click'); assert.equal(context.sprintLatched, false);
 
 const options = { htmlPage: value => value, escapeHtml: String, assetVersionQuery: 'v=test' };
 const primary = renderGallery3DExperience({ id: 'zannenin', theme: {} }, options);
@@ -99,5 +114,6 @@ assert.equal(primary.urlPath, 'zannenin/manzokukyo/truth/gallery/'); assert.equa
 assert.match(primary.robots, /^index,/); assert.match(alias.robots, /^noindex,/);
 assert.doesNotMatch(primary.body, /通常の画廊へ|3D preview|class="gallery-mode-link"|href="\.\.\/gallery\//);
 assert.equal([...primary.body.matchAll(/data-gallery-3d-walk="/g)].length, 6);
+assert.equal([...primary.body.matchAll(/data-gallery-3d-sprint/g)].length, 1);
 assert.equal([...primary.body.matchAll(/data-gallery-index="/g)].length, 24);
 console.log('Gallery walking passed: six camera-relative controls, diagonal/refresh-rate consistency, boundaries, room crossings, actual key/touch handlers, blur/modal/IME guards and primary/alias routes.');
