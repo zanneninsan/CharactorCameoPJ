@@ -71,6 +71,18 @@ QCでは、各SHOTの人物数1、机1、黒い社長椅子1、パイプ椅子2�
 - 3方向確認: `previz/room-layout-rich-v2/room-layout-rich-contact-sheet-v2.jpg`
 - 自動評価: `previz/room-layout-rich-v2/evaluation-room-layout-rich-v2.json`
 
+### 3Dアニメ背景版v3
+
+キャラクターと配置を固定したまま、部屋だけをEeveeのアニメ背景向けPBR素材・実開口・ソフト照明へ更新した版。
+
+```powershell
+.\tools\blender-previz\build-scene05-room-layout-anime-v3.ps1
+```
+
+- Blend: `previz/room-layout-anime-v3/scene05-room-layout-anime-v3.blend`
+- 上面図＋背景確認: `previz/room-layout-anime-v3/room-layout-anime-contact-sheet-v3.jpg`
+- 自動評価: `previz/room-layout-anime-v3/evaluation-room-layout-anime-v3.json`
+
 ## SHOT 2静止画
 
 残念院さんへ切り返した第2ショットは、動きが落ち着いたフレーム120を1920×1080 PNGとして出力する。

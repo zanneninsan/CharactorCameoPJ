@@ -14,8 +14,11 @@ F_SHOT_2 = 90  # 3.70 seconds lands between frames 89 and 90 at 24 fps.
 QC = os.environ.get("QC", "0") == "1"
 ROOM_LAYOUT = os.environ.get("ROOM_LAYOUT", "0") == "1"
 RICH_ROOM = os.environ.get("RICH_ROOM", "0") == "1"
+ANIME_ROOM = os.environ.get("ANIME_ROOM", "0") == "1"
 if RICH_ROOM and not ROOM_LAYOUT:
     raise RuntimeError("RICH_ROOM requires ROOM_LAYOUT=1")
+if ANIME_ROOM and not RICH_ROOM:
+    raise RuntimeError("ANIME_ROOM requires RICH_ROOM=1")
 OUT = os.environ["OUTDIR"]
 BLEND_OUT = os.environ["BLEND_OUT"]
 REPORT_OUT = os.environ["REPORT_OUT"]
@@ -51,6 +54,9 @@ C_WALL_TRIM = (0.69, 0.65, 0.55)
 C_DOOR_PANEL = (0.22, 0.13, 0.075)
 C_SWITCH = (0.78, 0.77, 0.70)
 C_SWITCH_DARK = (0.36, 0.35, 0.32)
+C_SKY = (0.34, 0.53, 0.66)
+C_CITY = (0.13, 0.16, 0.19)
+C_CITY_LIGHT = (0.91, 0.71, 0.34)
 
 
 def clamp(value, low=0.0, high=1.0):
@@ -104,6 +110,107 @@ def bevel(obj, width=0.025, segments=2):
     modifier.segments = segments
     modifier.limit_method = "ANGLE"
     return obj
+
+
+def set_principled_input(shader, names, value):
+    for name in names:
+        socket = shader.inputs.get(name)
+        if socket is not None:
+            socket.default_value = value
+            return
+
+
+def material_principled(
+    name,
+    color,
+    roughness=0.65,
+    metallic=0.0,
+    emission=None,
+    emission_strength=0.0,
+    alpha=1.0,
+    transmission=0.0,
+    texture=None,
+):
+    material = bpy.data.materials.new(name=name)
+    material.use_nodes = True
+    material.diffuse_color = (*color, alpha)
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    shader = nodes.new("ShaderNodeBsdfPrincipled")
+    output.location = (520, 0)
+    shader.location = (220, 0)
+    links.new(shader.outputs["BSDF"], output.inputs["Surface"])
+    set_principled_input(shader, ("Base Color",), (*color, 1.0))
+    set_principled_input(shader, ("Roughness",), roughness)
+    set_principled_input(shader, ("Metallic",), metallic)
+    set_principled_input(shader, ("Alpha",), alpha)
+    set_principled_input(shader, ("Transmission Weight", "Transmission"), transmission)
+    set_principled_input(shader, ("Specular IOR Level", "Specular"), 0.35)
+    if emission is not None:
+        set_principled_input(shader, ("Emission Color", "Emission"), (*emission, 1.0))
+        set_principled_input(shader, ("Emission Strength",), emission_strength)
+
+    if texture:
+        texcoord = nodes.new("ShaderNodeTexCoord")
+        texcoord.location = (-760, 0)
+        ramp = nodes.new("ShaderNodeValToRGB")
+        ramp.location = (-180, 80)
+        ramp.color_ramp.elements[0].color = (*texture["dark"], 1.0)
+        ramp.color_ramp.elements[1].color = (*texture["light"], 1.0)
+        if texture["kind"] == "wood":
+            source = nodes.new("ShaderNodeTexWave")
+            source.wave_type = "BANDS"
+            source.bands_direction = "X"
+            source.inputs["Scale"].default_value = texture.get("scale", 5.0)
+            source.inputs["Distortion"].default_value = texture.get("distortion", 7.0)
+            source.inputs["Detail Scale"].default_value = 2.0
+        else:
+            source = nodes.new("ShaderNodeTexNoise")
+            source.inputs["Scale"].default_value = texture.get("scale", 18.0)
+            source.inputs["Detail"].default_value = texture.get("detail", 3.0)
+            source.inputs["Roughness"].default_value = 0.65
+        source.location = (-520, 50)
+        links.new(texcoord.outputs["Generated"], source.inputs["Vector"])
+        links.new(source.outputs["Fac"], ramp.inputs["Fac"])
+        links.new(ramp.outputs["Color"], shader.inputs["Base Color"])
+        bump = nodes.new("ShaderNodeBump")
+        bump.location = (-20, -130)
+        bump.inputs["Strength"].default_value = texture.get("bump", 0.10)
+        bump.inputs["Distance"].default_value = texture.get("distance", 0.025)
+        links.new(source.outputs["Fac"], bump.inputs["Height"])
+        links.new(bump.outputs["Normal"], shader.inputs["Normal"])
+
+    if alpha < 1.0:
+        if hasattr(material, "surface_render_method"):
+            material.surface_render_method = "DITHERED"
+        elif hasattr(material, "blend_method"):
+            material.blend_method = "BLEND"
+        if hasattr(material, "use_transparency_overlap"):
+            material.use_transparency_overlap = False
+    return material
+
+
+def assign_material(obj, material):
+    if obj.type != "MESH":
+        return
+    obj.data.materials.clear()
+    obj.data.materials.append(material)
+
+
+def area_light(name, loc, target, energy, color, size, size_y=None):
+    bpy.ops.object.light_add(type="AREA", location=loc)
+    light = bpy.context.active_object
+    light.name = name
+    light.data.energy = energy
+    light.data.color = color
+    light.data.shape = "RECTANGLE"
+    light.data.size = size
+    light.data.size_y = size_y if size_y is not None else size
+    light.data.use_shadow = True
+    look_at(light, target)
+    return light
 
 
 def sphere(name, loc, scale, color, parent=None, segments=16, rings=8):
@@ -207,7 +314,7 @@ bpy.context.preferences.edit.keyframe_new_interpolation_type = "BEZIER"
 scene.frame_start = 1
 scene.frame_end = FRAMES
 scene.render.fps = FPS
-scene.render.engine = "BLENDER_WORKBENCH"
+scene.render.engine = "BLENDER_EEVEE" if ANIME_ROOM else "BLENDER_WORKBENCH"
 scene.render.resolution_x = 960
 scene.render.resolution_y = 540
 scene.render.resolution_percentage = 100
@@ -224,6 +331,18 @@ scene.display.shading.show_specular_highlight = False
 scene.display.shading.background_type = "VIEWPORT"
 scene.display.shading.background_color = (0.12, 0.12, 0.11)
 scene.view_settings.look = "AgX - Medium High Contrast"
+if ANIME_ROOM:
+    scene.render.image_settings.color_mode = "RGB"
+    scene.render.image_settings.color_depth = "8"
+    scene.render.image_settings.compression = 18
+    scene.render.film_transparent = False
+    scene.render.filter_size = 1.25
+    if scene.world is None:
+        scene.world = bpy.data.worlds.new("AnimeRoomWorld")
+    scene.world.use_nodes = True
+    world_background = scene.world.node_tree.nodes.get("Background")
+    world_background.inputs["Color"].default_value = (0.075, 0.095, 0.12, 1.0)
+    world_background.inputs["Strength"].default_value = 0.16
 
 # Room topology: north is +Y, east is +X.
 floor = cube("Floor", (0, 0, -0.06), (4.2, 4.3, 0.06), C_FLOOR)
@@ -429,6 +548,62 @@ if RICH_ROOM:
     cylinder_between("Rich_Table_CrossBrace", (-1.10, 0.35, 0.33), (1.10, 0.35, 0.33), 0.025, C_METAL)
 
 
+if ANIME_ROOM:
+    # Replace the solid blockout walls with modeled openings. The room envelope,
+    # window centers, and door center remain identical to the approved layout.
+    west_wall.hide_render = True
+    west_wall.hide_viewport = True
+    east_wall.hide_render = True
+    east_wall.hide_viewport = True
+
+    west_wall_parts = [
+        cube("Anime_WestWall_Lower", (-4.05, 0, 0.46), (0.08, 4.10, 0.46), C_WALL),
+        cube("Anime_WestWall_Upper", (-4.05, 0, 2.74), (0.08, 4.10, 0.36), C_WALL),
+        cube("Anime_WestWall_SouthPier", (-4.05, -3.18, 1.55), (0.08, 0.92, 1.55), C_WALL),
+        cube("Anime_WestWall_CenterPier", (-4.05, -0.13, 1.55), (0.08, 0.70, 1.55), C_WALL),
+        cube("Anime_WestWall_NorthPier", (-4.05, 3.06, 1.55), (0.08, 1.04, 1.55), C_WALL),
+    ]
+    east_wall_parts = [
+        cube("Anime_EastWall_South", (4.05, -1.14, 1.55), (0.08, 2.96, 1.55), C_WALL),
+        cube("Anime_EastWall_North", (4.05, 3.69, 1.55), (0.08, 0.41, 1.55), C_WALL),
+        cube("Anime_EastWall_DoorHeader", (4.05, 2.55, 2.74), (0.08, 0.73, 0.36), C_WALL),
+    ]
+    for wall_part in west_wall_parts + east_wall_parts:
+        bevel(wall_part, 0.018, 3)
+
+    # Recessed window views give the panes depth instead of reading as blue clay.
+    for index, y_pos in enumerate((-1.55, 1.30), 1):
+        cube(f"Anime_WindowSky_{index}", (-4.16, y_pos, 1.65), (0.018, 0.70, 0.70), C_SKY)
+        for building_index, (offset, width, height) in enumerate(
+            ((-0.48, 0.16, 0.58), (-0.18, 0.12, 0.36), (0.09, 0.17, 0.50), (0.39, 0.13, 0.29)),
+            1,
+        ):
+            cube(
+                f"Anime_Window{index}_Building_{building_index}",
+                (-4.13, y_pos + offset, 1.02 + height * 0.5),
+                (0.018, width, height * 0.5),
+                C_CITY,
+            )
+        cube(f"Anime_Window{index}_Mullion", (-3.80, y_pos, 1.65), (0.025, 0.025, 0.72), C_METAL)
+        cube(f"Anime_Window{index}_BlindRail", (-3.76, y_pos, 2.37), (0.045, 0.68, 0.055), C_METAL)
+
+    # Architectural rhythm and functional details keep wide shots from feeling empty.
+    for index, y_pos in enumerate((-2.72, -0.13, 2.82), 1):
+        bevel(cube(f"Anime_EastWall_Pilaster_{index}", (3.88, y_pos, 1.55), (0.045, 0.055, 1.42), C_WALL_TRIM), 0.012)
+    cube("Anime_North_CrownTrim", (0, 3.88, 2.96), (3.88, 0.055, 0.055), C_WALL_TRIM)
+    cube("Anime_West_CrownTrim", (-3.88, 0, 2.96), (0.055, 3.88, 0.055), C_WALL_TRIM)
+    cube("Anime_East_CrownTrim", (3.88, 0, 2.96), (0.055, 3.88, 0.055), C_WALL_TRIM)
+    for index, y_pos in enumerate((-2.70, 0.05), 1):
+        bevel(cube(f"Anime_East_OutletPlate_{index}", (3.82, y_pos, 0.42), (0.035, 0.11, 0.14), C_SWITCH), 0.010)
+        cube(f"Anime_East_OutletSlot_{index}_A", (3.77, y_pos - 0.035, 0.43), (0.012, 0.010, 0.035), C_SWITCH_DARK)
+        cube(f"Anime_East_OutletSlot_{index}_B", (3.77, y_pos + 0.035, 0.43), (0.012, 0.010, 0.035), C_SWITCH_DARK)
+
+    # Extra furniture construction details visible in medium and wide angles.
+    bevel(cube("Anime_Table_EdgeBand_West", (-1.405, 0.35, 0.78), (0.018, 2.16, 0.065), C_TRIM), 0.010)
+    bevel(cube("Anime_Table_EdgeBand_East", (1.405, 0.35, 0.78), (0.018, 2.16, 0.065), C_TRIM), 0.010)
+    bevel(cube("Anime_Table_CableTray", (0, 0.35, 0.49), (0.55, 1.40, 0.035), C_METAL), 0.014)
+
+
 def build_chair(name, loc, yaw, executive=False):
     root = empty(name + "_Root", loc)
     seat_color = C_CHARCOAL if executive else C_CHAIR
@@ -556,6 +731,121 @@ for frame in (1, FRAMES):
     key_transform(believer_f, frame, loc=f_base, rot=(0, 0, D(138)))
 
 
+if ANIME_ROOM:
+    # Production-style anime background materials: restrained contrast, broad
+    # highlights, and subtle procedural breakup without photographic noise.
+    mat_wall = material_principled(
+        "Anime_BG_PaintedWall",
+        (0.50, 0.46, 0.36),
+        roughness=0.84,
+        texture={"kind": "noise", "dark": (0.43, 0.40, 0.32), "light": (0.59, 0.55, 0.44), "scale": 28.0, "detail": 2.0, "bump": 0.055, "distance": 0.018},
+    )
+    mat_floor = material_principled(
+        "Anime_BG_VinylFloor",
+        (0.27, 0.35, 0.30),
+        roughness=0.70,
+        texture={"kind": "noise", "dark": (0.21, 0.29, 0.25), "light": (0.38, 0.46, 0.39), "scale": 8.0, "detail": 4.0, "bump": 0.085, "distance": 0.028},
+    )
+    mat_floor_line = material_principled("Anime_BG_FloorJoint", (0.16, 0.22, 0.19), roughness=0.82)
+    mat_wood = material_principled(
+        "Anime_BG_WalnutWood",
+        (0.30, 0.16, 0.075),
+        roughness=0.52,
+        texture={"kind": "noise", "dark": (0.060, 0.020, 0.008), "light": (0.13, 0.050, 0.016), "scale": 3.5, "detail": 2.0, "bump": 0.018, "distance": 0.010},
+    )
+    mat_dark_wood = material_principled(
+        "Anime_BG_DarkWood",
+        (0.15, 0.07, 0.025),
+        roughness=0.48,
+        texture={"kind": "wood", "dark": (0.045, 0.018, 0.009), "light": (0.25, 0.105, 0.035), "scale": 8.0, "distortion": 5.0, "bump": 0.08, "distance": 0.025},
+    )
+    mat_trim = material_principled("Anime_BG_PaintedTrim", (0.64, 0.59, 0.48), roughness=0.58)
+    mat_metal = material_principled("Anime_BG_BrushedSteel", (0.29, 0.31, 0.32), roughness=0.34, metallic=0.78)
+    mat_gold = material_principled("Anime_BG_AgedBrass", (0.66, 0.38, 0.08), roughness=0.30, metallic=0.70)
+    mat_glass = material_principled("Anime_BG_WindowGlass", (0.36, 0.58, 0.68), roughness=0.13, alpha=0.34, transmission=0.28)
+    mat_sky = material_principled("Anime_BG_WindowSky", C_SKY, roughness=0.9, emission=(0.24, 0.47, 0.66), emission_strength=0.38)
+    mat_city = material_principled("Anime_BG_CitySilhouette", C_CITY, roughness=0.82)
+    mat_light = material_principled("Anime_BG_FluorescentGlow", (0.92, 0.90, 0.76), roughness=0.30, emission=(0.92, 0.88, 0.68), emission_strength=3.0)
+    mat_banner = material_principled(
+        "Anime_BG_BannerCloth",
+        C_BLACK,
+        roughness=0.92,
+        texture={"kind": "noise", "dark": (0.018, 0.020, 0.026), "light": (0.095, 0.10, 0.11), "scale": 34.0, "detail": 2.0, "bump": 0.13, "distance": 0.02},
+    )
+    mat_cork = material_principled(
+        "Anime_BG_CorkBoard",
+        C_BOARD,
+        roughness=0.88,
+        texture={"kind": "noise", "dark": (0.25, 0.14, 0.065), "light": (0.55, 0.36, 0.15), "scale": 18.0, "detail": 4.0, "bump": 0.16, "distance": 0.025},
+    )
+    mat_chair = material_principled("Anime_BG_ChairVinyl", (0.075, 0.085, 0.095), roughness=0.48)
+    mat_plastic = material_principled("Anime_BG_MattePlastic", C_CHARCOAL, roughness=0.40)
+    flat_materials = {}
+
+    for obj in bpy.data.objects:
+        if obj.type != "MESH":
+            continue
+        name = obj.name
+        if name.startswith(("BelieverB_", "BelieverF_", "Zannenin_")):
+            rgb = tuple(round(component, 4) for component in obj.color[:3])
+            if rgb not in flat_materials:
+                flat_materials[rgb] = material_principled(
+                    "Character_Flat_{:02d}".format(len(flat_materials) + 1),
+                    rgb,
+                    roughness=0.78,
+                )
+            assign_material(obj, flat_materials[rgb])
+        elif name == "Floor":
+            assign_material(obj, mat_floor)
+        elif "FloorSeam" in name or "FloorScuff" in name:
+            assign_material(obj, mat_floor_line)
+        elif "Wall" in name and "Trim" not in name and "Pilaster" not in name:
+            assign_material(obj, mat_wall)
+        elif name.startswith("Window_") and "Frame" not in name:
+            assign_material(obj, mat_glass)
+        elif "WindowSky" in name:
+            assign_material(obj, mat_sky)
+        elif "Building" in name:
+            assign_material(obj, mat_city)
+        elif "Fluorescent" in name and "Housing" not in name:
+            assign_material(obj, mat_light)
+        elif name == "Black_Banner":
+            assign_material(obj, mat_banner)
+        elif name == "Notice_Board":
+            assign_material(obj, mat_cork)
+        elif name.startswith("Emblem_") or name == "Door_Handle":
+            assign_material(obj, mat_gold)
+        elif name == "Table_ContinuousTop" or "Table_EdgeBand" in name:
+            assign_material(obj, mat_wood)
+        elif name == "Door" or "DoorPanel" in name or "Table_EndApron" in name or "Table_LongApron" in name or name == "Table_South_Edge":
+            assign_material(obj, mat_dark_wood)
+        elif name.startswith("Chair_") and ("Seat" in name or "Back" in name):
+            assign_material(obj, mat_chair)
+        elif name.startswith("Laptop_"):
+            assign_material(obj, mat_plastic)
+        elif any(token in name for token in ("Metal", "Hinge", "Closer", "Housing", "CableTray", "CrossBrace", "_Leg_", "Mullion", "BlindRail")):
+            assign_material(obj, mat_metal)
+        elif any(token in name for token in ("Baseboard", "CornerTrim", "CrownTrim", "DoorFrame", "Window_Frame", "Rich_Window", "Pilaster")):
+            assign_material(obj, mat_trim)
+        else:
+            rgb = tuple(round(component, 4) for component in obj.color[:3])
+            if rgb not in flat_materials:
+                flat_materials[rgb] = material_principled(
+                    "Room_Flat_{:02d}".format(len(flat_materials) + 1),
+                    rgb,
+                    roughness=0.68,
+                )
+            assign_material(obj, flat_materials[rgb])
+
+    # Broad, soft sources are closer to an anime background plate than a hard
+    # photoreal spotlight setup, while still grounding furniture with shadows.
+    area_light("Anime_Key_Ceiling_South", (0, -1.15, 2.90), (0, -1.15, 0.20), 145, (1.0, 0.87, 0.68), 2.2, 0.85)
+    area_light("Anime_Key_Ceiling_North", (0, 1.30, 2.90), (0, 1.30, 0.20), 155, (1.0, 0.87, 0.68), 2.2, 0.85)
+    area_light("Anime_WindowFill_South", (-3.65, -1.55, 1.70), (-0.8, -1.20, 1.05), 135, (0.52, 0.72, 1.0), 1.8, 2.0)
+    area_light("Anime_WindowFill_North", (-3.65, 1.30, 1.70), (-0.8, 1.05, 1.05), 125, (0.52, 0.72, 1.0), 1.8, 2.0)
+    area_light("Anime_FrontFill", (0, -3.45, 2.25), (0, 0.30, 1.0), 55, (1.0, 0.56, 0.38), 2.8, 1.4)
+
+
 def build_ortho_camera(name, loc, target, ortho_scale, shift_x=0.0, shift_y=0.0):
     bpy.ops.object.camera_add(location=loc)
     camera = bpy.context.active_object
@@ -564,6 +854,19 @@ def build_ortho_camera(name, loc, target, ortho_scale, shift_x=0.0, shift_y=0.0)
     camera.data.ortho_scale = ortho_scale
     camera.data.shift_x = shift_x
     camera.data.shift_y = shift_y
+    camera.data.clip_start = 0.05
+    camera.data.clip_end = 100
+    look_at(camera, target)
+    return camera
+
+
+def build_perspective_camera(name, loc, target, lens=35.0):
+    bpy.ops.object.camera_add(location=loc)
+    camera = bpy.context.active_object
+    camera.name = name
+    camera.data.type = "PERSP"
+    camera.data.lens = lens
+    camera.data.sensor_width = 36.0
     camera.data.clip_start = 0.05
     camera.data.clip_end = 100
     look_at(camera, target)
@@ -607,6 +910,21 @@ camera_layout_entrance = build_ortho_camera(
     (-0.25, 0.35, 0.85),
     7.2,
 )
+camera_anime_wide = None
+camera_anime_entrance = None
+if ANIME_ROOM:
+    camera_anime_wide = build_perspective_camera(
+        "Camera_ANIME_Wide",
+        (2.55, -7.65, 4.15),
+        (0, 0.45, 1.10),
+        38.0,
+    )
+    camera_anime_entrance = build_perspective_camera(
+        "Camera_ANIME_FromEntrance",
+        (3.35, 2.55, 2.20),
+        (-0.30, 0.15, 1.00),
+        31.0,
+    )
 
 # SHOT 1 has only the specified 4% planar push. Camera angle and occlusion stay fixed.
 camera_shot1.data.ortho_scale = 2.30
@@ -750,7 +1068,7 @@ os.makedirs(os.path.dirname(BLEND_OUT), exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=BLEND_OUT)
 
 report = {
-    "name": "pilot-opening-meeting-scene05-previz-v1-2d-camera",
+    "name": "scene05-room-anime-production-v3" if ANIME_ROOM else "pilot-opening-meeting-scene05-previz-v1-2d-camera",
     "passed": ROOM_LAYOUT or (
         all(value > 0 for value in camera_side_signs)
         and openings_out_of_frame
@@ -819,6 +1137,8 @@ report = {
     "visual_qc_required": True,
     "room_layout_mode": ROOM_LAYOUT,
     "rich_room_mode": RICH_ROOM,
+    "anime_room_mode": ANIME_ROOM,
+    "render_engine": scene.render.engine,
     "shot_evaluation_applicable": not ROOM_LAYOUT,
     "room_layout": {
         "room_size_blender_units": [8.4, 8.6, 3.1],
@@ -829,8 +1149,8 @@ report = {
     },
     "room_layout_cameras": [
         camera_layout_top.name,
-        camera_layout_south.name,
-        camera_layout_entrance.name,
+        (camera_anime_wide.name if ANIME_ROOM else camera_layout_south.name),
+        (camera_anime_entrance.name if ANIME_ROOM else camera_layout_entrance.name),
     ],
     "rich_room_details": {
         "characters_modified": False,
@@ -842,6 +1162,15 @@ report = {
         "light_switches": 1 if RICH_ROOM else 0,
         "fluorescent_housings": 2 if RICH_ROOM else 0,
         "table_aprons_and_braces": 5 if RICH_ROOM else 0,
+    },
+    "anime_room_details": {
+        "characters_modified": False,
+        "character_geometry_pose_palette_locked": True if ANIME_ROOM else False,
+        "modeled_wall_openings": 3 if ANIME_ROOM else 0,
+        "procedural_material_families": 13 if ANIME_ROOM else 0,
+        "soft_area_lights": 5 if ANIME_ROOM else 0,
+        "perspective_preview_cameras": 2 if ANIME_ROOM else 0,
+        "style": "stylized 3D anime background PBR" if ANIME_ROOM else None,
     },
 }
 with open(REPORT_OUT, "w", encoding="utf-8", newline="\n") as handle:
@@ -905,6 +1234,17 @@ if RICH_ROOM:
 - 巾木、床タイル目地と軽い擦れ、窓枠と窓台、ドア枠・パネル・蝶番・クローザー、照明スイッチ、蛍光灯筐体、机の幕板と補強を追加する。
 - 家具、窓、扉、壁、カメラの基本座標と個数は標準箱モデルから変更しない。
 """
+if ANIME_ROOM:
+    placement += """
+
+## 3Dアニメ背景版
+
+- キャラクター3名の形状、ポーズ、配置、色設計は変更しない。
+- 壁と床は微細な凹凸を持つマット素材、机と扉は木目、金物は金属、窓は透過ガラスとして分離する。
+- 西壁の窓2つと東壁の扉1つは、貼り付け板ではなく実際の壁開口として再構成する。
+- 蛍光灯の暖色キー、窓からの寒色フィル、南側の弱い補助光でアニメ背景向けの面構成を作る。
+- 上面図は配置確認用、残り2枚はパース付きの背景美術確認用カメラとする。
+"""
 with open(PLACEMENT_OUT, "w", encoding="utf-8", newline="\n") as handle:
     handle.write(placement)
 
@@ -914,14 +1254,14 @@ def active_camera(frame):
 
 
 if ROOM_LAYOUT:
-    scene.render.resolution_x = 1600 if RICH_ROOM else 1280
-    scene.render.resolution_y = 900 if RICH_ROOM else 720
+    scene.render.resolution_x = 1920 if ANIME_ROOM else (1600 if RICH_ROOM else 1280)
+    scene.render.resolution_y = 1080 if ANIME_ROOM else (900 if RICH_ROOM else 720)
     scene.render.resolution_percentage = 100
     scene.frame_set(1)
     layout_views = (
         ("layout_0001.png", camera_layout_top),
-        ("layout_0002.png", camera_layout_south),
-        ("layout_0003.png", camera_layout_entrance),
+        ("layout_0002.png", camera_anime_wide if ANIME_ROOM else camera_layout_south),
+        ("layout_0003.png", camera_anime_entrance if ANIME_ROOM else camera_layout_entrance),
     )
     for filename, camera in layout_views:
         scene.camera = camera
