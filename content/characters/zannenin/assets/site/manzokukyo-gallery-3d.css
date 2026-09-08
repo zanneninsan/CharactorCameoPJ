@@ -1,5 +1,5 @@
 /* The primary gallery. Artwork is never cropped here. */
-.gallery-loop-ui { width: min(1240px, calc(100% - 72px)); margin: 0 auto 16px; color: #eee3c9; }
+.gallery-loop-ui { width: var(--gallery-3d-width); margin: 0 auto 16px; color: #eee3c9; }
 .gallery-loop-ui[hidden], .gallery-loop-panel[hidden], .gallery-loop-transition[hidden], .gallery-loop-transition button[hidden] { display: none !important; }
 .gallery-loop-modes { display: flex; gap: 6px; margin-bottom: 12px; }
 .gallery-loop-ui button { min-height: 40px; border: 1px solid #b9a67966; color: #ddceb0; background: #20282b; padding: 8px 14px; font: 12px/1.4 system-ui; cursor: pointer; border-radius: 4px; }
@@ -17,7 +17,6 @@
 .is-gallery-loop :is(.gallery-3d-room-jumps, .gallery-3d-catalog, #gallery-puzzle, .gallery-exit, .gallery-ledger, [data-gallery-3d-prev], [data-gallery-3d-next], [data-gallery-3d-overview], [data-gallery-3d-list]) { display: none !important; }
 .is-gallery-loop .gallery-3d-heading > p { display: none; }
 .is-gallery-loop .gallery-3d-heading { margin-bottom: 12px; }
-.is-gallery-loop .gallery-3d-viewport { height: 54svh; min-height: 300px; }
 .is-gallery-loop .gallery-3d-controls { padding-bottom: 20px; }
 .gallery-loop-transition { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; text-align: center; background: #ece6d7f5; color: #3a433a; }
 .gallery-loop-transition > span { font: 9px/1.6 system-ui; letter-spacing: .22em; color: #6b7164; }
@@ -49,7 +48,6 @@
   .gallery-loop-count span > b { font-size: 22px; }
   .gallery-loop-panel > button { min-height: 36px; padding: 7px; font-size: 10px; }
   .is-gallery-loop .gallery-3d-heading h1 { margin-bottom: 0; }
-  .is-gallery-loop .gallery-3d-viewport { height: 48svh; min-height: 310px; }
   .gallery-loop-inspection img { height: 70svh; }
   .gallery-loop-inspection footer { flex-wrap: wrap; gap: 8px; padding: 10px; }
   .gallery-loop-inspection footer span { display: none; }
@@ -64,6 +62,7 @@
 .gallery-3d-stage {
   --gallery-3d-cream: #f1e6ce;
   --gallery-3d-brass: #ceb782;
+  --gallery-3d-width: min(calc(100% - clamp(24px, 7vw, 128px)), 132svh, 1440px);
   position: relative;
   padding: clamp(28px, 5vw, 64px) 0 clamp(40px, 6vw, 80px);
   border-bottom: 1px solid #cdb47f33;
@@ -71,7 +70,7 @@
 }
 
 .gallery-3d-heading {
-  width: min(1240px, calc(100% - clamp(32px, 9vw, 128px)));
+  width: var(--gallery-3d-width);
   margin: 0 auto clamp(24px, 3vw, 40px);
   color: #eadfc7;
 }
@@ -138,9 +137,10 @@
 .gallery-3d-viewport {
   position: relative;
   isolation: isolate;
-  height: min(64svh, 720px);
+  height: min(74svh, 810px);
   min-height: 360px;
-  margin: 0 clamp(12px, 3.5vw, 64px);
+  width: var(--gallery-3d-width);
+  margin: 0 auto;
   overflow: hidden;
   border: 1px solid #d3bd89a6;
   border-radius: 3px;
@@ -248,7 +248,7 @@
   justify-content: center;
   align-items: center;
   gap: 12px;
-  width: min(1100px, calc(100% - 40px));
+  width: min(1100px, var(--gallery-3d-width));
   margin: 0 auto;
   padding: 22px 0 0;
 }
@@ -425,14 +425,14 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
 
 @media (max-width: 760px) {
   .has-gallery-3d .gallery-sound:has([data-gallery-sound-invite]:not([hidden])) { top: 12px; bottom: auto; }
-  .gallery-3d-stage { padding-top: 26px; padding-bottom: 40px; }
+  .gallery-3d-stage { --gallery-3d-width: calc(100% - 20px); padding-top: 26px; padding-bottom: 40px; }
   .gallery-3d-heading { width: calc(100% - 36px); margin-bottom: 23px; }
   .gallery-3d-heading h1 { font-size: clamp(31px, 9.5vw, 48px); margin-bottom: 13px; }
   .gallery-3d-heading p { font-size: .77rem; line-height: 1.9; }
   .gallery-3d-heading :is(.gallery-eyebrow, .eyebrow) { font-size: .59rem; letter-spacing: .15em; }
   .gallery-3d-room-jumps { width: calc(100% - 36px); gap: 6px; margin-bottom: 16px; }
   .gallery-3d-room-jumps button { flex: 1 1 calc(25% - 6px); min-width: 0; padding: 8px 6px; font-size: .6rem; letter-spacing: .025em; }
-  .gallery-3d-viewport { height: 56svh; min-height: 50svh; margin-inline: 10px; border-radius: 2px; }
+  .gallery-3d-viewport { height: 64svh; min-height: 320px; border-radius: 2px; }
   .gallery-3d-viewport::after { border-width: 4px; }
   .gallery-3d-viewport .gallery-3d-help { bottom: 11px; max-width: calc(100% - 22px); padding: 6px 10px; font-size: .61rem; }
   .gallery-3d-viewport .gallery-3d-help { top: 10px; bottom: auto; left: 10px; right: 10px; max-width: none; width: auto; transform: none; text-align: center; }
@@ -463,7 +463,7 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
 }
 
 @media (max-height: 520px) and (min-width: 761px) {
-  .gallery-3d-viewport { height: 56svh; min-height: 220px; }
+  .gallery-3d-viewport { height: 74svh; min-height: 220px; }
   .gallery-3d-heading > h1 { font-size: 36px; }
   .gallery-lightbox picture { height: 90svh; }
 }
