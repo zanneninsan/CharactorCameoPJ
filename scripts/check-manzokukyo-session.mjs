@@ -133,14 +133,14 @@ for (const room of rooms) {
     const galleryController = await readFile(path.join(dist, 'zannenin/assets/site/manzokukyo-gallery.js'), 'utf8');
     assert.match(galleryController, /room\.navigate\(destination\)/, 'Gallery delayed door must use the persistent session');
     assert.doesNotMatch(view, /window\.location\.href\s*=\s*exit\.href/, 'Gallery must not discard the audio owner');
-    if (room.id === 'gallery-3d') {
+    if (room.id === 'gallery' || room.id === 'gallery-3d') {
       assert.match(view, /assets\/site\/manzokukyo-gallery-3d\.js/, 'The 3D gallery must load its scene module');
       assert.equal(viewTags.filter(element => element.attrs.has('data-gallery-index')).length, 24, 'The 3D view retains all original selectable records');
       assert.ok(viewTags.some(element => element.attrs.has('data-gallery-3d-canvas')), 'The 3D view includes its canvas');
       const canonical = await readFile(path.join(dist, canonicalPath, room.route, 'index.html'), 'utf8');
       const canonicalTags = tags(canonical);
-      assert.equal(canonicalTags.find(element => element.attrs.get('name') === 'robots').attrs.get('content'), 'noindex,nofollow', 'The canonical 3D prototype is not indexed');
-      assert.ok(canonicalTags.find(element => element.name === 'link' && element.attrs.get('rel') === 'canonical').attrs.get('href').endsWith('/manzokukyo/truth/gallery-3d/'), 'The 3D canonical URL points to the 3D route');
+      assert.equal(canonicalTags.find(element => element.attrs.get('name') === 'robots').attrs.get('content'), room.id === 'gallery-3d' ? 'noindex,follow' : 'index,follow,max-image-preview:large', 'The primary gallery is indexed; the compatibility URL is not');
+      assert.ok(canonicalTags.find(element => element.name === 'link' && element.attrs.get('rel') === 'canonical').attrs.get('href').endsWith('/manzokukyo/truth/gallery/'), 'Both URLs identify the primary gallery');
     }
   }
 }
@@ -153,7 +153,7 @@ for (const directory of [path.join(root, 'content/static-sites', previewPath), p
     assert.equal(result.status, 0, `${path.relative(root, filename)}: ${result.error?.message || result.stderr || result.stdout}`);
   }
 }
-const galleryScripts = ['manzokukyo-gallery.js', 'manzokukyo-gallery-3d.js'];
+const galleryScripts = ['manzokukyo-gallery.js', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js'];
 for (const directory of [path.join(root, 'content/characters/zannenin/assets/site'), path.join(dist, 'zannenin/assets/site')]) {
   for (const script of galleryScripts) {
     const filename = path.join(directory, script);

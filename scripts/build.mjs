@@ -1,4 +1,3 @@
-import { renderGalleryExperience } from "./render-manzokukyo-gallery.mjs";
 import { renderGallery3DExperience } from "./render-manzokukyo-gallery-3d.mjs";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -115,7 +114,7 @@ async function build() {
           await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
           await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
           await writeFile(path.join(manzokukyoGalleryDir, "index.html"), renderManzokukyoGallery(character), "utf8");
-          await writeFile(path.join(manzokukyoGallery3DDir, "index.html"), renderGallery3DExperience(character, { htmlPage, escapeHtml, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` }), "utf8");
+          await writeFile(path.join(manzokukyoGallery3DDir, "index.html"), renderGallery3DExperience(character, { htmlPage, escapeHtml, alias: true, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` }), "utf8");
           await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
           await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
@@ -2607,7 +2606,7 @@ function renderManzokukyoUiSounds() {
 }
 
 function renderManzokukyoGallery(character) {
-  return renderGalleryExperience(character, { htmlPage, escapeHtml, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` });
+  return renderGallery3DExperience(character, { htmlPage, escapeHtml, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` });
 }
 
 function renderManzokukyoRedHouse(character) {

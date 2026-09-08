@@ -3,7 +3,7 @@ export const rooms = [
   { id: 'corridor', path: '', old: '', title: '満足教 — 回廊', music: 'corridor' },
   { id: 'truth', path: 'truth/', old: 'truth/', title: '真理の扉 — 満足教', music: 'truth' },
   { id: 'gallery', path: 'truth/gallery/', old: 'truth/gallery/', title: '記憶の画廊 — 満足教', music: 'truth' },
-  { id: 'gallery-3d', path: 'truth/gallery-3d/', old: 'truth/gallery-3d/', title: '記憶の画廊 3D — 満足教', music: 'truth' },
+  { id: 'gallery-3d', path: 'truth/gallery-3d/', old: 'truth/gallery-3d/', title: '記憶の画廊 — 満足教', music: 'truth' },
   { id: 'red-house', path: 'truth/red-house/', old: 'truth/red-house/', title: '懺悔室 — 満足教', music: 'truth' },
   { id: 'archive', path: 'truth/red-house/archive/', old: 'truth/red-house/archive/', title: '保管庫 — 満足教', music: 'corridor' },
   { id: 'novel', path: 'novel/', old: 'novel/', title: '満足教 — 物語', music: 'corridor' }

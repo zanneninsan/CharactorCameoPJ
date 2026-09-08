@@ -6,6 +6,7 @@ const catalog = document.querySelector('.gallery-3d-catalog');
 const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
+const { advanceWalk, walkKeys, walkRoom } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let exhibition, selected = 0;
 function setCatalog(open) {
@@ -18,10 +19,12 @@ function fallback() {
   setCatalog(true);
   for (const name of ['prev', 'next', 'overview']) stage.querySelector(`[data-gallery-3d-${name}]`).disabled = true;
   for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.disabled = true;
+  for (const button of stage.querySelectorAll('[data-gallery-3d-walk]')) button.disabled = true;
 }
 function updateSelection(index) {
   if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
   selected = index;
+  stage.querySelector('[data-gallery-3d-inspect]').disabled = false;
   stage.querySelector('[data-gallery-3d-room]').textContent = `展示室 ${['I', 'II', 'III', 'IV'][Math.floor(index / 6)]} / IV`;
   stage.querySelector('[data-gallery-3d-record]').textContent = `記録 ${String(index + 1).padStart(2, '0')} / 24`;
   stage.querySelector('[data-gallery-3d-inspect]').textContent = `記録 ${String(index + 1).padStart(2, '0')} を大きく見る`;
@@ -30,15 +33,16 @@ function updateSelection(index) {
 }
 function inspect(index = selected) {
   if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
+  exhibition?.stop();
   if (gallery.showRecord(index, stage.querySelector('[data-gallery-3d-inspect]'))) {
-    updateSelection(index); exhibition?.select(index); return true;
+    updateSelection(index); return true;
   }
   return false;
 }
 stage.querySelector('[data-gallery-3d-prev]').addEventListener('click', () => { exhibition?.select((selected + 23) % 24); gallery.play('step-1', { level: .35 }); });
 stage.querySelector('[data-gallery-3d-next]').addEventListener('click', () => { exhibition?.select((selected + 1) % 24); gallery.play('step-2', { level: .35 }); });
 stage.querySelector('[data-gallery-3d-inspect]').addEventListener('click', () => inspect());
-stage.querySelector('[data-gallery-3d-overview]').addEventListener('click', () => exhibition?.overview(Math.floor(selected / 6)));
+stage.querySelector('[data-gallery-3d-overview]').addEventListener('click', () => exhibition?.overview(exhibition.state().room - 1));
 listButton.addEventListener('click', () => { setCatalog(catalog.hidden); if (!catalog.hidden) catalog.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'start' }); });
 for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener('click', () => { exhibition?.overview(Number(button.getAttribute('data-gallery-3d-room-jump'))); gallery.play('step-1', { level: .35 }); });
 for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.addEventListener('click', () => { const index = Number(button.dataset.galleryIndex); updateSelection(index); exhibition?.select(index); });
@@ -108,6 +112,10 @@ function createExhibition(T) {
   }
   box(scene, [11.4, .18, 69], [0, 6.45, -30], baseStone);
   box(scene, [2.4, .05, 69], [0, 6.33, -30], warm);
+  // Walking lets visitors turn back toward the entrance as well.
+  box(scene, [11.4, 6.4, .3], [0, 3.15, 4.5], stone);
+  box(scene, [3.3, 4.8, .18], [0, 2.4, 4.2], gold);
+  box(scene, [2.95, 4.55, .18], [0, 2.28, 4.07], baseStone);
   const curve = new T.CatmullRomCurve3([new T.Vector3(-4.95, 3.8, 0), new T.Vector3(-4.5, 4.8, 0), new T.Vector3(-2.8, 5.8, 0), new T.Vector3(0, 6.2, 0), new T.Vector3(2.8, 5.8, 0), new T.Vector3(4.5, 4.8, 0), new T.Vector3(4.95, 3.8, 0)]);
   const arch = new T.TubeGeometry(curve, 40, .12, 6, false); geometry.add(arch);
   for (let r = 0; r <= 4; r++) {
@@ -131,7 +139,12 @@ function createExhibition(T) {
   const roomCache = [];
   const loaded = new Map(), failed = new Set(), pending = new Map();
   let activeRoom = 0, disposed = false, lost = false, inView = true, raf = 0, last = 0;
-  let selectedIndex = 0, mode = 'overview', moving = false;
+  let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
+  let yaw = 0, pitch = 0, walked = 0;
+  const heldKeys = new Set(), heldPointers = new Map();
+  const walkButtons = [...stage.querySelectorAll('[data-gallery-3d-walk]')];
+  const orientation = new T.Euler(0, 0, 0, 'YXZ');
+  const forwardVector = new T.Vector3(), toFrame = new T.Vector3();
   const endPosition = new T.Vector3(), endQuaternion = new T.Quaternion(), lookCamera = new T.PerspectiveCamera();
   function labelTexture(text, detail = '') {
     const c = document.createElement('canvas'); c.width = 256; c.height = 96;
@@ -163,9 +176,10 @@ function createExhibition(T) {
   const skyPanels = [green, rose, warm, green];
   for (let r = 0; r < 4; r++) for (const side of [-1, 1]) box(scene, [.045, 1.6, .15], [side * 5.18, 3.4, -15 - r * 16], skyPanels[r]);
 
-  function loadRoom(r) {
-    activeRoom = r; const previous = roomCache.indexOf(r); if (previous !== -1) roomCache.splice(previous, 1); roomCache.push(r);
-    while (roomCache.length > 2) roomCache.shift();
+  function loadRoom(r, preload = false) {
+    if (!preload) activeRoom = r;
+    const previous = roomCache.indexOf(r); if (previous !== -1) roomCache.splice(previous, 1); roomCache.push(r);
+    while (roomCache.length > 2) roomCache.splice(roomCache.findIndex(room => room !== activeRoom), 1);
     for (const [index, texture] of loaded) if (!roomCache.includes(frames[index].roomIndex)) { frames[index].surface.map = null; frames[index].surface.fog = true; frames[index].surface.needsUpdate = true; texture.dispose(); textures.delete(texture); loaded.delete(index); }
     for (const frame of frames.filter(frame => frame.roomIndex === r)) {
       if (loaded.has(frame.index) || pending.has(frame.index)) continue;
@@ -182,7 +196,7 @@ function createExhibition(T) {
         textures.add(texture); loaded.set(frame.index, texture); failed.delete(frame.index); refreshLoading(); wake();
       }, undefined, () => { pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
     }
-    ambience.position.z = -6 - r * 16; refreshLoading();
+    ambience.position.z = -6 - activeRoom * 16; refreshLoading();
   }
   function refreshLoading() {
     const roomFrames = frames.filter(frame => frame.roomIndex === activeRoom);
@@ -198,6 +212,8 @@ function createExhibition(T) {
   }
   function select(index, immediate = false) {
     if (!Number.isInteger(index) || index < 0 || index >= records.length) return false;
+    stopWalk();
+    aimedIndex = null; viewport.classList.remove('is-aiming');
     selectedIndex = index; mode = 'artwork'; updateSelection(index);
     const frame = frames[index]; loadRoom(frame.roomIndex);
     const vertical = frame.height / (2 * Math.tan(T.MathUtils.degToRad(camera.fov / 2)));
@@ -207,28 +223,83 @@ function createExhibition(T) {
   }
   function overview(r, immediate = false) {
     if (!Number.isInteger(r) || r < 0 || r >= 4) return false;
+    stopWalk();
+    aimedIndex = null; viewport.classList.remove('is-aiming');
     mode = 'overview'; selectedIndex = r * 6; updateSelection(selectedIndex); loadRoom(r);
     destination(new T.Vector3(0, 2.32, 2 - r * 16), new T.Vector3(0, 2.6, -10 - r * 16), immediate);
+  }
+  function stopWalk() {
+    heldKeys.clear(); heldPointers.clear(); walked = 0; down = null;
+    for (const button of walkButtons) button.classList.remove('is-held');
+  }
+  function canWalk() { return !disposed && !lost && !document.hidden && inView && !document.querySelector('dialog[open]'); }
+  function startWalk() {
+    if (!canWalk()) return false;
+    if (mode !== 'walking') {
+      orientation.setFromQuaternion(camera.quaternion, 'YXZ'); yaw = orientation.y; pitch = orientation.x;
+      mode = 'walking'; moving = false;
+    }
+    return true;
+  }
+  function walkActions() { return new Set([...heldKeys].map(key => walkKeys[key]).concat([...heldPointers.values()])); }
+  function syncWalkingSelection(direction = Math.cos(yaw) >= 0 ? 1 : -1) {
+    const r = walkRoom(camera.position.z);
+    if (r !== activeRoom) loadRoom(r);
+    // Prefetch the next room near an arch, while retaining the current room.
+    const neighbor = r + direction;
+    const boundary = direction === 1 ? 2 - (r + 1) * 16 : 2 - r * 16;
+    if (neighbor >= 0 && neighbor < 4 && Math.abs(camera.position.z - boundary) < 6 && !roomCache.includes(neighbor)) loadRoom(neighbor, true);
+    camera.getWorldDirection(forwardVector);
+    let best = .94; aimedIndex = null;
+    for (const frame of frames) {
+      toFrame.copy(frame.group.position).sub(camera.position);
+      const distance = toFrame.length();
+      const alignment = toFrame.normalize().dot(forwardVector);
+      if (distance < 10 && alignment > best) { best = alignment; aimedIndex = frame.index; }
+    }
+    if (aimedIndex !== null) {
+      selectedIndex = aimedIndex;
+      if (selected !== aimedIndex || stage.querySelector('[data-gallery-3d-inspect]').disabled) updateSelection(aimedIndex);
+    } else {
+      stage.querySelector('[data-gallery-3d-record]').textContent = '歩いて探索中';
+      stage.querySelector('[data-gallery-3d-inspect]').textContent = '気になる絵の方を向く';
+      stage.querySelector('[data-gallery-3d-inspect]').disabled = true;
+    }
+    stage.querySelector('[data-gallery-3d-room]').textContent = `展示室 ${['I', 'II', 'III', 'IV'][r]} / IV`;
+    for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.setAttribute('aria-pressed', String(Number(button.getAttribute('data-gallery-3d-room-jump')) === r));
+    viewport.classList.toggle('is-aiming', aimedIndex !== null);
+  }
+  function applyWalk(dt, actions = walkActions()) {
+    const next = advanceWalk(camera.position, yaw, actions, dt);
+    const direction = next.z < camera.position.z ? 1 : next.z > camera.position.z ? -1 : undefined;
+    camera.position.x = next.x; camera.position.z = next.z; yaw = next.yaw;
+    camera.quaternion.setFromEuler(orientation.set(pitch, yaw, 0, 'YXZ'));
+    endPosition.copy(camera.position); endQuaternion.copy(camera.quaternion);
+    walked += next.distance;
+    if (walked >= 1.75) { gallery.play('step-1', { level: .18 }); walked %= 1.75; }
+    syncWalkingSelection(direction); wake();
   }
   function syncSeals() {
     for (const frame of frames) if (frame.seal) { frame.seal.material = document.querySelector(`[data-gallery-index="${frame.index}"]`).classList.contains('is-collected') ? green : gold; }
     wake();
   }
   const sealObserver = new MutationObserver(syncSeals); sealObserver.observe(catalog, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  const modalObserver = new MutationObserver(() => { last = 0; wake(); });
+  const modalObserver = new MutationObserver(() => { if (document.querySelector('dialog[open]')) stopWalk(); last = 0; wake(); });
   for (const dialog of document.querySelectorAll('dialog')) modalObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] });
   function animate(time) {
     raf = 0;
     if (disposed || lost || document.hidden || !inView) { last = 0; return; }
     const paused = document.querySelector('dialog[open]');
     const dt = last ? Math.min((time - last) / 1000, .05) : 0; last = time;
+    const walking = mode === 'walking' && (heldKeys.size || heldPointers.size) && !paused;
+    if (walking) applyWalk(dt);
     if (moving && !paused) {
       const ease = 1 - Math.exp(-dt * 5.4);
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
     renderer.render(scene, camera);
-    if (moving && !paused) raf = requestAnimationFrame(animate);
+    if ((moving || walking) && !paused && !raf) raf = requestAnimationFrame(animate);
   }
   function wake() { if (!raf && !disposed && !lost) raf = requestAnimationFrame(animate); }
   function resize() {
@@ -238,28 +309,69 @@ function createExhibition(T) {
     if (mode === 'artwork') select(selectedIndex, true); else wake();
   }
   const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(viewport);
-  const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; last = 0; if (inView) wake(); }, { rootMargin: '80px' }); intersection.observe(canvas);
+  const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; last = 0; if (inView) wake(); else stopWalk(); }, { rootMargin: '80px' }); intersection.observe(canvas);
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
   let down;
-  canvas.addEventListener('pointerdown', event => { down = { x: event.clientX, y: event.clientY }; });
+  canvas.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !canWalk() || down) return;
+    canvas.focus({ preventScroll: true }); canvas.setPointerCapture(event.pointerId);
+    down = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, dragged: false };
+  });
+  canvas.addEventListener('pointermove', event => {
+    if (!down || down.id !== event.pointerId) return;
+    if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > 7) down.dragged = true;
+    if (down.dragged && startWalk()) {
+      yaw -= (event.clientX - down.lastX) * .004;
+      pitch = Math.max(-.65, Math.min(.65, pitch - (event.clientY - down.lastY) * .003));
+      applyWalk(0);
+    }
+    down.lastX = event.clientX; down.lastY = event.clientY;
+  });
   canvas.addEventListener('pointerup', event => {
-    if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 12) { down = null; return; } down = null;
+    if (!down || down.id !== event.pointerId) return;
+    const dragged = down.dragged; down = null;
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    if (dragged || !canWalk()) return;
     const rect = canvas.getBoundingClientRect(); pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera); const hit = raycaster.intersectObjects(targets)[0];
     if (hit) inspect(hit.object.userData.index);
   });
   canvas.addEventListener('pointercancel', () => { down = null; });
-  canvas.addEventListener('keydown', event => {
-    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); select((selectedIndex + (event.key === 'ArrowRight' ? 1 : 23)) % 24); }
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); inspect(); }
+  canvas.addEventListener('lostpointercapture', () => { down = null; });
+  stage.addEventListener('keydown', event => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.target.closest('input,textarea,select,[contenteditable]')) return;
+    if (!walkKeys[event.code] || !startWalk()) return;
+    event.preventDefault();
+    if (!heldKeys.has(event.code)) { heldKeys.add(event.code); applyWalk(.035); }
   });
-  const visibility = () => { last = 0; if (!document.hidden) wake(); };
+  window.addEventListener('keyup', event => { heldKeys.delete(event.code); });
+  stage.addEventListener('focusout', event => { if (!stage.contains(event.relatedTarget)) stopWalk(); });
+  for (const button of walkButtons) {
+    const action = button.getAttribute('data-gallery-3d-walk');
+    button.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || !startWalk()) return;
+      event.preventDefault(); canvas.focus({ preventScroll: true }); button.setPointerCapture(event.pointerId);
+      heldPointers.set(event.pointerId, action); button.classList.add('is-held'); applyWalk(.035);
+    });
+    const release = event => { heldPointers.delete(event.pointerId); button.classList.remove('is-held'); };
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, release);
+    button.addEventListener('click', event => { if (event.detail === 0 && startWalk()) applyWalk(.05, new Set([action])); });
+  }
+  canvas.addEventListener('keydown', event => {
+    if (event.ctrlKey || event.metaKey || event.altKey || !canWalk()) return;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); select((selected + (event.key === 'ArrowRight' ? 1 : 23)) % 24); }
+    if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) { event.preventDefault(); if (mode !== 'walking' || aimedIndex !== null) inspect(); }
+    if (event.key === 'Escape') stopWalk();
+  });
+  window.addEventListener('blur', stopWalk);
+  const visibility = () => { stopWalk(); last = 0; if (!document.hidden) wake(); };
   document.addEventListener('visibilitychange', visibility);
   motion.addEventListener('change', () => { if (motion.matches) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; wake(); } });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); lost = true; cancelAnimationFrame(raf); fallback(); });
+  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); stopWalk(); lost = true; cancelAnimationFrame(raf); fallback(); });
   // Keep the accessible catalog after a graphics reset. Reloading just the
   // hosted iframe would leave the parent's old sound subscriptions attached.
   window.addEventListener('pagehide', event => {
+    stopWalk();
     cancelAnimationFrame(raf); raf = 0; last = 0;
     if (event.persisted) return;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
@@ -267,10 +379,10 @@ function createExhibition(T) {
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
   resize(); overview(0, true); syncSeals();
-  return { select, overview, state: () => ({ ready: !disposed && !lost, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+  return { select, overview, stop: stopWalk, state: () => ({ ready: !disposed && !lost, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };
-register({ name: 'read_gallery_3d_state', description: 'Read the optional 3D gallery camera and image loading status without moving or changing progress.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: () => exhibition?.state() || { ready: false, fallback: true } });
+register({ name: 'read_gallery_3d_state', description: 'Read the walking 3D gallery camera and image loading status without moving or changing progress.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true }, execute: () => exhibition?.state() || { ready: false, fallback: true } });
 register({ name: 'view_gallery_3d_artwork', description: 'Move to the front of one of the 24 paintings using the normal gallery camera. Does not collect a seal.', inputSchema: { type: 'object', properties: { number: { type: 'integer', minimum: 1, maximum: 24 } }, required: ['number'], additionalProperties: false }, execute: ({ number }) => { if (!Number.isInteger(number) || number < 1 || number > 24 || !exhibition) throw Error('Choose a displayed record from 1 to 24'); exhibition.select(number - 1); return exhibition.state(); } });
 register({ name: 'view_gallery_3d_room', description: 'View one of the four exhibition rooms using its visible room selector. Does not change collected seals or sound.', inputSchema: { type: 'object', properties: { number: { type: 'integer', minimum: 1, maximum: 4 } }, required: ['number'], additionalProperties: false }, execute: ({ number }) => { if (!Number.isInteger(number) || number < 1 || number > 4 || !exhibition) throw Error('Choose room 1 to 4'); exhibition.overview(number - 1); return exhibition.state(); } });
