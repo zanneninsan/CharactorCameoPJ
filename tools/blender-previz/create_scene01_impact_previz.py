@@ -159,6 +159,17 @@ z_gesture = bpy.data.objects["Zannenin_RightGesture"]
 for obj in (zannenin, believer_b, believer_f, z_gesture):
     obj.animation_data_clear()
 
+# Verify that the shared room's laptop has an explicit screen surface facing
+# Believer B.  This catches a visually reversed hinge/lid construction before
+# the animation is accepted as a camera reference.
+laptop_root = bpy.data.objects["Laptop_Root"]
+laptop_screen = bpy.data.objects["Laptop_ScreenFace"]
+laptop_screen_forward = (laptop_root.matrix_world.to_3x3() @ Vector((0, 1, 0))).to_2d().normalized()
+laptop_to_b = (believer_b.location.to_2d() - laptop_root.location.to_2d()).normalized()
+laptop_screen_alignment = laptop_screen_forward.dot(laptop_to_b)
+if laptop_screen_alignment <= 0.999:
+    raise RuntimeError("Laptop screen is not facing Believer B")
+
 # The other two characters remain seated and only recoil a fraction at impact.
 for frame, pitch in ((1, 0), (77, 0), (88, -2.2), (96, -0.7), (168, -0.7)):
     key_object(believer_b, frame, loc=(1.40, 0.08, 0), rot=(D(pitch), 0, D(-128)))
@@ -283,6 +294,9 @@ report = {
         "believer_b": "east seat with one laptop",
         "believer_f": "west window-side seat",
         "door_handle": "left side from room interior front view",
+        "laptop_screen_faces": "Believer B",
+        "laptop_hinge_side": "opposite Believer B",
+        "laptop_screen_direction_dot_to_believer_b": round(laptop_screen_alignment, 4),
     },
     "qc_frames": [1, 18, 77, 83, 88, 120, 160, 168],
 }
@@ -298,7 +312,7 @@ plan = """# SCENE 01 impact-camera previz v2
 - 00:03.67–00:03.83: 到達時に2フレームの小さなインパクト揺れを入れ、すぐ停止する。
 - 00:03.83–00:07.00: 残念院さんの寄りを固定。右手を大きく掲げ、効果背景だけを緩く脈動させる。
 
-キャラクター、座席、PC、窓、扉、ドアノブ、机の配置は共有会議室モデルから変更しない。プレビズのCG外観と効果背景の具体的な線を完成画へ転写せず、演技、カメラ時刻、画面占有率、背景切替の役割だけを参照する。
+キャラクター、座席、窓、扉、ドアノブ、机の配置は共有会議室モデルから変更しない。PCは画面が信者Bを向き、ヒンジがその反対側にある。プレビズのCG外観と効果背景の具体的な線を完成画へ転写せず、演技、カメラ時刻、画面占有率、背景切替の役割だけを参照する。
 """
 with open(PLAN_OUT, "w", encoding="utf-8", newline="\n") as handle:
     handle.write(plan)

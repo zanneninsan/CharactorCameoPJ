@@ -44,7 +44,10 @@
     "zannenin": "north head position",
     "believer_b": "east seat with one laptop",
     "believer_f": "west window-side seat",
-    "door_handle": "left side from room interior front view"
+    "door_handle": "left side from room interior front view",
+    "laptop_screen_faces": "Believer B",
+    "laptop_hinge_side": "opposite Believer B",
+    "laptop_screen_direction_dot_to_believer_b": 1.0
   },
   "qc_frames": [
     1,

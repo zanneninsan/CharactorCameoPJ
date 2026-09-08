@@ -72,9 +72,12 @@
       0.86
     ],
     "screen_faces": "southeast toward Believer B",
+    "hinge_side": "northwest, opposite Believer B",
+    "screen_face_is_explicit": true,
+    "screen_direction_dot_to_believer_b": 1.0,
     "material_color": "matte charcoal gray",
     "visible_shot1": true,
-    "visible_shot2": false,
+    "visible_shot2": true,
     "shot1_center_axis_delta": 0.0042
   },
   "dialogue_axis": "BelieverB <-> Zannenin",
@@ -88,13 +91,13 @@
       "Zannenin": false,
       "BelieverF": false,
       "laptop": true,
-      "laptop_fully_framed": false
+      "laptop_fully_framed": true
     },
     "shot2": {
       "BelieverB": false,
       "Zannenin": true,
       "BelieverF": false,
-      "laptop": false,
+      "laptop": true,
       "emblem_fully_framed": true
     }
   },

@@ -636,20 +636,47 @@ chair_z = build_chair("Chair_Zannenin", (-0.55, 2.74, 0), 0, True)
 chair_b = build_chair("Chair_BelieverB", (1.76, 0.08, 0), D(-128))
 chair_f = build_chair("Chair_BelieverF", (-1.76, 0.16, 0), D(138))
 
-# The only tabletop prop: Believer B's matte charcoal laptop, screen facing east/+X.
+# The only tabletop prop: Believer B's matte charcoal laptop.  Build it in a
+# local frame where +Y is the screen's viewing direction, then point +Y exactly
+# at Believer B.  Keeping the hinge on local -Y makes the physical construction
+# agree with the screen direction instead of merely rotating a symmetric slab.
+laptop_origin = Vector((1.00, 0.42))
+believer_b_seat = Vector((1.40, 0.08))
+laptop_to_b = (believer_b_seat - laptop_origin).normalized()
+laptop_yaw = math.atan2(-laptop_to_b.x, laptop_to_b.y)
+laptop_root = empty("Laptop_Root", (laptop_origin.x, laptop_origin.y, 0.86))
+laptop_root.rotation_euler.z = laptop_yaw
 laptop_base = cube(
     "Laptop_Base",
-    (1.00, 0.42, 0.86),
+    (0, 0, 0),
     (0.34, 0.28, 0.025),
     C_CHARCOAL,
-    rot=(0, 0, D(-40)),
+    laptop_root,
+)
+cube(
+    "Laptop_KeyboardDeck",
+    (0, 0.035, 0.031),
+    (0.29, 0.205, 0.006),
+    (0.12, 0.13, 0.15),
+    laptop_root,
 )
 laptop_lid = cube(
     "Laptop_Lid_Exterior",
-    (1.10, 0.34, 1.08),
-    (0.025, 0.28, 0.24),
+    (0, -0.245, 0.22),
+    (0.34, 0.025, 0.22),
     C_CHARCOAL,
-    rot=(0, D(-10), D(-40)),
+    laptop_root,
+    rot=(D(-10), 0, 0),
+)
+# The blue-black inset is only on the +Y/user side, so the front and back of
+# the lid remain visually unambiguous in every previz angle.
+laptop_screen = cube(
+    "Laptop_ScreenFace",
+    (0, -0.217, 0.215),
+    (0.292, 0.005, 0.172),
+    (0.025, 0.055, 0.075),
+    laptop_root,
+    rot=(D(-10), 0, 0),
 )
 
 
@@ -1062,6 +1089,8 @@ subjects_isolated = (
     and not shot_visibility["shot2"]["laptop"]
     and shot_visibility["shot2"]["emblem_fully_framed"]
 )
+laptop_screen_forward = Vector((-math.sin(laptop_yaw), math.cos(laptop_yaw)))
+laptop_screen_alignment = laptop_screen_forward.dot(laptop_to_b)
 
 # Save the reproducible scene before rendering.
 os.makedirs(os.path.dirname(BLEND_OUT), exist_ok=True)
@@ -1069,10 +1098,12 @@ bpy.ops.wm.save_as_mainfile(filepath=BLEND_OUT)
 
 report = {
     "name": "scene05-room-anime-production-v3" if ANIME_ROOM else "pilot-opening-meeting-scene05-previz-v1-2d-camera",
-    "passed": ROOM_LAYOUT or (
-        all(value > 0 for value in camera_side_signs)
-        and openings_out_of_frame
-        and subjects_isolated
+    "passed": laptop_screen_alignment > 0.999 and (
+        ROOM_LAYOUT or (
+            all(value > 0 for value in camera_side_signs)
+            and openings_out_of_frame
+            and subjects_isolated
+        )
     ),
     "duration_seconds": 7.0,
     "fps": FPS,
@@ -1116,6 +1147,9 @@ report = {
         "owner": "BelieverB",
         "world_xyz": [1.00, 0.42, 0.86],
         "screen_faces": "southeast toward Believer B",
+        "hinge_side": "northwest, opposite Believer B",
+        "screen_face_is_explicit": True,
+        "screen_direction_dot_to_believer_b": round(laptop_screen_alignment, 4),
         "material_color": "matte charcoal gray",
         "visible_shot1": object_in_frame(laptop_lid, camera_shot1, 48),
         "visible_shot2": object_in_frame(laptop_lid, camera_shot2, 120),
