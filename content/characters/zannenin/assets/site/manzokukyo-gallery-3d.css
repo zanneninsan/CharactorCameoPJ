@@ -500,4 +500,7 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
   .gallery-page[data-gallery-experience] .gallery-3d-catalog .gallery-frame:hover { transform: none; }
 }
 .gallery-visitor-note { width: var(--gallery-3d-width); margin: .65rem auto .5rem; color: #c4b28b; font-size: .76rem; line-height: 1.65; }
+.gallery-visitor-select { display: grid; gap: 4px; color: #c4b28b; font-size: .72rem; text-align: left; }
+.gallery-visitor-select select { min-height: 44px; padding: 8px 30px 8px 12px; border: 1px solid #bba77870; border-radius: 3px; color: #f0e5cb; background: #272b2c; font: 500 .82rem system-ui, sans-serif; }
+.gallery-visitor-select select:focus-visible { outline: 2px solid #efd38b; outline-offset: 3px; }
 [data-gallery-visitor-toggle][aria-pressed="true"] { background: #f5e6be; color: #44341e; }

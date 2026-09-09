@@ -6,6 +6,7 @@
     "esbuild": "0.28.2",
     "gltf-validator": "2.0.0-dev.3.10",
     "meshoptimizer": "1.2.0",
+    "sharp": "0.35.4",
     "three": "0.185.0"
   },
   "name": "manzokukyo-gallery-model-tools",

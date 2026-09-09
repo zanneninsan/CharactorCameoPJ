@@ -1,0 +1,230 @@
+{
+  "source": "zannenin-official-costume-v11.vrm",
+  "sourceSha256": "4f81cbd4785ef31e683816f3f560aa2c9a9634dfe514145b6de00603921f96c6",
+  "before": {
+    "bytes": 34501220,
+    "draws": 96,
+    "triangles": 72921
+  },
+  "after": {
+    "bytes": 2202548,
+    "draws": 23,
+    "triangles": 53567,
+    "textures": 22
+  },
+  "textures": [
+    {
+      "name": "_01",
+      "before": 31651,
+      "after": 1496,
+      "sourceSize": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "_02",
+      "before": 117565,
+      "after": 10276,
+      "sourceSize": [
+        1024,
+        512
+      ]
+    },
+    {
+      "name": "_03",
+      "before": 35401,
+      "after": 11762,
+      "sourceSize": [
+        1024,
+        512
+      ]
+    },
+    {
+      "name": "_04",
+      "before": 185405,
+      "after": 7088,
+      "sourceSize": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "_06",
+      "before": 134135,
+      "after": 4552,
+      "sourceSize": [
+        1024,
+        512
+      ]
+    },
+    {
+      "name": "_07",
+      "before": 13795,
+      "after": 6820,
+      "sourceSize": [
+        1024,
+        256
+      ]
+    },
+    {
+      "name": "_08",
+      "before": 91581,
+      "after": 37380,
+      "sourceSize": [
+        1024,
+        256
+      ]
+    },
+    {
+      "name": "_09",
+      "before": 87552,
+      "after": 38402,
+      "sourceSize": [
+        1024,
+        256
+      ]
+    },
+    {
+      "name": "_10",
+      "before": 2070327,
+      "after": 28988,
+      "sourceSize": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "name": "_12",
+      "before": 174143,
+      "after": 19894,
+      "sourceSize": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "_21",
+      "before": 97361,
+      "after": 6250,
+      "sourceSize": [
+        512,
+        1024
+      ]
+    },
+    {
+      "name": "_23",
+      "before": 167413,
+      "after": 4154,
+      "sourceSize": [
+        512,
+        1024
+      ]
+    },
+    {
+      "name": "_25",
+      "before": 965095,
+      "after": 66872,
+      "sourceSize": [
+        512,
+        1024
+      ]
+    },
+    {
+      "name": "polished-badges-2k",
+      "before": 465433,
+      "after": 79388,
+      "sourceSize": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "name": "braid-and-trim-2k",
+      "before": 742091,
+      "after": 285736,
+      "sourceSize": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "name": "boots-1k",
+      "before": 17842,
+      "after": 11816,
+      "sourceSize": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "cross-border-1k",
+      "before": 73152,
+      "after": 9480,
+      "sourceSize": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "cross-face-2k",
+      "before": 214835,
+      "after": 10696,
+      "sourceSize": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "name": "diamond-512",
+      "before": 53685,
+      "after": 4918,
+      "sourceSize": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "cel-jacket-4k",
+      "before": 307983,
+      "after": 22146,
+      "sourceSize": [
+        4096,
+        4096
+      ]
+    },
+    {
+      "name": "cel-collar-pleats-2k",
+      "before": 125644,
+      "after": 36102,
+      "sourceSize": [
+        2048,
+        2048
+      ]
+    },
+    {
+      "name": "cel-boots-1k",
+      "before": 24748,
+      "after": 9332,
+      "sourceSize": [
+        1024,
+        1024
+      ]
+    }
+  ],
+  "validation": {
+    "numErrors": 0,
+    "numWarnings": 0,
+    "numInfos": 1,
+    "numHints": 0,
+    "messages": [
+      {
+        "code": "NODE_EMPTY",
+        "message": "Empty node encountered.",
+        "severity": 2,
+        "pointer": "/nodes/141"
+      }
+    ],
+    "truncated": false
+  }
+}

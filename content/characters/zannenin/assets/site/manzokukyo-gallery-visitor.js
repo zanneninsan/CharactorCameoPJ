@@ -61,22 +61,35 @@ export function advanceVisitor(state, seconds, viewer, random = Math.random) {
   return state;
 }
 
-export async function loadGalleryVisitor(T, { scene, url, Loader }) {
+export async function loadGalleryVisitor(T, { scene, url, Loader, kind = 'darenin' }) {
   const GLTFLoader = Loader || (await import(new URL('../../manzokukyo-preview/vendor/GLTFLoader.js', import.meta.url))).GLTFLoader;
   const gltf = await new GLTFLoader().loadAsync(url.href);
   const figure = gltf.scene;
-  const root = new T.Group(); root.name = 'Darenin gallery visitor';
+  const official = kind === 'zannenin';
+  const root = new T.Group(); root.name = official ? 'Zannenin gallery visitor' : 'Darenin gallery visitor';
   const resources = new Set();
-  const finish = new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide });
-  resources.add(finish);
-  const bones = {};
+  const finish = official ? null : new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide });
+  if (finish) resources.add(finish);
+  const bones = {}, blinkMeshes = [], bitmaps = new Set(), skeletons = new Set();
+  let draws = 0;
   figure.traverse(object => {
     if (object.isBone) bones[object.name] = object;
     if (!object.isMesh) return;
-    for (const material of [object.material].flat()) material.dispose();
-    object.material = finish; resources.add(object.geometry);
-    // Quantized skin bounds change with the animated rig. One tiny mesh avoids
-    // expensive per-frame bound recalculation; the visitor is distance-culled.
+    draws += Array.isArray(object.material) ? object.geometry.groups.length : 1;
+    if (official) {
+      for (const material of [object.material].flat()) {
+        material.toneMapped = false; material.forceSinglePass = true; resources.add(material);
+        for (const value of Object.values(material)) if (value?.isTexture) { resources.add(value); if (value.image?.close) bitmaps.add(value.image); }
+      }
+    } else {
+      for (const material of [object.material].flat()) material.dispose();
+      object.material = finish;
+    }
+    resources.add(object.geometry);
+    if (object.skeleton) skeletons.add(object.skeleton);
+    if (object.morphTargetDictionary?.Blink !== undefined) blinkMeshes.push(object);
+    // Quantized skin bounds change with the rig. Cull the whole visitor below
+    // instead of recalculating every skinned mesh's bounds every frame.
     object.frustumCulled = false;
   });
   figure.updateMatrixWorld(true);
@@ -98,6 +111,7 @@ export async function loadGalleryVisitor(T, { scene, url, Loader }) {
   let state = createVisitorState(), gait = 0, enabled = true, visible = false, disposed = false;
   const frustum = new T.Frustum(), projection = new T.Matrix4(), sphere = new T.Sphere(new T.Vector3(), 1.3);
   const bind = Object.fromEntries(Object.entries(bones).map(([name, bone]) => [name, bone.rotation.clone()]));
+  const hairBones = official ? Object.keys(bones).filter(name => /^J_Sec_Hair\d+_02$/.test(name)) : [];
   function rotate(name, axis, radians) { const bone = bones[name]; if (bone) bone.rotation[axis] = bind[name][axis] + radians; }
   function pose(dt, viewer) {
     gait += state.speed * dt * 10;
@@ -106,6 +120,7 @@ export async function loadGalleryVisitor(T, { scene, url, Loader }) {
       rotate(`J_Bip_${side}_UpperLeg`, 'x', swing * .24 * sign);
       rotate(`J_Bip_${side}_LowerLeg`, 'x', Math.max(0, -swing * sign) * .28);
       rotate(`J_Bip_${side}_UpperArm`, 'x', -swing * .18 * sign);
+      if (official) rotate(`J_Bip_${side}_UpperArm`, 'z', sign * 1.07);
       rotate(`J_Bip_${side}_LowerArm`, 'x', -.06 - Math.max(0, swing * sign) * .08);
       rotate(`J_Sec_${side}_TwinTail`, 'z', Math.sin(state.phase * 2.4 + sign) * .025 * (stride + .2));
     }
@@ -113,6 +128,10 @@ export async function loadGalleryVisitor(T, { scene, url, Loader }) {
     const viewerDistance = Math.hypot(viewer.x - state.x, viewer.z - state.z);
     const headTurn = viewerDistance < 5 ? clamp(angle(Math.atan2(state.x - viewer.x, state.z - viewer.z) - state.yaw), -.45, .45) : Math.sin(state.phase * .55) * .12;
     rotate('J_Bip_C_Head', 'y', headTurn);
+    for (const [index, name] of hairBones.entries()) rotate(name, 'x', Math.sin(state.phase * 2.1 + index * .6) * .018 * (stride + .15));
+    const blinkPhase = state.phase % 5.3;
+    const blink = blinkPhase > 4.95 ? Math.sin((blinkPhase - 4.95) / .35 * Math.PI) : 0;
+    for (const mesh of blinkMeshes) mesh.morphTargetInfluences[mesh.morphTargetDictionary.Blink] = blink;
     root.position.set(state.x, Math.abs(Math.sin(gait)) * stride * .012, state.z); root.rotation.y = state.yaw;
   }
   const api = {
@@ -132,8 +151,8 @@ export async function loadGalleryVisitor(T, { scene, url, Loader }) {
     reset() { state = createVisitorState(); gait = 0; pose(0, { x: 0, z: .8 }); },
     setEnabled(value) { enabled = value; root.visible = enabled; },
     isVisible: () => visible,
-    snapshot: () => ({ loaded: true, enabled, visible, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws: 1 }),
-    dispose() { disposed = true; scene.remove(root); for (const resource of resources) resource.dispose(); figure.traverse(object => { if (object.isSkinnedMesh) object.skeleton.dispose(); }); },
+    snapshot: () => ({ loaded: true, kind, enabled, visible, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws, blink: blinkMeshes.length > 0 }),
+    dispose() { if (disposed) return; disposed = true; scene.remove(root); for (const resource of resources) resource.dispose(); for (const bitmap of bitmaps) bitmap.close(); for (const skeleton of skeletons) skeleton.dispose(); },
   };
   api.reset(); return api;
 }

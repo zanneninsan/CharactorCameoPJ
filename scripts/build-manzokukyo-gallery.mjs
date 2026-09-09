@@ -50,6 +50,6 @@ for (const route of ['gallery', 'gallery-3d']) {
 await mkdir(target, { recursive: true });
 for (const file of files) await cp(path.join(source, file), path.join(target, file));
 await mkdir(path.join(root, 'dist/zannenin/assets/models'), { recursive: true });
-await cp(path.join(root, 'content/characters/zannenin/assets/models/darenin-gallery.glb'), path.join(root, 'dist/zannenin/assets/models/darenin-gallery.glb'));
+for (const file of ['darenin-gallery.glb', 'zannenin-v11-gallery.glb']) await cp(path.join(root, 'content/characters/zannenin/assets/models', file), path.join(root, 'dist/zannenin/assets/models', file));
 await buildManzokukyoPreview();
 console.log('Walking gallery: primary page, compatibility URL and persistent-audio views updated.');
