@@ -143,19 +143,8 @@ function createExhibition(T) {
   const roomCache = [];
   const loaded = new Map(), failed = new Set(), pending = new Map();
   let activeRoom = 0, disposed = false, lost = false, inView = true, raf = 0, last = 0, lastRender = 0;
-  let visitor, visitorError = '', visitorWasVisible = false, visitorSequence = 0, visitorLoading = false;
-  const visitorButton = stage.querySelector('[data-gallery-visitor-toggle]');
-  const visitorSelect = stage.querySelector('[data-gallery-visitor-model]');
+  let visitor, visitorError = '', visitorWasVisible = false, visitorLoading = true;
   const visitorNote = stage.querySelector('[data-gallery-visitor-note]');
-  const visitorChoices = { zannenin: { name: '残念院さん', file: 'zannenin-v11-gallery.glb' }, darenin: { name: '誰念院さん', file: 'darenin-gallery.glb' } };
-  visitorButton.disabled = true;
-  visitorButton.addEventListener('click', () => {
-    const enabled = visitorButton.getAttribute('aria-pressed') !== 'true';
-    visitorButton.setAttribute('aria-pressed', String(enabled));
-    visitorButton.textContent = enabled ? '散策 ON' : '散策 OFF';
-    visitor?.setEnabled(enabled); wake();
-  });
-  visitorSelect.addEventListener('change', () => { void changeVisitor(visitorSelect.value); });
   let anomaly = null, textureGeneration = 0, preparationResolve;
   let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
   let yaw = 0, pitch = 0, walked = 0;
@@ -243,7 +232,7 @@ function createExhibition(T) {
   }
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
-    visitor?.reset();
+    visitor?.setAnomaly(nextAnomaly);
     preparationResolve?.(false); preparationResolve = null;
     for (const texture of loaded.values()) { texture.dispose(); textures.delete(texture); }
     loaded.clear(); failed.clear(); pending.clear(); roomCache.length = 0;
@@ -461,29 +450,26 @@ function createExhibition(T) {
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
   resize(); overview(0, true); syncSeals();
   // Optional character loading never blocks paintings, seals or the game.
-  async function changeVisitor(kind) {
-    const choice = visitorChoices[kind]; if (!choice || disposed || lost) return;
-    const sequence = ++visitorSequence; visitorLoading = true; visitorError = ''; visitorButton.disabled = true;
-    visitorNote.textContent = `${choice.name}が来館準備中……。先に絵を見ていても大丈夫です。`;
+  async function loadVisitors() {
+    visitorNote.textContent = '散策する二人が来館準備中……。先に絵を見ていても大丈夫です。';
     try {
-      const { loadGalleryVisitor } = await import(new URL(`manzokukyo-gallery-visitor.js?${assetVersionQuery}`, import.meta.url));
-      const next = await loadGalleryVisitor(T, { scene, kind, url: new URL(`../models/${choice.file}?${assetVersionQuery}`, import.meta.url) });
-      if (disposed || lost || sequence !== visitorSequence) { next.dispose(); return; }
-      visitor?.dispose(); visitor = next; visitorLoading = false;
-      visitor.setEnabled(visitorButton.getAttribute('aria-pressed') === 'true');
-      visitorButton.disabled = false;
-      visitorNote.textContent = `巡回中：${choice.name}。歩き回っていても異変ではありません。`;
+      const { loadGalleryVisitors } = await import(new URL(`manzokukyo-gallery-visitor.js?${assetVersionQuery}`, import.meta.url));
+      const next = await loadGalleryVisitors(T, { scene, urls: {
+        zannenin: new URL(`../models/zannenin-v11-gallery.glb?${assetVersionQuery}`, import.meta.url),
+        darenin: new URL(`../models/darenin-gallery.glb?${assetVersionQuery}`, import.meta.url),
+      }, onStep: (name, options) => gallery.play(name, options) });
+      if (disposed || lost) { next.dispose(); return; }
+      visitor = next; visitorLoading = false; visitor.setAnomaly(anomaly);
+      visitorNote.textContent = 'いつもは残念院さんと誰念院さんが、一人ずつ散策しています。人数や様子もよく見て。';
       wake();
     } catch (error) {
-      if (disposed || lost || sequence !== visitorSequence) return;
+      if (disposed || lost) return;
       visitorLoading = false; visitorError = String(error?.message || error);
-      visitorButton.disabled = !visitor;
-      if (visitor) visitorSelect.value = visitor.snapshot().kind;
-      visitorNote.textContent = `${choice.name}を呼べませんでした。別の人を選ぶか、再読み込みで試せます。画廊はそのまま遊べます。`;
+      visitorNote.textContent = '二人を読み込めませんでした。今回は絵の異変だけで遊べます。再読み込みで再試行できます。';
     }
   }
-  void changeVisitor(visitorSelect.value);
-  return { select, overview, prepareLoop, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
+  void loadVisitors();
+  return { select, overview, prepareLoop, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
     state: () => ({ ready: !disposed && !lost, loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 

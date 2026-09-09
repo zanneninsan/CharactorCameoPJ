@@ -2,21 +2,23 @@ const kinds = ['upside-down', 'negative', 'same-image'];
 export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
 }
-export function chooseAnomaly(random = Math.random) {
+export function chooseAnomaly(random = Math.random, { visitorsReady = false } = {}) {
   if (random() < .45) return null;
-  return { kind: kinds[Math.min(2, Math.floor(random() * kinds.length))], index: Math.min(23, Math.floor(random() * 24)) };
+  const available = visitorsReady ? [...kinds, 'darenin-rush'] : kinds;
+  const kind = available[Math.min(available.length - 1, Math.floor(random() * available.length))];
+  return kind === 'darenin-rush' ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
   return { imageIndex: anomaly?.kind === 'same-image' ? anomaly.index : index,
     upsideDown: anomaly?.kind === 'upside-down' && anomaly.index === index,
     negative: anomaly?.kind === 'negative' && anomaly.index === index };
 }
-export function judgeLoop(state, direction, random = Math.random) {
+export function judgeLoop(state, direction, random = Math.random, options) {
   if (!['forward', 'back'].includes(direction)) throw Error('Choose a corridor exit.');
   const correct = Boolean(state.anomaly) === (direction === 'back');
   const streak = correct ? state.streak + (state.round === 0 ? 0 : 1) : 0;
   return { correct, baseline: state.round === 0, previous: state.anomaly,
-    next: { round: state.round + 1, streak, best: Math.max(state.best, streak), anomaly: chooseAnomaly(random) } };
+    next: { round: state.round + 1, streak, best: Math.max(state.best, streak), anomaly: chooseAnomaly(random, options) } };
 }
 export function loopExit(position) {
   if (Math.abs(position.x) > 1.25) return null;
@@ -24,6 +26,7 @@ export function loopExit(position) {
 }
 export function describeAnomaly(anomaly) {
   if (!anomaly) return 'この巡回に異変はありませんでした。';
+  if (anomaly.kind === 'darenin-rush') return '残念院さんが姿を消し、誰念院さんが4体、横一列で奥から迫ってきました。';
   if (anomaly.kind === 'same-image') return 'すべての額縁が、同じ絵になっていました。';
   return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の絵が${anomaly.kind === 'negative' ? '色反転' : '逆さま'}になっていました。`;
 }
@@ -78,13 +81,13 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     if (disposed || token !== epoch) return false;
     if (!ready) {
       retry = true;
-      notice('展示の準備ができませんでした', '画像を読み込めないため、判定を止めています。読み込み直してから進んでください。', 'loading');
+      notice('展示の準備ができませんでした', '展示を読み込めないため、判定を止めています。読み込み直してから進んでください。', 'loading');
       q('[data-gallery-loop-retry]').hidden = false;
       // Switching to the accessible catalog remains possible after a graphics failure.
       for (const choice of choices) choice.disabled = false;
       return false;
     }
-    busy = false; veil.hidden = true; render(); canvas.focus({ preventScroll: true });
+    busy = false; veil.hidden = true; render(); canvas.focus({ preventScroll: true }); exhibition.wake?.();
     return true;
   }
   async function cross(direction) {
@@ -93,7 +96,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       void prepare('展示を確認しています', '画像を読み込み直しています。この巡回の判定と展示内容は変わりません。');
       return false;
     }
-    const verdict = judgeLoop(state, direction, random);
+    const verdict = judgeLoop(state, direction, random, { visitorsReady: exhibition.hasVisitors?.() === true });
     const carried = heldSeal;
     const confirmed = verdict.correct && carried !== null ? gallery.confirmSeal(carried) : null;
     heldSeal = null;

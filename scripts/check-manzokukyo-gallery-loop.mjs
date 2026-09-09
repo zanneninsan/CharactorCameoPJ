@@ -61,14 +61,14 @@ globalThis.window = new Element();
 globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
 globalThis.matchMedia = () => ({ matches: false });
 globalThis.setTimeout = callback => timers.push(callback);
-let imageErrors = false;
+let imageErrors = false, visitorsReady = false, wakes = 0;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
 const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => .9,
-  exhibition: { stop() {}, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
+  exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
 assert.equal(ui.busy, true); assert.equal(await ui.cross('forward'), false);
-await finish(); assert.equal(ui.busy, false); assert.ok(classes.has('is-gallery-loop'));
+await finish(); assert.equal(ui.busy, false); assert.ok(classes.has('is-gallery-loop')); assert.equal(wakes, 1);
 function inspectSeal(number) {
   assert.equal(ui.inspect(number - 1), true);
   nodes.get('img').naturalWidth = 600; nodes.get('img').fire('load');
@@ -78,6 +78,7 @@ inspectSeal(2); assert.equal(ui.collect(), false, 'the baseline is for observati
 assert.equal(await ui.cross('forward'), true); assert.equal(ui.snapshot().round, 1); assert.equal(ui.busy, true);
 assert.equal(await ui.cross('forward'), false, 'held movement cannot count the same exit twice');
 await finish();
+assert.equal(wakes, 2, 'the next lap resumes animation after the transition without another keypress');
 assert.equal(preparations.at(-1).anomaly.kind, 'same-image');
 inspectSeal(2);
 assert.match(nodes.get('img').src, /gallery-22\.webp/);
@@ -124,6 +125,15 @@ assert.equal(shared.state().cleared, true); assert.equal(shared.elements.exit.ge
 nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
 assert.equal(ui.snapshot().round, 0); assert.equal(ui.snapshot().best, 4); assert.equal(preparations.at(-1).anomaly, null);
 assert.equal(shared.state().count, 0); assert.equal(shared.state().cleared, false); assert.equal(shared.elements.ceremony.open, false);
+visitorsReady = true;
+await ui.cross('forward'); await finish();
+assert.equal(preparations.at(-1).anomaly.kind, 'darenin-rush', 'only ready character models enter the anomaly draw');
+inspectSeal(2); ui.collect(); close();
+await ui.cross('back'); await finish();
+assert.equal(shared.state().count, 1, 'retreating from the four runners files the provisional seal');
+assert.match(nodes.get('[data-gallery-loop-transition-note]').textContent, /4体/);
+nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
+assert.equal(preparations.at(-1).anomaly, null, 'reset clears the running-row anomaly');
 const returning = ui.setMode('loop'); await Promise.resolve(); ui.fallback(); await finish(); await returning;
 assert.equal(ui.active, false, 'late preparation cannot re-enable a failed 3D scene');
 assert.equal(storage.get('existing-gallery-seals'), 'keep-me');
