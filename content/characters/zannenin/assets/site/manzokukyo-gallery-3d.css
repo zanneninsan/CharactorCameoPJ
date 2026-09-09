@@ -499,3 +499,5 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
   }
   .gallery-page[data-gallery-experience] .gallery-3d-catalog .gallery-frame:hover { transform: none; }
 }
+.gallery-visitor-note { width: var(--gallery-3d-width); margin: .65rem auto .5rem; color: #c4b28b; font-size: .76rem; line-height: 1.65; }
+[data-gallery-visitor-toggle][aria-pressed="true"] { background: #f5e6be; color: #44341e; }

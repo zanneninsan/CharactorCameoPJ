@@ -142,7 +142,16 @@ function createExhibition(T) {
   const loader = new T.TextureLoader();
   const roomCache = [];
   const loaded = new Map(), failed = new Set(), pending = new Map();
-  let activeRoom = 0, disposed = false, lost = false, inView = true, raf = 0, last = 0;
+  let activeRoom = 0, disposed = false, lost = false, inView = true, raf = 0, last = 0, lastRender = 0;
+  let visitor, visitorError = '', visitorWasVisible = false;
+  const visitorButton = stage.querySelector('[data-gallery-visitor-toggle]');
+  visitorButton.disabled = true;
+  visitorButton.addEventListener('click', () => {
+    const enabled = visitorButton.getAttribute('aria-pressed') !== 'true';
+    visitorButton.setAttribute('aria-pressed', String(enabled));
+    visitorButton.textContent = enabled ? '誰念院さん ON' : '誰念院さん OFF';
+    visitor?.setEnabled(enabled); wake();
+  });
   let anomaly = null, textureGeneration = 0, preparationResolve;
   let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
   let yaw = 0, pitch = 0, walked = 0;
@@ -230,6 +239,7 @@ function createExhibition(T) {
   }
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
+    visitor?.reset();
     preparationResolve?.(false); preparationResolve = null;
     for (const texture of loaded.values()) { texture.dispose(); textures.delete(texture); }
     loaded.clear(); failed.clear(); pending.clear(); roomCache.length = 0;
@@ -349,14 +359,22 @@ function createExhibition(T) {
     const paused = document.querySelector('dialog[open]') || loop?.busy;
     const dt = last ? Math.min((time - last) / 1000, .05) : 0; last = time;
     const walking = mode === 'walking' && (heldKeys.size || heldPointers.size) && !paused;
+    const cameraActive = moving || walking;
     if (walking) applyWalk(dt);
     if (moving && !paused) {
       const ease = 1 - Math.exp(-dt * 5.4);
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
-    renderer.render(scene, camera);
-    if ((moving || walking) && !paused && !raf) raf = requestAnimationFrame(animate);
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera });
+    // Wandering uses at most 30 rendered frames/sec while the camera is still;
+    // keyboard movement keeps the existing responsive refresh rate.
+    const visitorVisible = visitor?.isVisible();
+    if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
+      renderer.render(scene, camera); lastRender = time;
+      visitorWasVisible = visitorVisible;
+    }
+    if ((moving || walking || visitorMoving) && !paused && !raf) raf = requestAnimationFrame(animate);
   }
   function wake() { if (!raf && !disposed && !lost) raf = requestAnimationFrame(animate); }
   function resize() {
@@ -433,12 +451,24 @@ function createExhibition(T) {
     if (event.persisted) return;
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
+    visitor?.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
   resize(); overview(0, true); syncSeals();
+  // Optional character loading never blocks paintings, seals or the game.
+  void import(new URL(`manzokukyo-gallery-visitor.js?${assetVersionQuery}`, import.meta.url)).then(({ loadGalleryVisitor }) => loadGalleryVisitor(T, {
+    scene, url: new URL(`../models/darenin-gallery.glb?${assetVersionQuery}`, import.meta.url),
+  })).then(loadedVisitor => {
+    if (disposed || lost) { loadedVisitor.dispose(); return; }
+    visitor = loadedVisitor; visitorButton.disabled = false; wake();
+  }).catch(error => {
+    visitorError = String(error?.message || error);
+    visitorButton.textContent = '誰念院さんは休憩中';
+    visitorButton.title = 'モデルを読み込めませんでした。再読み込みで再試行できます。画廊はそのまま遊べます。';
+  });
   return { select, overview, prepareLoop, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, loop: loop?.snapshot(), selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, loop: loop?.snapshot(), visitor: visitor?.snapshot() || { loaded: false, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

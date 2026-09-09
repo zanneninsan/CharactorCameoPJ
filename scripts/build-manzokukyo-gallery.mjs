@@ -13,7 +13,7 @@ const target = path.join(root, 'dist/zannenin/assets/site');
 const filename = path.join(root, 'dist/zannenin/manzokukyo/truth/gallery/index.html');
 const previous = await readFile(filename, 'utf8');
 const character = JSON.parse(await readFile(path.join(root, 'content/characters/zannenin/character.json'), 'utf8'));
-const files = ['manzokukyo-gallery.css', 'manzokukyo-gallery.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js'];
+const files = ['manzokukyo-gallery.css', 'manzokukyo-gallery.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-visitor.js'];
 const texts = await Promise.all(files.map(file => readFile(path.join(source, file), 'utf8')));
 const renderers = await Promise.all(['render-manzokukyo-gallery.mjs', 'render-manzokukyo-gallery-3d.mjs'].map(file => readFile(new URL(file, import.meta.url), 'utf8')));
 const version = createHash('sha256').update([...texts, ...renderers].join('\n')).digest('hex').slice(0, 12);
@@ -49,5 +49,7 @@ for (const route of ['gallery', 'gallery-3d']) {
 }
 await mkdir(target, { recursive: true });
 for (const file of files) await cp(path.join(source, file), path.join(target, file));
+await mkdir(path.join(root, 'dist/zannenin/assets/models'), { recursive: true });
+await cp(path.join(root, 'content/characters/zannenin/assets/models/darenin-gallery.glb'), path.join(root, 'dist/zannenin/assets/models/darenin-gallery.glb'));
 await buildManzokukyoPreview();
 console.log('Walking gallery: primary page, compatibility URL and persistent-audio views updated.');

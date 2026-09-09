@@ -1,0 +1,23 @@
+{
+  "source": "zannenin-san-rough.vrm",
+  "sourceSha256": "5c20510e4ff2dd0a2468d22dfbf9aab3f662d41b331138aca3cf93ba384556c1",
+  "before": {
+    "bytes": 393120,
+    "draws": 63,
+    "triangles": 6704
+  },
+  "after": {
+    "bytes": 127296,
+    "draws": 1,
+    "triangles": 5116,
+    "textures": 0
+  },
+  "validation": {
+    "numErrors": 0,
+    "numWarnings": 0,
+    "numInfos": 0,
+    "numHints": 0,
+    "messages": [],
+    "truncated": false
+  }
+}

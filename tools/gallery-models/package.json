@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "@gltf-transform/core": "4.5.0",
+    "@gltf-transform/extensions": "4.5.0",
+    "@gltf-transform/functions": "4.5.0",
+    "esbuild": "0.28.2",
+    "gltf-validator": "2.0.0-dev.3.10",
+    "meshoptimizer": "1.2.0",
+    "three": "0.185.0"
+  },
+  "name": "manzokukyo-gallery-model-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "optimize": "node optimize.mjs",
+    "loader": "node prepare-loader.mjs"
+  }
+}
