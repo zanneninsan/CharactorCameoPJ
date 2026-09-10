@@ -1,4 +1,5 @@
 import { renderGallery3DExperience } from "./render-manzokukyo-gallery-3d.mjs";
+import { buildGalleryRoomImages } from "./build-manzokukyo-gallery-images.mjs";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -476,6 +477,7 @@ async function generateManzokukyoAssets(characterDir) {
   if (await fileExists(gallerySourceDir)) {
     const galleryOutputDir = path.join(outputDir, "gallery");
     await mkdir(galleryOutputDir, { recursive: true });
+    await buildGalleryRoomImages(gallerySourceDir, galleryOutputDir);
     const galleryFiles = (await readdir(gallerySourceDir))
       .filter((file) => /^gallery-\d+\.png$/i.test(file))
       .sort((a, b) => a.localeCompare(b, "en"));

@@ -4,10 +4,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 import { buildManzokukyoPreview } from './build-manzokukyo-preview.mjs';
+import { buildGalleryRoomImages } from './build-manzokukyo-gallery-images.mjs';
 
 // Reuse an existing site's shared head/footer for a focused local gallery build.
 // The full build continues to render this same body through htmlPage().
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const galleryImages = path.join(root, 'content/characters/zannenin/assets/manzokukyo/gallery');
+await buildGalleryRoomImages(galleryImages, path.join(root, 'dist/zannenin/assets/generated/manzokukyo/gallery'));
+await cp(galleryImages, path.join(root, 'dist/zannenin/assets/manzokukyo/gallery'), { recursive: true });
 const source = path.join(root, 'content/characters/zannenin/assets/site');
 const target = path.join(root, 'dist/zannenin/assets/site');
 const filename = path.join(root, 'dist/zannenin/manzokukyo/truth/gallery/index.html');

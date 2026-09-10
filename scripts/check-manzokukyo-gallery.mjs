@@ -148,6 +148,8 @@ for (const modifiers of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true 
 }
 assert.equal(fresh.navigation.length, 0);
 fresh.call('showRecord', 0);
+assert.match(fresh.elements.dialog.querySelector('[data-gallery-image]').src, /assets\/manzokukyo\/gallery\/gallery-01\.png\?/, 'viewing mode opens the original PNG');
+assert.equal(fresh.elements.dialog.querySelector('[data-gallery-avif]').srcset, '', 'the picture source cannot override the original with a compressed preview');
 assert.equal(fresh.call('collectSeal'), false, 'ordinary records never supply a seal');
 fresh.call('showRecord', 1);
 assert.equal(fresh.call('collectSeal'), true);

@@ -166,9 +166,9 @@ function showRecord(index, openingButton) {
   current = (index + records.length) % records.length;
   const record = records[current]; viewed.add(record.number);
   document.querySelector(`[data-gallery-index="${current}"]`).classList.add('is-viewed');
-  const base = `../../../assets/generated/manzokukyo/gallery/gallery-${record.id}`;
-  dialog.querySelector('[data-gallery-avif]').srcset = `${base}.avif?${assetVersionQuery}`;
-  dialog.querySelector('[data-gallery-image]').src = `${base}.webp?${assetVersionQuery}`;
+  const base = `../../../assets/manzokukyo/gallery/gallery-${record.id}`;
+  dialog.querySelector('[data-gallery-avif]').srcset = '';
+  dialog.querySelector('[data-gallery-image]').src = `${base}.png?${assetVersionQuery}`;
   dialog.querySelector('[data-gallery-image]').alt = `記録 ${record.id}`;
   dialog.querySelector('[data-gallery-title]').textContent = `ARCHIVE ${record.id}`;
   dialog.querySelector('[data-gallery-shelf]').textContent = record.shelf;

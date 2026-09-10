@@ -116,4 +116,44 @@ assert.doesNotMatch(primary.body, /通常の画廊へ|3D preview|class="gallery-
 assert.equal([...primary.body.matchAll(/data-gallery-3d-walk="/g)].length, 6);
 assert.equal([...primary.body.matchAll(/data-gallery-3d-sprint/g)].length, 1);
 assert.equal([...primary.body.matchAll(/data-gallery-index="/g)].length, 24);
+
+// The actual pointer handlers must never hit-test or move the camera repeatedly
+// during a drag. Rendering consumes the dirty flag once per animation frame.
+const dragCanvas = new Control();
+dragCanvas.hasPointerCapture = () => false;
+dragCanvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 390, height: 740 });
+let raycasts = 0, inspections = 0, immediateMoves = 0;
+const dragContext = vm.createContext({ canvas: dragCanvas, down: null, yaw: 0, pitch: 0, lookDirty: false,
+  canWalk: () => true, startWalk: () => true, wake() {}, applyWalk() { immediateMoves++; },
+  pointer: { set() {} }, camera: {}, targets: [],
+  raycaster: { setFromCamera() {}, intersectObjects() { raycasts++; return [{ object: { userData: { index: 4 } } }]; } },
+  inspect(index) { assert.equal(index, 4); inspections++; },
+});
+vm.runInContext(['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'].map(event => declaration(`canvas.addEventListener('${event}'`)).join('\n'), dragContext);
+dragCanvas.fire('pointerdown', { pointerId: 1, button: 0, clientX: 100, clientY: 300 });
+for (let x = 101; x <= 160; x++) dragCanvas.fire('pointermove', { pointerId: 1, clientX: x, clientY: 310 });
+assert.equal(dragContext.lookDirty, true);
+assert.equal(immediateMoves, 0, 'drag coalesces camera work into animation frames');
+dragCanvas.fire('pointerup', { pointerId: 1, clientX: 160, clientY: 310 });
+assert.equal(raycasts, 0, 'drag release cannot inspect a painting');
+dragCanvas.fire('pointerdown', { pointerId: 2, button: 0, clientX: 120, clientY: 300 });
+dragCanvas.fire('pointerup', { pointerId: 2, clientX: 120, clientY: 300 });
+assert.equal(raycasts, 1); assert.equal(inspections, 1, 'a deliberate tap still opens its painting');
+
+let roomWrites = 0;
+const roomLabel = { set textContent(value) { roomWrites++; } };
+const roomContext = vm.createContext({ walkRoom, yaw: 0, camera: { position: { z: -5 } },
+  activeRoom: 0, roomCache: [0], walkingRoom: -1, loop: { active: true },
+  stage: { querySelector: () => roomLabel, querySelectorAll: () => [] },
+  loadRoom(r) { roomContext.activeRoom = r; roomContext.roomCache.push(r); },
+});
+vm.runInContext(declaration('function syncWalkingSelection('), roomContext);
+for (let i = 0; i < 120; i++) vm.runInContext('syncWalkingSelection()', roomContext);
+assert.equal(roomWrites, 0, 'loop movement never touches hidden record-navigation controls');
+roomContext.loop.active = false; roomContext.walkingRoom = -1;
+for (let i = 0; i < 120; i++) vm.runInContext('syncWalkingSelection()', roomContext);
+assert.equal(roomWrites, 1, 'viewing-mode room labels change only on entering a room');
+roomContext.camera.position.z = -20;
+vm.runInContext('syncWalkingSelection()', roomContext);
+assert.equal(roomWrites, 2); assert.equal(roomContext.activeRoom, 1);
 console.log('Gallery walking passed: six camera-relative controls, diagonal/refresh-rate consistency, boundaries, room crossings, actual key/touch handlers, blur/modal/IME guards and primary/alias routes.');

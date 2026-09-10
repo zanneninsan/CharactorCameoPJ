@@ -4,7 +4,9 @@ import { renderGalleryExperience } from './render-manzokukyo-gallery.mjs';
 // archived flat gallery source. Only the 3D experience is published now.
 export function renderGallery3DExperience(character, { htmlPage, escapeHtml, assetVersionQuery, alias = false }) {
   const original = renderGalleryExperience(character, { htmlPage: options => options, escapeHtml, assetVersionQuery });
-  const frames = [...original.body.matchAll(/<button\b[^>]*\bdata-gallery-index="\d+"[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]);
+  const frames = [...original.body.matchAll(/<button\b[^>]*\bdata-gallery-index="\d+"[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]
+    .replace(/<source\b[^>]*>/g, '')
+    .replace(/(gallery-\d+)\.webp/g, '$1-room.webp'));
   const introStart = original.body.indexOf('<section class="gallery-intro">');
   const puzzleStart = original.body.indexOf('<section id="gallery-puzzle"');
   if (frames.length !== 24 || introStart < 0 || puzzleStart <= introStart) throw Error('The 3D gallery requires the original 24 records and puzzle.');
@@ -21,11 +23,11 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
       `;
   const loopPanel = `<div class="gallery-loop-ui" data-gallery-loop-ui hidden>
         <div class="gallery-loop-modes" role="group" aria-label="画廊の遊び方"><button type="button" data-gallery-loop-mode="loop" aria-pressed="true">異変と検印の回廊</button><button type="button" data-gallery-loop-mode="gallery" aria-pressed="false" title="鑑賞だけのモード。切り替えると仮押しは消えます。持ち帰った検印は残ります">作品鑑賞</button></div>
-        <div class="gallery-loop-panel" data-gallery-loop-panel><div class="gallery-loop-rule"><strong>異変があれば、引き返せ。</strong><p data-gallery-loop-hint>まずは正常な24枚を覚えて、奥の扉へ。</p></div><div class="gallery-loop-count"><small data-gallery-loop-round>初回 / 正常な展示</small><span>連続正解 <b data-gallery-loop-streak>00</b><small>最高 <b data-gallery-loop-best>00</b></small></span></div><button type="button" data-gallery-loop-restart title="検印と連続正解をリセットして最初から遊ぶ">最初から</button></div>
+        <div class="gallery-loop-panel" data-gallery-loop-panel><details class="gallery-loop-rule"><summary>遊び方</summary><div><strong>異変があれば、引き返せ。</strong><p data-gallery-loop-hint>まずは正常な24枚を覚えて、奥の扉へ。</p><p>左のボタンで移動、ドラッグで見回す。絵をタップして拡大・検印。いつもは残念院さんと誰念院さんが一人ずつ散策しています。</p></div></details><div class="gallery-loop-count"><small data-gallery-loop-round>初回 / 正常な展示</small><span>連続正解 <b data-gallery-loop-streak>00</b><small>最高 <b data-gallery-loop-best>00</b></small></span></div><button type="button" data-gallery-loop-restart title="検印と連続正解をリセットして最初から遊ぶ">最初から</button></div>
         <div class="gallery-loop-bag" data-gallery-loop-bag><div class="gallery-loop-slots" aria-label="持ち帰った検印と仮押し">${sealRecords.map(record => `<span data-gallery-loop-slot="${record.number}" data-status="empty">—</span>`).join('')}</div><p data-gallery-loop-carry role="status"></p><button type="button" data-gallery-loop-ledger>検印帳 <b data-gallery-loop-filed>0 / 6</b></button></div>
       </div>`;
   const transition = `<div class="gallery-loop-transition" data-gallery-loop-transition role="status" hidden><div class="gallery-loop-eye" aria-hidden="true"><i></i></div><span>MANZOKUKYO / RECURSION</span><strong data-gallery-loop-transition-title></strong><p data-gallery-loop-transition-note></p><button type="button" data-gallery-loop-retry hidden>展示を読み込み直す</button></div>`;
-  const exhibition = stage.replace('<div class="gallery-3d-viewport">', loopPanel + '<div class="gallery-3d-viewport">' + transition);
+  const exhibition = stage.replace('<div class="gallery-3d-viewport">', '<div class="gallery-3d-viewport">' + loopPanel + transition);
   let body = original.body.slice(0, introStart) + exhibition + original.body.slice(puzzleStart);
   body = body.replace('金色の検印が付いた記録を開き、照合していく。集まった六つの文字を並べ替えれば、次の扉を呼ぶ言葉になる。', '金色の印を1周に1枚仮押しし、異変の判断に正解すると検印帳に残る。間違えた周回の仮押しは消える。6枚を持ち帰ったら、文字を並べ替えて次の扉を呼ぼう。');
   body = body.replace('<main class="gallery-page" data-gallery-experience>', '<main class="gallery-page gallery-3d-page" data-gallery-experience data-gallery-3d>');

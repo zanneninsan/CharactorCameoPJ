@@ -59,6 +59,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     q('[data-gallery-loop-hint]').textContent = state.round === 0 ? 'まずは正常な24枚を覚えて奥へ。次の巡回から、検印を1枚仮押しして持ち帰ろう。' : '金色の印を1周1枚仮押し。異変があれば入口へ、なければ奥へ。正しい判断で検印が確定。';
     q('[data-gallery-loop-carry]').textContent = heldSeal ? `仮押し「${records.find(record => record.number === heldSeal).seal.fragment}」 / 正しい扉で確定` : progress.count === 6 ? '6枚を持ち帰った。検印帳で文字を並べ、赤い扉へ。' : state.round === 0 ? '初回は観察のみ / 次の巡回から回収' : '仮押し なし / 金色の印がある絵を探そう';
     q('[data-gallery-loop-filed]').textContent = `${progress.count} / 6`;
+    q('[data-gallery-loop-bag]').setAttribute('data-held', String(heldSeal !== null));
     for (const slot of stage.querySelectorAll('[data-gallery-loop-slot]')) {
       const record = records.find(record => record.number === Number(slot.getAttribute('data-gallery-loop-slot')));
       const filed = progress.found.includes(record.number), held = record.number === heldSeal;
@@ -115,7 +116,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     const appearance = paintingAppearance(index, state.anomaly);
     image.style.transform = appearance.upsideDown ? 'rotate(180deg)' : '';
     image.style.filter = appearance.negative ? 'invert(1)' : '';
-    image.src = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.webp?${assetVersionQuery}`, document.baseURI).href;
+    image.src = new URL(`../../../assets/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.png?${assetVersionQuery}`, document.baseURI).href;
     image.alt = `展示中の記録 ${String(index + 1).padStart(2, '0')}`;
     modal.querySelector('[data-gallery-loop-inspection-title]').textContent = `記録 ${String(index + 1).padStart(2, '0')}`;
     imageReady = image.complete && image.naturalWidth > 0;

@@ -81,7 +81,7 @@ await finish();
 assert.equal(wakes, 2, 'the next lap resumes animation after the transition without another keypress');
 assert.equal(preparations.at(-1).anomaly.kind, 'same-image');
 inspectSeal(2);
-assert.match(nodes.get('img').src, /gallery-22\.webp/);
+assert.match(nodes.get('img').src, /assets\/manzokukyo\/gallery\/gallery-22\.png/, 'inspection requests the original image');
 nodes.get('img').fire('error'); assert.equal(ui.collect(), false, 'a failed inspection image cannot grant a seal');
 nodes.get('img').fire('load'); assert.equal(shared.call('collectSeal'), true, 'the normal collection entry point uses the expedition');
 assert.equal(ui.snapshot().heldSeal, 2); assert.equal(shared.state().count, 0, 'a provisional seal is not saved');

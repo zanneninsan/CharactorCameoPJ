@@ -147,7 +147,7 @@ function createExhibition(T) {
   const visitorNote = stage.querySelector('[data-gallery-visitor-note]');
   let anomaly = null, textureGeneration = 0, preparationResolve;
   let selectedIndex = 0, mode = 'overview', moving = false, aimedIndex = null;
-  let yaw = 0, pitch = 0, walked = 0;
+  let yaw = 0, pitch = 0, walked = 0, lookDirty = false, walkingRoom = -1;
   const heldKeys = new Set(), heldPointers = new Map();
   const sprintButton = stage.querySelector('[data-gallery-3d-sprint]');
   let sprintLatched = false;
@@ -173,9 +173,10 @@ function createExhibition(T) {
     const inversion = { value: 0 };
     surface.onBeforeCompile = shader => {
       shader.uniforms.galleryNegative = inversion;
-      shader.fragmentShader = 'uniform float galleryNegative;\n' + shader.fragmentShader.replace('#include <colorspace_fragment>', '#include <colorspace_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0) - gl_FragColor.rgb, galleryNegative);');
+      shader.vertexShader = 'varying float galleryViewDistance;\n' + shader.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\ngalleryViewDistance = length(mvPosition.xyz);');
+      shader.fragmentShader = 'uniform float galleryNegative;\nvarying float galleryViewDistance;\n' + shader.fragmentShader.replace('#include <colorspace_fragment>', '#include <colorspace_fragment>\n#ifdef USE_MAP\nfloat nearView = 1.0 - smoothstep(5.0, 13.0, galleryViewDistance);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0) - gl_FragColor.rgb, galleryNegative * nearView);\n#endif');
     };
-    surface.customProgramCacheKey = () => 'gallery-negative-v1';
+    surface.customProgramCacheKey = () => 'gallery-negative-distance-v2';
     const painting = new T.Mesh(plane, surface); painting.scale.set(width, height, 1); painting.position.z = .118; painting.userData.index = index; group.add(painting); targets.push(painting);
     const plaque = new T.Mesh(plane, basic({ map: labelTexture(`ARCHIVE ${records[index].id}`, records[index].seal ? 'SEALED RECORD' : 'UNFILED IMAGE'), toneMapped: false }));
     plaque.scale.set(1.22, .46, 1); plaque.position.set(0, -height / 2 - .64, .11); group.add(plaque);
@@ -205,7 +206,7 @@ function createExhibition(T) {
       if (loaded.has(frame.index) || pending.has(frame.index)) continue;
       const generation = textureGeneration;
       const appearance = paintingAppearance(frame.index, anomaly);
-      const url = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.webp?${assetVersionQuery}`, document.baseURI).href;
+      const url = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}-room.webp?${assetVersionQuery}`, document.baseURI).href;
       pending.set(frame.index, generation);
       loader.load(url, texture => {
         if (generation !== textureGeneration) { texture.dispose(); return; }
@@ -215,7 +216,7 @@ function createExhibition(T) {
         // Fit the original aspect ratio inside its matte; never crop a texture.
         const aspect = texture.image.width / texture.image.height;
         const w = Math.min(frame.width, frame.height * aspect), h = w / aspect;
-        frame.painting.scale.set(w, h, 1); frame.surface.map = texture; frame.surface.fog = false; frame.surface.needsUpdate = true;
+        frame.painting.scale.set(w, h, 1); frame.surface.map = texture; frame.surface.fog = true; frame.surface.needsUpdate = true;
         textures.add(texture); loaded.set(frame.index, texture); failed.delete(frame.index); refreshLoading(); wake();
       }, undefined, () => { if (generation !== textureGeneration || disposed) return; pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
     }
@@ -247,7 +248,11 @@ function createExhibition(T) {
     portalTexture = labelTexture(loop?.active ? `ROUND ${String(round).padStart(2, '0')}` : 'GALLERY', 'THE SAME CORRIDOR');
     for (const sign of portalLabels) { sign.material.map = portalTexture; sign.material.needsUpdate = true; }
     const ready = new Promise(resolve => { preparationResolve = resolve; });
-    overview(0, true, true); camera.position.z = .8; endPosition.copy(camera.position); wake();
+    overview(0, true, true);
+    // Portrait view sees farther down the hall. Warm the adjacent room too,
+    // within the existing two-room texture limit, rather than showing blanks.
+    loadRoom(1, true);
+    camera.position.z = .8; endPosition.copy(camera.position); wake();
     if (disposed || lost) { preparationResolve?.(false); preparationResolve = null; }
     return ready;
   }
@@ -288,7 +293,11 @@ function createExhibition(T) {
     if (!canWalk()) return false;
     if (mode !== 'walking') {
       orientation.setFromQuaternion(camera.quaternion, 'YXZ'); yaw = orientation.y; pitch = orientation.x;
-      mode = 'walking'; moving = false;
+      mode = 'walking'; moving = false; walkingRoom = -1;
+      stage.querySelector('[data-gallery-3d-record]').textContent = '歩いて探索中';
+      stage.querySelector('[data-gallery-3d-inspect]').textContent = '気になる絵をタップ';
+      stage.querySelector('[data-gallery-3d-inspect]').disabled = true;
+      aimedIndex = null; viewport.classList.remove('is-aiming');
     }
     return true;
   }
@@ -307,25 +316,24 @@ function createExhibition(T) {
     const neighbor = r + direction;
     const boundary = direction === 1 ? 2 - (r + 1) * 16 : 2 - r * 16;
     if (neighbor >= 0 && neighbor < 4 && Math.abs(camera.position.z - boundary) < 6 && !roomCache.includes(neighbor)) loadRoom(neighbor, true);
+    if (r === walkingRoom) return;
+    walkingRoom = r;
+    if (!loop?.active) {
+      stage.querySelector('[data-gallery-3d-room]').textContent = `展示室 ${['I', 'II', 'III', 'IV'][r]} / IV`;
+      for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.setAttribute('aria-pressed', String(Number(button.getAttribute('data-gallery-3d-room-jump')) === r));
+    }
+  }
+  // Selection is requested on Enter, not every movement frame or drag event.
+  function findAimedRecord() {
     camera.getWorldDirection(forwardVector);
-    let best = .94; aimedIndex = null;
+    let best = .94, index = null;
     for (const frame of frames) {
       toFrame.copy(frame.group.position).sub(camera.position);
       const distance = toFrame.length();
       const alignment = toFrame.normalize().dot(forwardVector);
-      if (distance < 10 && alignment > best) { best = alignment; aimedIndex = frame.index; }
+      if (distance < 10 && alignment > best) { best = alignment; index = frame.index; }
     }
-    if (aimedIndex !== null) {
-      selectedIndex = aimedIndex;
-      if (selected !== aimedIndex || stage.querySelector('[data-gallery-3d-inspect]').disabled) updateSelection(aimedIndex);
-    } else {
-      stage.querySelector('[data-gallery-3d-record]').textContent = '歩いて探索中';
-      stage.querySelector('[data-gallery-3d-inspect]').textContent = '気になる絵の方を向く';
-      stage.querySelector('[data-gallery-3d-inspect]').disabled = true;
-    }
-    stage.querySelector('[data-gallery-3d-room]').textContent = `展示室 ${['I', 'II', 'III', 'IV'][r]} / IV`;
-    for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.setAttribute('aria-pressed', String(Number(button.getAttribute('data-gallery-3d-room-jump')) === r));
-    viewport.classList.toggle('is-aiming', aimedIndex !== null);
+    return index;
   }
   function applyWalk(dt, actions = walkActions()) {
     const next = advanceWalk(camera.position, yaw, actions, dt);
@@ -352,8 +360,8 @@ function createExhibition(T) {
     const paused = document.querySelector('dialog[open]') || loop?.busy;
     const dt = last ? Math.min((time - last) / 1000, .05) : 0; last = time;
     const walking = mode === 'walking' && (heldKeys.size || heldPointers.size) && !paused;
-    const cameraActive = moving || walking;
-    if (walking) applyWalk(dt);
+    const cameraActive = moving || walking || lookDirty;
+    if (walking || (lookDirty && !paused)) { applyWalk(walking ? dt : 0); lookDirty = false; }
     if (moving && !paused) {
       const ease = 1 - Math.exp(-dt * 5.4);
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
@@ -391,7 +399,7 @@ function createExhibition(T) {
     if (down.dragged && startWalk()) {
       yaw -= (event.clientX - down.lastX) * .004;
       pitch = Math.max(-.65, Math.min(.65, pitch - (event.clientY - down.lastY) * .003));
-      applyWalk(0);
+      lookDirty = true; wake();
     }
     down.lastX = event.clientX; down.lastY = event.clientY;
   });
@@ -427,8 +435,12 @@ function createExhibition(T) {
   }
   canvas.addEventListener('keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey || !canWalk()) return;
-    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); select((selected + (event.key === 'ArrowRight' ? 1 : 23)) % 24); }
-    if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) { event.preventDefault(); if (mode !== 'walking' || aimedIndex !== null) inspect(); }
+    if (!loop?.active && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) { event.preventDefault(); select((selected + (event.key === 'ArrowRight' ? 1 : 23)) % 24); }
+    if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
+      event.preventDefault();
+      const index = mode === 'walking' || loop?.active ? findAimedRecord() : selected;
+      if (index !== null) inspect(index);
+    }
     if (event.key === 'Escape') stopWalk();
   });
   window.addEventListener('blur', stopWalk);

@@ -500,3 +500,48 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
   .gallery-page[data-gallery-experience] .gallery-3d-catalog .gallery-frame:hover { transform: none; }
 }
 .gallery-visitor-note { width: var(--gallery-3d-width); margin: .65rem auto .5rem; color: #c4b28b; font-size: .76rem; line-height: 1.65; }
+
+/* Walking is the primary interface. Keep the room visible around a compact HUD. */
+.is-gallery-loop .gallery-3d-controls { display: none !important; }
+.gallery-3d-viewport .gallery-loop-ui { position: absolute; z-index: 5; top: 12px; left: 12px; width: min(470px, calc(100% - 24px)); margin: 0; pointer-events: none; }
+.gallery-loop-ui :is(button, summary, details[open]) { pointer-events: auto; }
+.gallery-loop-modes { margin-bottom: 6px; }
+.gallery-loop-modes button { min-height: 40px; background: #20282be8; }
+.gallery-loop-panel { gap: 12px; padding: 6px 8px; flex-wrap: nowrap; background: #172329de; }
+.gallery-loop-rule { position: relative; flex: 0 0 auto; }
+.gallery-loop-rule summary { min-height: 40px; display: flex; align-items: center; padding: 6px 10px; border: 1px solid #b9a67966; border-radius: 4px; cursor: pointer; font: 12px/1.4 system-ui; }
+.gallery-loop-rule summary::after { content: ' ⌄'; margin-left: 8px; }
+.gallery-loop-rule > div { position: absolute; z-index: 10; left: -9px; top: calc(100% + 10px); width: min(400px, calc(100vw - 48px)); padding: 16px; border: 1px solid #bba472; background: #142027f5; box-shadow: 0 8px 28px #0008; }
+.gallery-loop-count { flex: 1; gap: 0; }
+.gallery-loop-count span > b { font-size: 22px; }
+.gallery-loop-bag { padding: 6px 8px; background: #172022de; }
+.gallery-loop-bag .gallery-loop-slots, .gallery-loop-bag > button { display: none; }
+.gallery-loop-bag[data-held="false"] { display: none; }
+.gallery-loop-bag p { flex: 1; order: initial; font-size: 11px; }
+.gallery-3d-viewport .gallery-3d-help { left: auto; right: 12px; bottom: 12px; transform: none; max-width: calc(100% - 220px); }
+
+@media (max-width: 760px), (max-height: 520px) and (max-width: 1000px) {
+  .has-gallery-3d.is-gallery-loop .gallery-topbar { height: 32px; flex-direction: row; align-items: center; padding: 4px 12px; gap: 8px; font-size: 10px; letter-spacing: .03em; }
+  .has-gallery-3d.is-gallery-loop .gallery-nav a:last-child { display: none; }
+  .has-gallery-3d.is-gallery-loop .gallery-3d-stage { --gallery-3d-width: 100%; padding: 0 0 64px; }
+  .has-gallery-3d.is-gallery-loop .gallery-3d-heading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); margin: 0; }
+  .has-gallery-3d.is-gallery-loop .gallery-3d-viewport { height: calc(100svh - 96px); height: calc(100dvh - 96px); min-height: 0; border-radius: 0; border-inline: 0; box-shadow: none; }
+  .has-gallery-3d.is-gallery-loop .gallery-visitor-note { display: none; }
+  .gallery-3d-viewport .gallery-loop-ui { top: max(8px, env(safe-area-inset-top, 0px)); left: 8px; width: calc(100% - 16px); }
+  .gallery-loop-panel { padding: 4px 6px; gap: 8px; }
+  .gallery-loop-count { display: grid; gap: 0; }
+  .gallery-loop-count span small { display: none; }
+  .gallery-loop-rule summary, .gallery-loop-panel > button { min-height: 40px; padding: 6px 8px; font-size: 11px; }
+  .gallery-loop-rule > div { max-height: min(50dvh, 340px); overflow: auto; }
+  .gallery-3d-viewport .gallery-3d-help { display: none; }
+  .has-gallery-3d.is-gallery-loop .gallery-ledger { left: 8px; bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  .has-gallery-3d.is-gallery-loop .gallery-sound { right: 8px; bottom: max(8px, env(safe-area-inset-bottom, 0px)); top: auto; }
+  .has-gallery-3d.is-gallery-loop .gallery-sound:has([data-gallery-sound-invite]:not([hidden])) { top: auto; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-height: 520px) and (min-width: 600px) and (max-width: 1000px) {
+  .gallery-3d-viewport .gallery-loop-ui { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
+  .gallery-loop-modes { margin: 0; }
+  .gallery-loop-panel { flex: 1; }
+  .gallery-loop-bag { flex-basis: 100%; }
+  .gallery-loop-rule > div { width: min(360px, 45vw); }
+}
