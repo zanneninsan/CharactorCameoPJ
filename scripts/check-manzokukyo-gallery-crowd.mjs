@@ -3,17 +3,32 @@ import { readFile } from 'node:fs/promises';
 import * as T from '../content/static-sites/zannenin/manzokukyo-preview/vendor/three.module.js';
 import { GLTFLoader, cloneSkeleton } from '../content/static-sites/zannenin/manzokukyo-preview/vendor/GLTFLoader.js';
 import { loadGalleryVisitors, rushLanes, createRushState, advanceRush } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-visitor.js';
-import { chooseAnomaly, judgeLoop, paintingAppearance, newLoop, describeAnomaly } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
+import { chooseAnomaly, judgeLoop, paintingAppearance, newLoop, describeAnomaly, satisfactionLabel } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 
 const html = renderGallery3DExperience({ id: 'zannenin', theme: {} }, { htmlPage: page => page, escapeHtml: String, assetVersionQuery: 'test' }).body;
 assert.ok(!html.includes('data-gallery-visitor-model') && !html.includes('data-gallery-visitor-toggle'), 'both characters are always present without a selector or a way to hide the anomaly');
 
-const anomaly = chooseAnomaly(() => .9, { visitorsReady: true });
+const anomaly = chooseAnomaly(() => .74, { visitorsReady: true });
 assert.equal(anomaly.kind, 'darenin-rush');
 assert.notEqual(chooseAnomaly(() => .9, { visitorsReady: false }).kind, 'darenin-rush', 'unloaded actors cannot create an invisible anomaly');
 for (const direction of ['back', 'forward']) assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, direction).correct, direction === 'back');
 assert.match(describeAnomaly(anomaly), /4体/);
+for (const visitorsReady of [false, true]) {
+  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction'];
+  for (let i = 0; i < allowed.length; i++) {
+    const values = [.8, (i + .5) / allowed.length, .3];
+    const picked = chooseAnomaly(() => values.shift(), { visitorsReady });
+    assert.equal(picked.kind, allowed[i]);
+    assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly: picked }, 'back').correct, true);
+    assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly: picked }, 'forward').correct, false);
+  }
+}
+assert.equal(satisfactionLabel(null), '100％');
+assert.equal(satisfactionLabel({ kind: 'satisfaction' }), 'あなた以外 100％');
+assert.equal(satisfactionLabel({ kind: 'giant-darenin' }), '100％');
+assert.match(describeAnomaly({ kind: 'satisfaction' }), /あなた以外/);
+assert.match(describeAnomaly({ kind: 'giant-darenin' }), /巨大/);
 for (let n = 0; n < 24; n++) assert.deepEqual(paintingAppearance(n, anomaly), paintingAppearance(n, null), 'the running row is the only changed exhibit');
 const frozen = createRushState();
 for (const mode of [{ paused: true }, { inspecting: true }]) {
@@ -85,6 +100,28 @@ assert.ok(crowd.snapshot().formation.z < -10, 'narrow view keeps all four within
 crowd.setAnomaly(null); crowd.update(.05, { x: 0, z: .8 });
 assert.equal(crowd.snapshot().count, 2, 'new lap restores both usual visitors');
 assert.equal(scene.children.filter(object => object.visible).length, 2);
+const giant = scene.getObjectByName('Giant Darenin head');
+assert.ok(giant && !giant.visible);
+assert.ok(giant.geometry.attributes.position.count > 300 && giant.geometry.attributes.position.count < 9000, 'head is real model geometry and stays lightweight');
+assert.equal(giant.isSkinnedMesh, undefined, 'the giant uses no extra skinning');
+crowd.setAnomaly({ kind: 'giant-darenin' });
+crowd.update(.05, { x: 0, z: -30 });
+assert.equal(crowd.snapshot().count, 3); assert.equal(giant.visible, true);
+assert.deepEqual(crowd.snapshot().people.map(actor => actor.kind), ['zannenin', 'darenin'], 'the two ordinary walkers remain');
+assert.ok(giant.position.z < -47 && giant.position.z > -63, 'peeks from behind the distant arch');
+scene.updateMatrixWorld(true);
+const giantBounds = new T.Box3().setFromObject(giant);
+assert.ok(giantBounds.max.y < 6.4 && giantBounds.min.y > 1.9 && giantBounds.min.x > -5.2, 'face is inside the visible arch opening');
+const still = giant.matrixWorld.clone();
+for (let i = 0; i < 20; i++) crowd.update(.05, { x: 0, z: -30 }, { paused: true });
+scene.updateMatrixWorld(true); assert.ok(giant.matrixWorld.equals(still), 'modal pauses the giant');
+crowd.setAnomaly({ kind: 'giant-darenin' });
+crowd.update(.05, { x: 0, z: -30 }, { reduced: true }); scene.updateMatrixWorld(true);
+const reducedPose = giant.matrixWorld.clone();
+for (let i = 0; i < 20; i++) crowd.update(.05, { x: 0, z: -30 }, { reduced: true });
+scene.updateMatrixWorld(true); assert.ok(giant.visible && giant.matrixWorld.equals(reducedPose), 'reduced motion retains the clue without swaying');
+crowd.setAnomaly(null); assert.equal(giant.visible, false); assert.equal(crowd.snapshot().count, 2);
+assert.equal(downloads, 2, 'giant reuses the loaded model');
 let geometryDisposals = 0, finishDisposals = 0;
 skins[0].geometry.addEventListener('dispose', () => geometryDisposals++);
 skins[0].material.addEventListener('dispose', () => finishDisposals++);

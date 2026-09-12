@@ -201,6 +201,37 @@ function releaseModel(scene) {
   for (const bitmap of bitmaps) bitmap.close();
 }
 
+// Bake only the head from the already loaded rough model. No extra VRM, skin
+// updates, image textures or full-body geometry are needed for the distant face.
+export function createGiantHeadGeometry(T, figure) {
+  figure.updateMatrixWorld(true);
+  const head = figure.getObjectByName('J_Bip_C_Head');
+  if (!head) throw Error('Darenin head bone is missing');
+  const cutoff = head.getWorldPosition(new T.Vector3()).y - .14;
+  const positions = [], colors = [], vertex = new T.Vector3();
+  figure.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    mesh.skeleton?.update();
+    const geometry = mesh.geometry, color = geometry.getAttribute('color');
+    const vertices = Array.from({ length: geometry.getAttribute('position').count }, (_, index) => mesh.getVertexPosition(index, vertex).applyMatrix4(mesh.matrixWorld).clone());
+    const count = geometry.index?.count ?? vertices.length;
+    for (let offset = 0; offset < count; offset += 3) {
+      const indices = [0, 1, 2].map(n => geometry.index ? geometry.index.getX(offset + n) : offset + n);
+      if (indices.some(index => vertices[index].y < cutoff)) continue;
+      for (const index of indices) {
+        positions.push(...vertices[index].toArray());
+        colors.push(color ? color.getX(index) : .8, color ? color.getY(index) : .8, color ? color.getZ(index) : .8);
+      }
+    }
+  });
+  if (!positions.length) throw Error('Darenin head geometry is empty');
+  const result = new T.BufferGeometry();
+  result.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+  result.setAttribute('color', new T.Float32BufferAttribute(colors, 3));
+  result.computeVertexNormals(); result.center(); result.computeBoundingBox(); result.computeBoundingSphere();
+  return result;
+}
+
 // Two downloads total. Four independent Darenin skeletons reuse one geometry;
 // the three extra actors stay hidden outside the running-row anomaly.
 export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleton, onStep = () => {} }) {
@@ -218,13 +249,20 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
   const official = createGalleryVisitor(T, { scene, figure: results[0].value.scene, kind: 'zannenin', spawn: { x: 1.65, z: -6.4, wait: 3.8 } });
   const template = results[1].value.scene;
   const sharedFinish = new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide });
+  const giantGeometry = createGiantHeadGeometry(T, template);
+  const giant = new T.Mesh(giantGeometry, sharedFinish); giant.name = 'Giant Darenin head';
+  const headSize = giantGeometry.boundingBox.getSize(new T.Vector3());
+  giant.scale.setScalar(4.2 / Math.max(headSize.x, headSize.y, headSize.z));
+  scene.add(giant);
   const copies = rushLanes.map(() => createGalleryVisitor(T, { scene, figure: cloneSkeleton(template), sharedFinish, spawn: { x: -1.65, z: -5.4, wait: 1.8 } }));
   const everyone = [official, ...copies];
-  let rushing = false, rush = createRushState(), disposed = false, step = 0;
+  let rushing = false, giantActive = false, giantTime = 0, rush = createRushState(), disposed = false, step = 0;
   const api = {
     setAnomaly(anomaly) {
       if (disposed) return;
       rushing = anomaly?.kind === 'darenin-rush'; rush = createRushState(); step = 0;
+      giantActive = anomaly?.kind === 'giant-darenin'; giantTime = 0;
+      giant.visible = giantActive; giant.position.set(-2.15, 3.7, -48.2); giant.rotation.set(0, Math.PI, -.08);
       for (const actor of everyone) actor.reset();
       official.setEnabled(!rushing);
       copies.forEach((actor, index) => actor.setEnabled(rushing || index === 0));
@@ -247,13 +285,21 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
         moving = official.update(dt, viewer, options);
         moving = copies[0].update(dt, viewer, options) || moving;
       }
+      giant.visible = giantActive && !options.inspecting;
+      if (giantActive && !options.paused && !options.inspecting) {
+        if (!options.reduced) giantTime += clamp(Number.isFinite(dt) ? dt : 0, 0, .05);
+        giant.position.x = -2.15 + Math.sin(giantTime * .55) * .18;
+        giant.rotation.y = Math.PI + Math.sin(giantTime * .4) * .09;
+        moving = !options.reduced || moving;
+      }
       return moving;
     },
-    isVisible: () => everyone.some(actor => actor.isVisible()),
-    snapshot: () => ({ loaded: true, count: rushing ? 4 : 2, people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
+    isVisible: () => giant.visible || everyone.some(actor => actor.isVisible()),
+    snapshot: () => ({ loaded: true, count: rushing ? 4 : giantActive ? 3 : 2, people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, position: giant.position.toArray(), yaw: giant.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
     dispose() {
       if (disposed) return; disposed = true;
       for (const actor of everyone) actor.dispose();
+      scene.remove(giant); giantGeometry.dispose();
       releaseModel(template); sharedFinish.dispose();
     },
   };

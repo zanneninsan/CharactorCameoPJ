@@ -1,12 +1,13 @@
-const kinds = ['upside-down', 'negative', 'same-image'];
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction'];
+export function satisfactionLabel(anomaly) { return anomaly?.kind === 'satisfaction' ? 'あなた以外 100％' : '100％'; }
 export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
 }
 export function chooseAnomaly(random = Math.random, { visitorsReady = false } = {}) {
   if (random() < .45) return null;
-  const available = visitorsReady ? [...kinds, 'darenin-rush'] : kinds;
+  const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin'] : kinds;
   const kind = available[Math.min(available.length - 1, Math.floor(random() * available.length))];
-  return kind === 'darenin-rush' ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
+  return ['darenin-rush', 'giant-darenin', 'satisfaction'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
   return { imageIndex: anomaly?.kind === 'same-image' ? anomaly.index : index,
@@ -26,6 +27,8 @@ export function loopExit(position) {
 }
 export function describeAnomaly(anomaly) {
   if (!anomaly) return 'この巡回に異変はありませんでした。';
+  if (anomaly.kind === 'giant-darenin') return '奥のアーチから、巨大な誰念院さんの顔がのぞいていました。';
+  if (anomaly.kind === 'satisfaction') return '本日の満足度が「あなた以外 100％」になっていました。';
   if (anomaly.kind === 'darenin-rush') return '残念院さんが姿を消し、誰念院さんが4体、横一列で奥から迫ってきました。';
   if (anomaly.kind === 'same-image') return 'すべての額縁が、同じ絵になっていました。';
   return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の絵が${anomaly.kind === 'negative' ? '色反転' : '逆さま'}になっていました。`;

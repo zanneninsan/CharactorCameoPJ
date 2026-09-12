@@ -7,7 +7,7 @@ const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
-const { mountGalleryLoop, paintingAppearance, loopExit } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
+const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 let exhibition, loop, selected = 0;
 function setCatalog(open) {
@@ -190,6 +190,21 @@ function createExhibition(T) {
     frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
   let portalTexture = labelTexture('GALLERY', 'THE SAME CORRIDOR');
+  function satisfactionTexture() {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 320;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#162a2b'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.strokeStyle = '#d5bb7c'; ctx.lineWidth = 5; ctx.strokeRect(14, 14, 996, 292);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#d5bb7c'; ctx.font = '48px sans-serif'; ctx.fillText('本日の満足度', 512, 90);
+    ctx.fillStyle = '#fff3d5'; ctx.font = 'bold 92px sans-serif'; ctx.fillText(satisfactionLabel(anomaly), 512, 232);
+    const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
+  }
+  let satisfactionMap = satisfactionTexture();
+  const satisfactionMaterial = basic({ map: satisfactionMap, toneMapped: false });
+  for (const z of [-14.6, -30.6, -46.6]) {
+    box(scene, [3.9, 1.3, .14], [0, 4.95, z - .1], gold);
+    const sign = new T.Mesh(plane, satisfactionMaterial); sign.scale.set(3.76, 1.175, 1); sign.position.set(0, 4.95, z); scene.add(sign);
+    for (const x of [-1.6, 1.6]) box(scene, [.035, .7, .035], [x, 5.85, z - .1], gold);
+  }
   const portalLabels = [4.03, -63.93].map((z, index) => {
     const sign = new T.Mesh(plane, basic({ map: portalTexture, toneMapped: false }));
     sign.scale.set(2.3, .86, 1); sign.position.set(0, 5.3, z); sign.rotation.y = index === 0 ? Math.PI : 0; scene.add(sign); return sign;
@@ -233,6 +248,8 @@ function createExhibition(T) {
   }
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
+    satisfactionMap.dispose(); textures.delete(satisfactionMap);
+    satisfactionMap = satisfactionTexture(); satisfactionMaterial.map = satisfactionMap;
     visitor?.setAnomaly(nextAnomaly);
     preparationResolve?.(false); preparationResolve = null;
     for (const texture of loaded.values()) { texture.dispose(); textures.delete(texture); }

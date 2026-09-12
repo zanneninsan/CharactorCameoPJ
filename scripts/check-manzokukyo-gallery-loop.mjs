@@ -6,7 +6,7 @@ import { createHarness } from './check-manzokukyo-gallery.mjs';
 assert.deepEqual(newLoop(NaN), newLoop());
 assert.deepEqual(newLoop(-1), newLoop());
 assert.equal(chooseAnomaly(() => 0), null);
-for (const [kind, draw] of [['upside-down', .1], ['negative', .5], ['same-image', .9]]) {
+for (const [kind, draw] of [['upside-down', .1], ['negative', .4], ['same-image', .6]]) {
   const sequence = [.8, draw, .54];
   const anomaly = chooseAnomaly(() => sequence.shift());
   assert.equal(anomaly.kind, kind); assert.equal(anomaly.index, 12);
@@ -62,8 +62,9 @@ globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (
 globalThis.matchMedia = () => ({ matches: false });
 globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0;
+let randomDraw = 0;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
-const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => .9,
+const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .74 : [.9, .6, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
