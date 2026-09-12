@@ -6,7 +6,8 @@ const catalog = document.querySelector('.gallery-3d-catalog');
 const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
-const { advanceWalk, walkKeys, walkRoom } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
+const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
+const { mountGallerySpatial } = await import(new URL(`manzokukyo-gallery-spatial.js?${assetVersionQuery}`, import.meta.url));
 const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const { mountFrameHand } = await import(new URL(`manzokukyo-gallery-hand.js?${assetVersionQuery}`, import.meta.url));
@@ -135,10 +136,26 @@ function createExhibition(T) {
     const ring = new T.Mesh(ringShape, gold); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .038, z - 1.5); scene.add(ring);
   }
   // A red doorway anchors the far end, with the same heraldic silhouette as the other rooms.
-  box(scene, [11.4, 6.4, .3], [0, 3.15, -64.5], stone);
-  box(scene, [3.3, 4.8, .18], [0, 2.4, -64.2], gold);
-  box(scene, [2.95, 4.55, .18], [0, 2.28, -64.07], material({ color: 0x642b3c, roughness: .62 }));
-  box(scene, [.018, 4.45, .1], [0, 2.27, -63.96], warm);
+  const exitGroup = new T.Group(), extension = new T.Group(); scene.add(exitGroup, extension);
+  box(exitGroup, [11.4, 6.4, .3], [0, 3.15, -64.5], stone);
+  box(exitGroup, [3.3, 4.8, .18], [0, 2.4, -64.2], gold);
+  box(exitGroup, [2.95, 4.55, .18], [0, 2.28, -64.07], material({ color: 0x642b3c, roughness: .62 }));
+  box(exitGroup, [.018, 4.45, .1], [0, 2.27, -63.96], warm);
+  box(extension, [11.4, .25, 18], [0, -.15, -73.5], baseStone);
+  box(extension, [11.4, .18, 18], [0, 6.45, -73.5], baseStone);
+  box(extension, [2.4, .05, 18], [0, 6.33, -73.5], warm);
+  for (const side of [-1, 1]) {
+    box(extension, [.32, 6.4, 18], [side * 5.55, 3.15, -73.5], stone);
+    box(extension, [.24, .065, 18], [side * 5.29, .9, -73.5], gold);
+  }
+  for (const parity of [0, 1]) {
+    const tiles = new T.InstancedMesh(cube, material({ color: parity ? 0x888f8b : 0xa2a499, roughness: .64, metalness: .15 }), 30), matrix = new T.Object3D(); let tile = 0;
+    for (let row = 0; row < 10; row++) for (let col = 0; col < 6; col++) if ((col + row) % 2 === parity) {
+      matrix.position.set((col - 2.5) * 1.8, 0, -65.4 - row * 1.8); matrix.scale.set(1.78, .035, 1.78); matrix.updateMatrix(); tiles.setMatrixAt(tile++, matrix.matrix);
+    }
+    extension.add(tiles);
+  }
+  extension.visible = false;
   const frames = [], targets = [];
   const loader = new T.TextureLoader();
   const roomCache = [];
@@ -164,7 +181,7 @@ function createExhibition(T) {
     const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
   }
   for (let index = 0; index < 24; index++) {
-    const roomIndex = Math.floor(index / 6), local = index % 6, side = local % 2 === 0 ? -1 : 1, z = -3 - Math.floor(local / 2) * 4.5 - roomIndex * 16;
+    const roomIndex = Math.floor(index / 6), local = index % 6, side = local % 2 === 0 ? -1 : 1, z = galleryFrameZ(index);
     const group = new T.Group(); group.position.set(side * 5.13, 2.82, z); group.rotation.y = -side * Math.PI / 2; scene.add(group);
     const width = 2.12, height = width * 1080 / 768;
     box(group, [width + .5, height + .5, .09], [0, 0, -.07], black);
@@ -209,10 +226,11 @@ function createExhibition(T) {
   }
   const portalLabels = [4.03, -63.93].map((z, index) => {
     const sign = new T.Mesh(plane, basic({ map: portalTexture, toneMapped: false }));
-    sign.scale.set(2.3, .86, 1); sign.position.set(0, 5.3, z); sign.rotation.y = index === 0 ? Math.PI : 0; scene.add(sign); return sign;
+    sign.scale.set(2.3, .86, 1); sign.position.set(0, 5.3, z); sign.rotation.y = index === 0 ? Math.PI : 0; (index === 0 ? scene : exitGroup).add(sign); return sign;
   });
   const skyPanels = [green, rose, warm, green];
   for (let r = 0; r < 4; r++) for (const side of [-1, 1]) box(scene, [.045, 1.6, .15], [side * 5.18, 3.4, -15 - r * 16], skyPanels[r]);
+  const spatial = mountGallerySpatial(T, { frames, exitGroup, extension });
 
   function loadRoom(r, preload = false) {
     if (!preload) activeRoom = r;
@@ -251,6 +269,7 @@ function createExhibition(T) {
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
     frameHand.setAnomaly(anomaly);
+    spatial.reset(anomaly);
     satisfactionMap.dispose(); textures.delete(satisfactionMap);
     satisfactionMap = satisfactionTexture(); satisfactionMaterial.map = satisfactionMap;
     visitor?.setAnomaly(nextAnomaly);
@@ -356,14 +375,15 @@ function createExhibition(T) {
     return index;
   }
   function applyWalk(dt, actions = walkActions()) {
-    const next = advanceWalk(camera.position, yaw, actions, dt);
+    const next = advanceWalk(camera.position, yaw, actions, dt, spatial.walkLimit);
     const direction = next.z < camera.position.z ? 1 : next.z > camera.position.z ? -1 : undefined;
     camera.position.x = next.x; camera.position.z = next.z; yaw = next.yaw;
     camera.quaternion.setFromEuler(orientation.set(pitch, yaw, 0, 'YXZ'));
     endPosition.copy(camera.position); endQuaternion.copy(camera.quaternion);
     walked += next.distance;
     if (walked >= 1.75) { gallery.play('step-1', { level: actions.has('sprint') ? .25 : .18 }); walked %= 1.75; }
-    const exit = loopExit(camera.position);
+    spatial.track(camera);
+    const exit = loopExit(camera.position, spatial.exitOffset);
     if (loop?.active && exit) { void loop.cross(exit); return; }
     syncWalkingSelection(direction); wake();
   }
@@ -388,10 +408,11 @@ function createExhibition(T) {
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
     const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
-    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving;
+    const spatialMoving = spatial.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving;
     // Wandering uses at most 30 rendered frames/sec while the camera is still;
     // keyboard movement keeps the existing responsive refresh rate.
-    const visitorVisible = visitor?.isVisible() || frameHand.isVisible();
+    const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible();
     if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
       renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
@@ -506,7 +527,7 @@ function createExhibition(T) {
   }
   void loadVisitors();
   return { select, overview, prepareLoop, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

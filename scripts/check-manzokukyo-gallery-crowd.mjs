@@ -9,13 +9,13 @@ import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 const html = renderGallery3DExperience({ id: 'zannenin', theme: {} }, { htmlPage: page => page, escapeHtml: String, assetVersionQuery: 'test' }).body;
 assert.ok(!html.includes('data-gallery-visitor-model') && !html.includes('data-gallery-visitor-toggle'), 'both characters are always present without a selector or a way to hide the anomaly');
 
-const anomaly = chooseAnomaly(() => .74, { visitorsReady: true });
+const anomaly = chooseAnomaly(() => .84, { visitorsReady: true });
 assert.equal(anomaly.kind, 'darenin-rush');
 assert.notEqual(chooseAnomaly(() => .9, { visitorsReady: false }).kind, 'darenin-rush', 'unloaded actors cannot create an invisible anomaly');
 for (const direction of ['back', 'forward']) assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, direction).correct, direction === 'back');
 assert.match(describeAnomaly(anomaly), /4体/);
 for (const visitorsReady of [false, true]) {
-  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand'];
+  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait'];
   for (let i = 0; i < allowed.length; i++) {
     const values = [.8, (i + .5) / allowed.length, .3];
     const picked = chooseAnomaly(() => values.shift(), { visitorsReady });

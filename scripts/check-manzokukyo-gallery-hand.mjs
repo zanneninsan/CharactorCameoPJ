@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import * as T from '../content/static-sites/zannenin/manzokukyo-preview/vendor/three.module.js';
 import { mountFrameHand } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-hand.js';
 import { chooseAnomaly, judgeLoop, newLoop, paintingAppearance, describeAnomaly } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
-const draws = [.8, .9, .99];
+const draws = [.8, .64, .99];
 const anomaly = chooseAnomaly(() => draws.shift());
 assert.deepEqual(anomaly, { kind: 'frame-hand', index: 23 }, 'does not depend on NPC model loading');
 assert.ok(judgeLoop({ ...newLoop(), round: 1, anomaly }, 'back').correct);

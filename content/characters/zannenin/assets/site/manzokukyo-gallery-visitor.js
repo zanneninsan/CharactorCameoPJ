@@ -10,7 +10,7 @@ function chooseDestination(state, random) {
   if (random() < .7) {
     const room = clamp(Math.floor((2 - nextZ) / 16), 0, 3);
     const slot = Math.floor(random() * 3);
-    state.targetZ = -3 - slot * 4.5 - room * 16;
+    state.targetZ = room === 0 ? -4.8 - slot * 3.6 : -3 - slot * 4.5 - room * 16;
     state.targetX = random() < .5 ? -3.25 : 3.25;
     state.lookX = Math.sign(state.targetX) * 5.13; state.lookZ = state.targetZ;
   } else {

@@ -1,8 +1,10 @@
-const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand'];
+import { createGalleryAchievements, mountAchievementBoard } from './manzokukyo-gallery-achievements.js';
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait'];
 export const galleryDebugOptions = [
   ['normal', '異変なし'], ['upside-down', '絵が逆さま', true], ['negative', '絵の色が反転', true],
   ['same-image', '全部同じ絵', true], ['satisfaction', '満足度の掲示'], ['frame-hand', '額縁の外の手', true],
   ['darenin-rush', '誰念院さん4体の突進', false, true], ['giant-darenin', '巨大な誰念院さん', false, true],
+  ['receding-exit', '出口が遠ざかる'], ['approaching-portrait', '近づいてくる肖像', true],
 ].map(([kind, label, record = false, visitors = false]) => ({ kind, label, record, visitors }));
 export function validateDebugSelection(value) {
   const option = galleryDebugOptions.find(option => option.kind === value?.kind);
@@ -17,7 +19,7 @@ export function chooseAnomaly(random = Math.random, { visitorsReady = false } = 
   if (random() < .45) return null;
   const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin'] : kinds;
   const kind = available[Math.min(available.length - 1, Math.floor(random() * available.length))];
-  return ['darenin-rush', 'giant-darenin', 'satisfaction'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
+  return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
   return { imageIndex: anomaly?.kind === 'same-image' ? anomaly.index : index,
@@ -31,12 +33,15 @@ export function judgeLoop(state, direction, random = Math.random, options) {
   return { correct, baseline: state.round === 0, previous: state.anomaly,
     next: { round: state.round + 1, streak, best: Math.max(state.best, streak), anomaly: chooseAnomaly(random, options) } };
 }
-export function loopExit(position) {
+export function loopExit(position, exitOffset = 0) {
   if (Math.abs(position.x) > 1.25) return null;
-  return position.z <= -62.1 ? 'forward' : position.z >= 2.65 ? 'back' : null;
+  const extension = Number.isFinite(exitOffset) ? Math.max(0, Math.min(18, exitOffset)) : 0;
+  return position.z <= -62.1 - extension ? 'forward' : position.z >= 2.65 ? 'back' : null;
 }
 export function describeAnomaly(anomaly) {
   if (!anomaly) return 'この巡回に異変はありませんでした。';
+  if (anomaly.kind === 'receding-exit') return '近づくほど、奥の出口が遠ざかっていました。';
+  if (anomaly.kind === 'approaching-portrait') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の肖像が、額縁ごとこちらへ近づいていました。`;
   if (anomaly.kind === 'frame-hand') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} から、額縁の外へ手が伸びていました。`;
   if (anomaly.kind === 'giant-darenin') return '奥の扉の前に、巨大な誰念院さんの胸像が現れていました。';
   if (anomaly.kind === 'satisfaction') return '本日の満足度が「あなた以外 100％」になっていました。';
@@ -59,6 +64,9 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   let state = newLoop(savedBest), active = true, busy = true, epoch = 0, disposed = false, retry = false;
   let heldSeal = null, inspected = null, imageReady = false;
   let debugSelection = null, checkpoint = null, debugUI = null, available = true;
+  let achievementUI = null, storage;
+  try { storage = localStorage; } catch {}
+  const achievements = createGalleryAchievements(galleryDebugOptions, storage);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   function render() {
@@ -83,6 +91,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       slot.setAttribute('aria-label', filed ? `持ち帰り済み「${record.seal.fragment}」` : held ? `仮押し「${record.seal.fragment}」` : '未回収');
     }
     debugUI?.render();
+    achievementUI?.render();
   }
   function notice(title, text, result = 'loading') {
     veil.hidden = false; veil.setAttribute('data-result', result);
@@ -104,6 +113,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       // Switching to the accessible catalog remains possible after a graphics failure.
       for (const choice of choices) choice.disabled = false;
       debugUI?.render();
+      achievementUI?.render();
       return false;
     }
     busy = false; veil.hidden = true; render(); if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true }); exhibition.wake?.();
@@ -122,6 +132,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       void prepare(verdict.correct ? 'DEBUG / 判断は正解' : 'DEBUG / 判断は不正解', `${describeAnomaly(state.anomaly)} 検印・記録は保存せず、同じ異変で再開します。`, verdict.correct ? 'correct' : 'wrong', 1500);
       return true;
     }
+    achievements.record(state.anomaly?.kind, verdict.correct);
     const carried = heldSeal;
     const confirmed = verdict.correct && carried !== null ? gallery.confirmSeal(carried) : null;
     heldSeal = null;
@@ -202,14 +213,16 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   q('[data-gallery-loop-ledger]').addEventListener('click', () => { exhibition.stop(); document.querySelector('[data-ledger-toggle]').click(); });
   q('[data-gallery-loop-retry]').addEventListener('click', () => { void prepare('展示を読み込み直しています', 'この巡回の内容は変わりません。'); });
   q('[data-gallery-loop-ui]').hidden = false;
-  window.addEventListener('pagehide', event => { if (!event.persisted) { disposed = true; ++epoch; debugUI?.dispose(); } });
+  window.addEventListener('pagehide', event => { if (!event.persisted) { disposed = true; ++epoch; debugUI?.dispose(); achievementUI?.dispose(); } });
   render();
   // Let the caller install the controller before the asynchronous preparation.
   queueMicrotask(() => { void prepare('正常な展示を開いています', '最初の一周で、絵の配置を覚えてください。'); });
   const controller = { get active() { return active; }, get busy() { return busy; }, get debug() { return Boolean(debugSelection); }, inspect, collect, closeInspection, cross, setMode, reset, canDebug, startDebug, stopDebug, refreshDebug: () => debugUI?.render(),
     snapshot: () => ({ active, busy, debug: debugSelection ? { ...debugSelection } : null, round: state.round, streak: state.streak, best: state.best, baseline: state.round === 0, inspectionOpen: modal.open, inspectedRecord: modal.open ? records[inspected]?.number : null, heldSeal, filedSeals: gallery.state().count }),
-    fallback: () => { ++epoch; available = false; busy = false; active = false; if (checkpoint) state = checkpoint.state; checkpoint = null; debugSelection = null; clearTransient(); debugUI?.dispose(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };
+    achievements: () => achievements.snapshot(),
+    fallback: () => { ++epoch; available = false; busy = false; active = false; if (checkpoint) state = checkpoint.state; checkpoint = null; debugSelection = null; clearTransient(); debugUI?.dispose(); achievementUI?.dispose(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };
   debugUI = mountGalleryDebugPanel({ controller, exhibition, canvas });
+  achievementUI = mountAchievementBoard({ achievements, exhibition, canvas, canOpen: () => !disposed && available && (!busy || retry) && gallery.state().phase === 'idle' });
   gallery.setExpedition(controller);
   return controller;
 }

@@ -6,7 +6,7 @@ import { createHarness } from './check-manzokukyo-gallery.mjs';
 assert.deepEqual(newLoop(NaN), newLoop());
 assert.deepEqual(newLoop(-1), newLoop());
 assert.equal(chooseAnomaly(() => 0), null);
-for (const [kind, draw] of [['upside-down', .1], ['negative', .3], ['same-image', .5]]) {
+for (const [kind, draw] of [['upside-down', .1], ['negative', .2], ['same-image', .35]]) {
   const sequence = [.8, draw, .54];
   const anomaly = chooseAnomaly(() => sequence.shift());
   assert.equal(anomaly.kind, kind); assert.equal(anomaly.index, 12);
@@ -64,12 +64,13 @@ globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
 let randomDraw = 0;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
-const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .74 : [.9, .5, .9][randomDraw++ % 3],
+const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .84 : [.9, .35, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
 assert.equal(ui.busy, true); assert.equal(await ui.cross('forward'), false);
 await finish(); assert.equal(ui.busy, false); assert.ok(classes.has('is-gallery-loop')); assert.equal(wakes, 1);
+assert.equal(ui.achievements().encountered, 0, 'preparation cannot reveal a future anomaly');
 function inspectSeal(number) {
   assert.equal(ui.inspect(number - 1), true);
   nodes.get('img').naturalWidth = 600; nodes.get('img').fire('load');
@@ -91,8 +92,10 @@ assert.equal(await ui.cross('back'), false, 'the exit cannot judge while a paint
 inspectSeal(5); assert.equal(ui.collect(), false, 'only one provisional seal fits in each round'); close();
 await ui.cross('forward'); await finish();
 assert.equal(ui.snapshot().heldSeal, null); assert.equal(shared.state().count, 0, 'a wrong exit discards the provisional seal');
+assert.equal(ui.achievements().encountered, 1); assert.equal(ui.achievements().solved, 0, 'completed encounter is recorded even when the judgment was wrong');
 inspectSeal(2); ui.collect(); close();
 await ui.cross('back'); await finish(); assert.equal(ui.snapshot().streak, 1); assert.equal(shared.state().count, 1);
+assert.equal(ui.achievements().solved, 1, 'a correct retreat upgrades the same achievement');
 assert.deepEqual(JSON.parse(shared.store.get('manzokukyo-gallery-seals-v2')), [2], 'the existing saved progress is used');
 inspectSeal(2); assert.equal(ui.collect(), false, 'a confirmed seal cannot be collected again'); close();
 inspectSeal(5); ui.collect(); close();
@@ -139,6 +142,7 @@ inspectSeal(5); assert.equal(ui.collect(), true);
 assert.equal(ui.startDebug({ kind: 'normal' }), false, 'inspection blocks switching'); close();
 const normal = ui.snapshot(), normalExhibition = structuredClone(preparations.at(-1));
 const saves = [...shared.store], bestSave = [...storage];
+const achievementsBeforeDebug = ui.achievements();
 for (const selection of [null, { kind: 'unknown' }, ...[-1, 24, NaN, .5, '1'].map(index => ({ kind: 'frame-hand', index }))]) {
   assert.equal(ui.startDebug(selection), false); assert.deepEqual(ui.snapshot(), normal);
 }
@@ -181,6 +185,7 @@ let leaving = ui.stopDebug(); await finish(); assert.equal(await leaving, true);
 assert.deepEqual(ui.snapshot(), { ...normal, heldSeal: null }, 'original lap and score resume without provisional pickup');
 assert.deepEqual(preparations.at(-1), normalExhibition, 'the original randomly drawn anomaly is restored');
 assert.deepEqual([...shared.store], saves); assert.deepEqual([...storage], bestSave);
+assert.deepEqual(ui.achievements(), achievementsBeforeDebug, 'all debug selections and judgments leave the achievement board unchanged');
 let changing = ui.setMode('gallery'); await finish(); await changing;
 applying = ui.startDebug({ kind: 'normal' }); await finish(); await applying;
 leaving = ui.stopDebug(); await finish(); await leaving;
