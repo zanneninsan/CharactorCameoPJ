@@ -9900,7 +9900,7 @@ function renderLinksMarkdownGroup(title, links) {
 
   return `### ${title}
 
-${links.map((link) => `- ${link.label}: ${link.url}${link.creatorLabel && link.creatorUrl ? ` (by [${link.creatorLabel}](${link.creatorUrl}))` : ""}`).join("\n")}`;
+${links.map((link) => `- ${link.label}: ${link.canonicalUrl ? absoluteUrl(link.canonicalUrl) : link.url}${link.creatorLabel && link.creatorUrl ? ` (by [${link.creatorLabel}](${link.creatorUrl}))` : ""}`).join("\n")}`;
 }
 
 function renderSideFlavorsMarkdown(character) {
