@@ -38,7 +38,7 @@ export function loopExit(position) {
 export function describeAnomaly(anomaly) {
   if (!anomaly) return 'この巡回に異変はありませんでした。';
   if (anomaly.kind === 'frame-hand') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} から、額縁の外へ手が伸びていました。`;
-  if (anomaly.kind === 'giant-darenin') return '奥のアーチから、巨大な誰念院さんの顔がのぞいていました。';
+  if (anomaly.kind === 'giant-darenin') return '奥の扉の前に、巨大な誰念院さんの胸像が現れていました。';
   if (anomaly.kind === 'satisfaction') return '本日の満足度が「あなた以外 100％」になっていました。';
   if (anomaly.kind === 'darenin-rush') return '残念院さんが姿を消し、誰念院さんが4体、横一列で奥から迫ってきました。';
   if (anomaly.kind === 'same-image') return 'すべての額縁が、同じ絵になっていました。';
@@ -232,7 +232,7 @@ export function mountGalleryDebugPanel({ controller, exhibition, canvas }) {
     apply.disabled = !controller.canDebug() || (item?.visitors && !ready);
     leave.hidden = !controller.debug; leave.disabled = !controller.canDebug();
     badge.hidden = !controller.debug;
-    status.textContent = !ready ? 'キャラクターの準備ができるまで、突進と巨大な顔は選べません。' : '読み込み・拡大表示・演出中は切り替えできません。';
+    status.textContent = !ready ? 'キャラクターの準備ができるまで、突進と巨大な誰念院さんは選べません。' : '読み込み・拡大表示・演出中は切り替えできません。';
     for (const trigger of triggers) trigger.disabled = !controller.canDebug();
   }
   function close() { dialog.close(); canvas.focus({ preventScroll: true }); exhibition.wake?.(); }

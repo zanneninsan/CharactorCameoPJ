@@ -215,13 +215,13 @@ function releaseModel(scene) {
   for (const bitmap of bitmaps) bitmap.close();
 }
 
-// Bake only the head from the already loaded rough model. No extra VRM, skin
-// updates, image textures or full-body geometry are needed for the distant face.
-export function createGiantHeadGeometry(T, figure) {
+// Bake the head, shoulders and chest from the loaded model. Clip triangles at
+// the chest line so the bust has a clean base, without an extra animated skin.
+export function createGiantBustGeometry(T, figure) {
   figure.updateMatrixWorld(true);
-  const head = figure.getObjectByName('J_Bip_C_Head');
-  if (!head) throw Error('Darenin head bone is missing');
-  const cutoff = head.getWorldPosition(new T.Vector3()).y - .14;
+  const chest = figure.getObjectByName('J_Bip_C_Chest');
+  if (!chest) throw Error('Darenin chest bone is missing');
+  const cutoff = chest.getWorldPosition(new T.Vector3()).y - .1;
   const positions = [], colors = [], vertex = new T.Vector3();
   figure.traverse(mesh => {
     if (!mesh.isMesh) return;
@@ -231,18 +231,29 @@ export function createGiantHeadGeometry(T, figure) {
     const count = geometry.index?.count ?? vertices.length;
     for (let offset = 0; offset < count; offset += 3) {
       const indices = [0, 1, 2].map(n => geometry.index ? geometry.index.getX(offset + n) : offset + n);
-      if (indices.some(index => vertices[index].y < cutoff)) continue;
-      for (const index of indices) {
-        positions.push(...vertices[index].toArray());
-        colors.push(color ? color.getX(index) : .8, color ? color.getY(index) : .8, color ? color.getZ(index) : .8);
+      const triangle = indices.map(index => ({ p: vertices[index], c: new T.Vector3(color ? color.getX(index) : .8, color ? color.getY(index) : .8, color ? color.getZ(index) : .8) }));
+      const clipped = [];
+      for (let i = 0; i < 3; i++) {
+        const a = triangle[i], b = triangle[(i + 1) % 3];
+        if (a.p.y >= cutoff) clipped.push(a);
+        if ((a.p.y >= cutoff) !== (b.p.y >= cutoff)) {
+          const t = (cutoff - a.p.y) / (b.p.y - a.p.y);
+          clipped.push({ p: a.p.clone().lerp(b.p, t), c: a.c.clone().lerp(b.c, t) });
+        }
+      }
+      for (let i = 1; i + 1 < clipped.length; i++) for (const vertex of [clipped[0], clipped[i], clipped[i + 1]]) {
+        positions.push(...vertex.p.toArray()); colors.push(...vertex.c.toArray());
       }
     }
   });
-  if (!positions.length) throw Error('Darenin head geometry is empty');
+  if (!positions.length) throw Error('Darenin bust geometry is empty');
   const result = new T.BufferGeometry();
   result.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
   result.setAttribute('color', new T.Float32BufferAttribute(colors, 3));
-  result.computeVertexNormals(); result.center(); result.computeBoundingBox(); result.computeBoundingSphere();
+  result.computeVertexNormals(); result.computeBoundingBox();
+  const center = result.boundingBox.getCenter(new T.Vector3());
+  result.translate(-center.x, -result.boundingBox.min.y, -center.z);
+  result.computeBoundingBox(); result.computeBoundingSphere();
   return result;
 }
 
@@ -263,10 +274,17 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
   const official = createGalleryVisitor(T, { scene, figure: results[0].value.scene, kind: 'zannenin', spawn: { x: 1.65, z: -6.4, wait: 3.8 } });
   const template = results[1].value.scene;
   const sharedFinish = new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide });
-  const giantGeometry = createGiantHeadGeometry(T, template);
-  const giant = new T.Mesh(giantGeometry, sharedFinish); giant.name = 'Giant Darenin head';
-  const headSize = giantGeometry.boundingBox.getSize(new T.Vector3());
-  giant.scale.setScalar(4.2 / Math.max(headSize.x, headSize.y, headSize.z));
+  const giantGeometry = createGiantBustGeometry(T, template);
+  const giant = new T.Group(); giant.name = 'Giant Darenin bust';
+  const bust = new T.Mesh(giantGeometry, sharedFinish); bust.name = 'Darenin head shoulders and chest';
+  const bustSize = giantGeometry.boundingBox.getSize(new T.Vector3());
+  const bustScale = 4.25 / bustSize.y;
+  bust.scale.setScalar(bustScale); bust.position.y = 1.65;
+  // A low plinth conceals the cut and anchors the chest in the gallery.
+  const plinthGeometry = new T.BoxGeometry(bustSize.x * bustScale + .18, 1.7, bustSize.z * bustScale + .14);
+  const plinthMaterial = new T.MeshLambertMaterial({ color: 0x24302d });
+  const plinth = new T.Mesh(plinthGeometry, plinthMaterial); plinth.position.y = .85;
+  giant.add(bust, plinth);
   scene.add(giant);
   const copies = rushLanes.map(() => createGalleryVisitor(T, { scene, figure: cloneSkeleton(template), sharedFinish, spawn: { x: -1.65, z: -5.4, wait: 1.8 } }));
   const everyone = [official, ...copies];
@@ -276,7 +294,8 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       if (disposed) return;
       rushing = anomaly?.kind === 'darenin-rush'; rush = createRushState(); step = 0;
       giantActive = anomaly?.kind === 'giant-darenin'; giantTime = 0;
-      giant.visible = giantActive; giant.position.set(-2.15, 3.7, -48.2); giant.rotation.set(0, Math.PI, -.08);
+      giant.visible = giantActive; giant.position.set(-1.1, 0, -60.6); giant.rotation.set(0, Math.PI, 0);
+      bust.rotation.set(0, 0, 0);
       for (const actor of everyone) actor.reset();
       official.setEnabled(!rushing);
       copies.forEach((actor, index) => actor.setEnabled(rushing || index === 0));
@@ -302,18 +321,17 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       giant.visible = giantActive && !options.inspecting;
       if (giantActive && !options.paused && !options.inspecting) {
         if (!options.reduced) giantTime += clamp(Number.isFinite(dt) ? dt : 0, 0, .05);
-        giant.position.x = -2.15 + Math.sin(giantTime * .55) * .18;
-        giant.rotation.y = Math.PI + Math.sin(giantTime * .4) * .09;
+        bust.rotation.y = Math.sin(giantTime * .4) * .045;
         moving = !options.reduced || moving;
       }
       return moving;
     },
     isVisible: () => giant.visible || everyone.some(actor => actor.isVisible()),
-    snapshot: () => ({ loaded: true, count: rushing ? 4 : giantActive ? 3 : 2, people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, position: giant.position.toArray(), yaw: giant.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
+    snapshot: () => ({ loaded: true, count: rushing ? 4 : giantActive ? 3 : 2, people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, framing: 'bust', position: giant.position.toArray(), yaw: giant.rotation.y + bust.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
     dispose() {
       if (disposed) return; disposed = true;
       for (const actor of everyone) actor.dispose();
-      scene.remove(giant); giantGeometry.dispose();
+      scene.remove(giant); giantGeometry.dispose(); plinthGeometry.dispose(); plinthMaterial.dispose();
       releaseModel(template); sharedFinish.dispose();
     },
   };
