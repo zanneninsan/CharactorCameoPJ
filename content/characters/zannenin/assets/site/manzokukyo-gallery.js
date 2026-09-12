@@ -1,3 +1,4 @@
+import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
 const page = document.querySelector('[data-gallery-experience]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const room = window.ManzokukyoRoom;
@@ -169,7 +170,7 @@ function showRecord(index, openingButton) {
   document.querySelector(`[data-gallery-index="${current}"]`).classList.add('is-viewed');
   const base = `../../../assets/manzokukyo/gallery/gallery-${record.id}`;
   dialog.querySelector('[data-gallery-avif]').srcset = '';
-  dialog.querySelector('[data-gallery-image]').src = `${base}.png?${assetVersionQuery}`;
+  loadGalleryImage(dialog.querySelector('[data-gallery-image]'), `${base}.png?${assetVersionQuery}`, undefined, () => { note.textContent = '画像を読み込めませんでした。閉じて、もう一度お試しください。'; });
   dialog.querySelector('[data-gallery-image]').alt = `記録 ${record.id}`;
   dialog.querySelector('[data-gallery-title]').textContent = `ARCHIVE ${record.id}`;
   dialog.querySelector('[data-gallery-shelf]').textContent = record.shelf;
@@ -185,6 +186,7 @@ function showRecord(index, openingButton) {
   return true;
 }
 function closeRecord({ restoreFocus = true } = {}) {
+  cancelGalleryImage(dialog.querySelector('[data-gallery-image]'));
   if (phase === 'collecting') { stopTimeline(); stopSounds(); phase = 'idle'; renderPuzzle(); }
   dialog.close(); syncModalLock(); if (restoreFocus) opener?.focus({ preventScroll: true });
 }

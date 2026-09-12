@@ -2,7 +2,7 @@
 export const walkKeys = { KeyW: 'forward', KeyS: 'back', KeyA: 'left', KeyD: 'right', KeyQ: 'turnLeft', KeyE: 'turnRight', ShiftLeft: 'sprint', ShiftRight: 'sprint' };
 export function galleryFrameZ(index) {
   const room = Math.floor(index / 6), pair = Math.floor((index % 6) / 2);
-  return room === 0 ? -4.8 - pair * 3.6 : -3 - pair * 4.5 - room * 16;
+  return room === 0 ? -6 - pair * 3.6 : -3 - pair * 4.5 - room * 16;
 }
 export function advanceWalk(position, yaw, actions, seconds, exitOffset = 0) {
   const dt = Math.max(0, Math.min(Number.isFinite(seconds) ? seconds : 0, .05));

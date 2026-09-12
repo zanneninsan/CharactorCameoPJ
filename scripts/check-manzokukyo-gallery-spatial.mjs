@@ -4,8 +4,8 @@ import { mountGallerySpatial } from '../content/characters/zannenin/assets/site/
 import { galleryFrameZ, advanceWalk } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-walk.js';
 import { loopExit, chooseAnomaly, judgeLoop, newLoop } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 
-assert.equal(galleryFrameZ(0), -4.8); assert.equal(galleryFrameZ(1), -4.8);
-assert.equal(galleryFrameZ(4), -12); assert.equal(galleryFrameZ(6), -19);
+assert.equal(galleryFrameZ(0), -6); assert.equal(galleryFrameZ(1), -6);
+assert.equal(galleryFrameZ(4), -13.2); assert.equal(galleryFrameZ(6), -19);
 for (let i = 0; i < 22; i += 2) assert.ok(galleryFrameZ(i) - galleryFrameZ(i + 2) > 3.5, 'full frames do not overlap after making entrance space');
 const scene = new T.Scene(), exitGroup = new T.Group(), extension = new T.Group(); scene.add(exitGroup, extension);
 const frames = Array.from({ length: 24 }, (_, index) => {

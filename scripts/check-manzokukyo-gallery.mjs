@@ -1,3 +1,4 @@
+import { loadGalleryImage, cancelGalleryImage } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-image.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -53,13 +54,15 @@ function declaration(marker) {
 
 class Element {
   constructor() {
-    this.children = new Map(); this.attributes = new Map(); this.dataset = {}; this.hidden = false;
+    this.style = {}; this.events = new Map(); this.children = new Map(); this.attributes = new Map(); this.dataset = {}; this.hidden = false;
     this.disabled = false; this.open = false; this.value = ''; this.textContent = '';
     this.offsetWidth = 600; this.href = 'https://example.test/zannenin/manzokukyo/truth/red-house/';
     const classes = new Set();
     this.classList = { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)),
       contains: name => classes.has(name), toggle: (name, force = !classes.has(name)) => { if (force) classes.add(name); else classes.delete(name); return force; } };
   }
+  addEventListener(name, fn) { this.events.set(name, fn); }
+  removeEventListener(name) { this.events.delete(name); }
   querySelector(selector) { if (!this.children.has(selector)) this.children.set(selector, new Element()); return this.children.get(selector); }
   querySelectorAll(selector) { if (selector === '.gallery-orbit-seal strong') return Array.from({ length: 6 }, (_, index) => this.querySelector(`${selector}:${index}`)); return []; }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
@@ -95,7 +98,7 @@ export function createHarness({ saved = {}, blockedStorage = false, reduced = fa
     setMusicVolume(value) { soundMutations.push('musicVolume'); audioState.musicVolume = value; },
     setEffectsVolume(value) { soundMutations.push('effectsVolume'); audioState.effectsVolume = value; } };
   const sandbox = {
-    console, ...elements, records, assetVersionQuery,
+    console, loadGalleryImage, cancelGalleryImage, ...elements, records, assetVersionQuery,
     seals: records.filter(record => record.seal).sort((a, b) => a.seal.order - b.seal.order),
     reducedMotion: { matches: reduced }, document, sound: sharedSound,
     room: { navigate: destination => navigation.push(destination) },

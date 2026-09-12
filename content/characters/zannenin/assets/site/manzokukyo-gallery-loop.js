@@ -1,3 +1,4 @@
+import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
 import { createGalleryAchievements, mountAchievementBoard } from './manzokukyo-gallery-achievements.js';
 const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait'];
 export const galleryDebugOptions = [
@@ -151,10 +152,15 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     const appearance = paintingAppearance(index, state.anomaly);
     image.style.transform = appearance.upsideDown ? 'rotate(180deg)' : '';
     image.style.filter = appearance.negative ? 'invert(1)' : '';
-    image.src = new URL(`../../../assets/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.png?${assetVersionQuery}`, document.baseURI).href;
+    loadGalleryImage(image, new URL(`../../../assets/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.png?${assetVersionQuery}`, document.baseURI).href, () => {
+      if (!modal.open || inspected !== index) return;
+      imageReady = true; renderInspection();
+    }, () => {
+      if (!modal.open || inspected !== index) return;
+      imageReady = false; renderInspection(); sealNote.textContent = '画像を読み込めませんでした。閉じて、もう一度お試しください。';
+    });
     image.alt = `展示中の記録 ${String(index + 1).padStart(2, '0')}`;
     modal.querySelector('[data-gallery-loop-inspection-title]').textContent = `記録 ${String(index + 1).padStart(2, '0')}`;
-    imageReady = image.complete && image.naturalWidth > 0;
     renderInspection();
     modal.showModal(); gallery.play('gallery-reveal', { level: .35 });
     return true;
@@ -165,7 +171,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     collectButton.hidden = !record?.seal;
     collectButton.disabled = !imageReady || state.round === 0 || heldSeal !== null || filed || !active || busy;
     collectButton.textContent = filed ? '持ち帰り済み' : heldSeal === record?.number ? `仮押し「${record.seal.fragment}」` : '⊹ 検印を仮押しする';
-    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : debugSelection ? 'DEBUG / 仮押しを試せます。検印・最高記録は保存されません。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。正しい扉を選ぶと、検印帳に残ります。' : '仮押しした後も、回廊をよく観察。異変があれば引き返してください。';
+    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : debugSelection ? 'DEBUG / 仮押しを試せます。検印・最高記録は保存されません。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。正しい扉を選ぶと、検印帳に残ります。' : '';
     modal.setAttribute('data-held', String(record?.number === heldSeal));
   }
   function collect() {
@@ -175,18 +181,16 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     gallery.play('gallery-collect', { level: .7, rate: .95 + record.seal.order * .015 });
     return true;
   }
-  function closeInspection() { modal.close(); canvas.focus({ preventScroll: true }); }
+  function closeInspection() { cancelGalleryImage(image); modal.close(); canvas.focus({ preventScroll: true }); }
   modal.querySelector('[data-gallery-loop-inspection-close]').addEventListener('click', closeInspection);
   collectButton.addEventListener('click', collect);
   modal.addEventListener('cancel', event => { event.preventDefault(); closeInspection(); });
   modal.addEventListener('click', event => { if (event.target === modal) closeInspection(); });
-  image.addEventListener('load', () => { if (!modal.open || inspected === null) return; imageReady = image.naturalWidth > 0; renderInspection(); });
-  image.addEventListener('error', () => { if (!modal.open || inspected === null) return; imageReady = false; renderInspection(); sealNote.textContent = '画像を読み込めませんでした。閉じて、もう一度お試しください。'; });
   function canDebug() {
     const open = document.querySelector('dialog[open]');
     return available && !disposed && (!busy || retry) && gallery.state().phase === 'idle' && (!open || open === document.querySelector('[data-gallery-debug]'));
   }
-  function clearTransient() { heldSeal = null; inspected = null; imageReady = false; modal.close(); exhibition.stop(); }
+  function clearTransient() { cancelGalleryImage(image); heldSeal = null; inspected = null; imageReady = false; modal.close(); exhibition.stop(); }
   function startDebug(value) {
     const selection = validateDebugSelection(value);
     if (!canDebug() || !selection || (galleryDebugOptions.find(option => option.kind === selection.kind).visitors && !exhibition.hasVisitors?.())) return false;
@@ -204,10 +208,10 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     if (disposed || !['loop', 'gallery'].includes(mode) || (busy && !retry)) return false;
     if (debugSelection) { state = checkpoint.state; checkpoint = null; debugSelection = null; }
     active = mode === 'loop'; clearTransient();
-    if (active) state = newLoop(state.best);
+    state = newLoop(state.best);
     return prepare(active ? '正常な展示を開いています' : '作品鑑賞へ', active ? '最初の一周で、絵の配置を覚えてください。' : '異変を解除しています。');
   }
-  for (const choice of choices) choice.addEventListener('click', () => { void setMode(choice.getAttribute('data-gallery-loop-mode')); });
+  for (const choice of choices) choice.addEventListener('click', () => { const mode = choice.getAttribute('data-gallery-loop-mode'); if ((mode === 'loop') !== active) void setMode(mode); });
   function reset() { clearTransient(); if (debugSelection) { void prepare('DEBUG / 同じ展示を再開', '仮押しを破棄しました。保存済みの検印は変更しません。'); return; } state = newLoop(state.best); if (active) void prepare('初回の展示へ', '検印と連続正解をリセットしました。最高記録は残っています。'); else { render(); canvas.focus({ preventScroll: true }); } }
   q('[data-gallery-loop-restart]').addEventListener('click', () => { if (!busy) gallery.resetGallery(); });
   q('[data-gallery-loop-ledger]').addEventListener('click', () => { exhibition.stop(); document.querySelector('[data-ledger-toggle]').click(); });
@@ -222,7 +226,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     achievements: () => achievements.snapshot(),
     fallback: () => { ++epoch; available = false; busy = false; active = false; if (checkpoint) state = checkpoint.state; checkpoint = null; debugSelection = null; clearTransient(); debugUI?.dispose(); achievementUI?.dispose(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };
   debugUI = mountGalleryDebugPanel({ controller, exhibition, canvas });
-  achievementUI = mountAchievementBoard({ achievements, exhibition, canvas, canOpen: () => !disposed && available && (!busy || retry) && gallery.state().phase === 'idle' });
+  achievementUI = mountAchievementBoard({ achievements, exhibition, canvas, isViewing: () => !active, enterViewing: () => setMode('gallery'), canOpen: () => !disposed && available && (!busy || retry) && gallery.state().phase === 'idle' });
   gallery.setExpedition(controller);
   return controller;
 }

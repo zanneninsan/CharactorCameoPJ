@@ -26,27 +26,45 @@ export function createGalleryAchievements(options, storage) {
   };
 }
 
-export function mountAchievementBoard({ achievements, canvas, exhibition, canOpen }) {
+export function mountAchievementBoard({ achievements, canvas, exhibition, canOpen, isViewing = () => false, enterViewing }) {
   const dialog = document.querySelector('[data-gallery-achievements]');
   if (!dialog) return null;
   const triggers = [...document.querySelectorAll('[data-gallery-achievements-open]')];
   const cards = [...dialog.querySelectorAll('[data-achievement-card]')];
+  const viewing = dialog.querySelector('[data-achievements-viewing]');
+  const confirmation = dialog.querySelector('[data-viewing-confirm]');
+  const accept = dialog.querySelector('[data-viewing-accept]');
+  const cancel = dialog.querySelector('[data-viewing-cancel]');
+  let disposed = false;
   function render() {
+    if (disposed) return;
     const state = achievements.snapshot();
     for (const trigger of triggers) { trigger.textContent = `実績 ${state.encountered} / ${state.total}`; trigger.disabled = !canOpen(); }
     dialog.querySelector('[data-achievement-count]').textContent = `遭遇 ${state.encountered} / ${state.total}　看破 ${state.solved} / ${state.total}`;
     dialog.querySelector('[data-achievement-complete]').hidden = state.solved !== state.total;
+    if (viewing) { viewing.disabled = !canOpen() || isViewing(); viewing.textContent = isViewing() ? '作品鑑賞中' : '作品鑑賞'; }
     state.entries.forEach((entry, i) => {
       cards[i].setAttribute('data-level', String(entry.level));
       cards[i].querySelector('strong').textContent = entry.label;
       cards[i].querySelector('small').textContent = ['未遭遇', '遭遇済み', '看破済み'][entry.level];
     });
   }
-  function open() { if (!canOpen() || document.querySelector('dialog[open]')) return; exhibition.stop(); render(); dialog.showModal(); }
-  function close() { dialog.close(); canvas.focus({ preventScroll: true }); exhibition.wake?.(); }
+  function resetConfirmation() { if (confirmation) confirmation.hidden = true; }
+  function open() { if (disposed || !canOpen() || document.querySelector('dialog[open]')) return; resetConfirmation(); exhibition.stop(); render(); dialog.showModal(); }
+  function close() { resetConfirmation(); dialog.close(); canvas.focus({ preventScroll: true }); exhibition.wake?.(); }
+  viewing?.addEventListener('click', () => {
+    if (disposed || !dialog.open || !canOpen() || isViewing()) return;
+    confirmation.hidden = false; cancel.focus();
+  });
+  cancel?.addEventListener('click', () => { resetConfirmation(); viewing.focus(); });
+  accept?.addEventListener('click', () => {
+    if (disposed || !dialog.open || confirmation.hidden || !canOpen() || isViewing()) return;
+    // Only the explicit confirmation mutates the round and discards its held seal.
+    close(); void enterViewing();
+  });
   for (const trigger of triggers) trigger.addEventListener('click', open);
   dialog.querySelector('[data-achievements-close]').addEventListener('click', close);
-  dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  dialog.addEventListener('cancel', event => { event.preventDefault(); if (confirmation && !confirmation.hidden) { resetConfirmation(); viewing.focus(); } else close(); });
   render();
-  return { render, dispose() { dialog.close(); for (const trigger of triggers) trigger.removeEventListener('click', open); } };
+  return { render, dispose() { disposed = true; resetConfirmation(); dialog.close(); for (const trigger of triggers) trigger.removeEventListener('click', open); } };
 }

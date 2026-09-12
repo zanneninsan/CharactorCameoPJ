@@ -32,6 +32,9 @@ assert.throws(() => judgeLoop(state, 'left'));
 
 // Exercise the actual round controller with deferred image readiness and time.
 const page = renderGallery3DExperience({ id: 'zannenin', theme: {} }, { htmlPage: value => value, escapeHtml: String, assetVersionQuery: 'test' });
+assert.doesNotMatch(page.body, /data-gallery-loop-mode="gallery"/);
+assert.match(page.body.match(/<dialog class="gallery-achievements"[\s\S]*?<\/dialog>/)[0], /data-achievements-viewing[\s\S]*連続正解が 0/);
+assert.doesNotMatch(page.body, /いつもは残念院さんと誰念院さん/);
 const { records } = JSON.parse(page.body.match(/<script type="application\/json" data-gallery-records>([\s\S]*?)<\/script>/)[1]);
 const shared = createHarness({ saved: { 'other-room': 'keep-me' } });
 const markup = [...page.body.matchAll(/<[a-z][^>]*\bdata-gallery-loop[^>]*>/g)].map(match => match[0]);
@@ -42,6 +45,7 @@ class Element {
   getAttribute(name) { return this.attributes.get(name); }
   setAttribute(name, value) { this.attributes.set(name, value); }
   addEventListener(name, fn) { this.events.set(name, fn); }
+  removeEventListener(name) { this.events.delete(name); }
   fire(name, data = {}) { this.events.get(name)?.({ target: this, preventDefault() {}, ...data }); }
   showModal() { this.open = true; }
   close() { this.open = false; }
@@ -112,7 +116,9 @@ imageErrors = false; nodes.get('[data-gallery-loop-retry]').fire('click'); await
 assert.equal(ui.snapshot().round, beforeError.round, 'retrying images does not reroll or judge a round');
 await ui.cross('back'); await finish(); assert.equal(shared.state().count, 2);
 inspectSeal(9); ui.collect(); close();
+const beforeViewing = ui.snapshot(); assert.ok(beforeViewing.streak > 0);
 const switching = ui.setMode('gallery'); await finish(); await switching;
+assert.equal(ui.snapshot().streak, 0); assert.equal(ui.snapshot().best, beforeViewing.best);
 assert.equal(ui.active, false); assert.equal(preparations.at(-1).anomaly, null); assert.ok(!classes.has('is-gallery-loop'));
 assert.equal(ui.snapshot().heldSeal, null); assert.equal(shared.state().count, 2, 'changing modes discards only the provisional seal');
 shared.call('showRecord', 8); assert.equal(shared.elements.collect.hidden, true);

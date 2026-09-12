@@ -516,7 +516,7 @@ function createExhibition(T) {
       if (disposed || lost) { next.dispose(); return; }
       visitor = next; visitorLoading = false; visitor.setAnomaly(anomaly);
       loop?.refreshDebug();
-      visitorNote.textContent = 'いつもは残念院さんと誰念院さんが、一人ずつ散策しています。人数や様子もよく見て。';
+      visitorNote.textContent = '';
       wake();
     } catch (error) {
       if (disposed || lost) return;

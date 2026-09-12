@@ -15,6 +15,12 @@
 .gallery-achievement-grid [data-level="2"] small { color: #f5d988; }
 .gallery-achievements .gallery-achievement-complete { padding: 18px; border: 1px solid #ebcc80; background: linear-gradient(100deg, #62442e, #503656); color: #fff0b8; text-align: center; font-size: 16px; }
 .gallery-achievements [hidden] { display: none !important; }
+.gallery-achievement-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.gallery-achievements [data-achievements-viewing] { background: transparent; color: #dfc898; }
+.gallery-achievements button:disabled { opacity: .5; cursor: default; }
+.gallery-viewing-confirm { margin-top: 18px; padding: 18px; border: 1px solid #e8aa87; border-radius: 6px; background: #4b3033; }
+.gallery-viewing-confirm h3 { margin: 0; font-size: 17px; }
+.gallery-visitor-note:empty, [data-gallery-loop-seal-note]:empty { display: none; }
 .gallery-achievements button { min-height: 44px; padding: 10px 18px; border: 1px solid #d9bd7f; border-radius: 4px; background: #ddc48b; color: #172323; cursor: pointer; }
 @media (max-width: 560px) { .gallery-achievements { padding: 18px; } .gallery-achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gallery-achievement-grid article { padding: 12px; } }
 .gallery-loop-ui { width: var(--gallery-3d-width); margin: 0 auto 16px; color: #eee3c9; }
