@@ -149,6 +149,7 @@ function renderPuzzle() {
   exit.textContent = cleared ? '赤い懺悔室へ進む →' : '検印を照合すると扉が開く';
 }
 function resetGallery() {
+  if (expedition?.debug) { if (!expedition.busy) expedition.reset(); return; }
   stopTimeline(); stopSounds();
   dialog.close(); ceremony.close(); syncModalLock();
   found.clear(); viewed.clear(); cleared = false; current = 0; phase = 'idle'; ceremonyKind = undefined; opener = null;
@@ -229,6 +230,7 @@ function closeCeremony() {
   scrollToArea(ceremonyKind === 'release' ? exit : answer);
 }
 function submitWord(value) {
+  if (expedition?.debug) { message.textContent = 'デバッグを終了してから、扉を呼んでください。'; return { accepted: false, unavailable: true }; }
   if (found.size !== 6 || cleared || phase !== 'idle' || dialog.open || ceremony.open) return { accepted: false, unavailable: true };
   if (typeof value !== 'string' || value.length > 32) throw Error('Enter a word of at most 32 characters');
   answer.value = value;

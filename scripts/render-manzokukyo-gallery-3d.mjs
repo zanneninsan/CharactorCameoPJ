@@ -1,4 +1,5 @@
 import { renderGalleryExperience } from './render-manzokukyo-gallery.mjs';
+import { galleryDebugOptions } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 
 // Keep the record data, lightbox, seals and puzzle controller identical to the
 // archived flat gallery source. Only the 3D experience is published now.
@@ -34,6 +35,9 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
   body = body.replace('<main class="gallery-page gallery-3d-page"', `<link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-3d.css?${assetVersionQuery}">\n      <main class="gallery-page gallery-3d-page"`);
   body += `\n      <script type="module" src="../../../assets/site/manzokukyo-gallery-3d.js?${assetVersionQuery}"></script>\n`;
   body += `<dialog class="gallery-loop-inspection" data-gallery-loop-inspection aria-labelledby="gallery-loop-inspection-title"><div><img alt="展示中の記録"><footer><strong id="gallery-loop-inspection-title" data-gallery-loop-inspection-title></strong><button type="button" data-gallery-loop-collect hidden>⊹ 検印を仮押しする</button><button type="button" data-gallery-loop-inspection-close>展示室へ戻る</button><p data-gallery-loop-seal-note role="status"></p></footer></div></dialog>`;
+  body = body.replace('</div></details><div class="gallery-loop-count">', '<button type="button" data-debug-open>異変デバッグ（P）</button></div></details><div class="gallery-loop-count">');
+  body = body.replace('<div class="gallery-loop-bag"', '<button type="button" class="gallery-debug-active" data-debug-active data-debug-open hidden>DEBUG · 異変を選ぶ（P）</button><div class="gallery-loop-bag"');
+  body += `<dialog class="gallery-debug" data-gallery-debug aria-labelledby="gallery-debug-title"><header><span>GALLERY / DEBUG</span><h2 id="gallery-debug-title">体験する異変を選ぶ</h2></header><label>異変<select data-debug-kind>${galleryDebugOptions.map(option => `<option value="${option.kind}">${option.label}</option>`).join('')}</select></label><label>対象の記録（「全部同じ絵」では使用する画像）<select data-debug-record>${Array.from({ length: 24 }, (_, index) => `<option value="${index + 1}">記録 ${String(index + 1).padStart(2, '0')}</option>`).join('')}</select></label><p>切り替えは入口から。仮押しは破棄します。デバッグ中は検印・最高記録を保存しません。終了すると元のモード・周回へ、入口から戻ります。</p><p data-debug-status role="status"></p><footer><button type="button" data-debug-apply>この展示を体験</button><button type="button" data-debug-exit hidden>デバッグを終了</button><button type="button" data-debug-close>閉じる</button></footer><small>通常プレイ中に P で開く / Esc で閉じる</small></dialog>`;
   const options = {
     ...original,
     title: '記憶の画廊 | 満足教',

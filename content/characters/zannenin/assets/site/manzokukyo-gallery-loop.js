@@ -1,4 +1,14 @@
 const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand'];
+export const galleryDebugOptions = [
+  ['normal', '異変なし'], ['upside-down', '絵が逆さま', true], ['negative', '絵の色が反転', true],
+  ['same-image', '全部同じ絵', true], ['satisfaction', '満足度の掲示'], ['frame-hand', '額縁の外の手', true],
+  ['darenin-rush', '誰念院さん4体の突進', false, true], ['giant-darenin', '巨大な誰念院さん', false, true],
+].map(([kind, label, record = false, visitors = false]) => ({ kind, label, record, visitors }));
+export function validateDebugSelection(value) {
+  const option = galleryDebugOptions.find(option => option.kind === value?.kind);
+  if (!option || (option.record && (!Number.isInteger(value.index) || value.index < 0 || value.index >= 24))) return null;
+  return option.record ? { kind: option.kind, index: value.index } : { kind: option.kind };
+}
 export function satisfactionLabel(anomaly) { return anomaly?.kind === 'satisfaction' ? 'あなた以外 100％' : '100％'; }
 export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
@@ -48,6 +58,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   try { savedBest = Number(localStorage.getItem(bestKey)); } catch {}
   let state = newLoop(savedBest), active = true, busy = true, epoch = 0, disposed = false, retry = false;
   let heldSeal = null, inspected = null, imageReady = false;
+  let debugSelection = null, checkpoint = null, debugUI = null, available = true;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   function render() {
@@ -55,7 +66,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     panel.hidden = !active;
     q('[data-gallery-loop-bag]').hidden = !active;
     for (const choice of choices) { choice.setAttribute('aria-pressed', String((choice.getAttribute('data-gallery-loop-mode') === 'loop') === active)); choice.disabled = busy; }
-    q('[data-gallery-loop-round]').textContent = state.round === 0 ? '初回 / 正常な展示' : `巡回 ${String(state.round).padStart(2, '0')}`;
+    q('[data-gallery-loop-round]').textContent = debugSelection ? `DEBUG / ${galleryDebugOptions.find(option => option.kind === debugSelection.kind).label}${Number.isInteger(debugSelection.index) ? ` / ${debugSelection.index + 1}` : ''}` : state.round === 0 ? '初回 / 正常な展示' : `巡回 ${String(state.round).padStart(2, '0')}`;
     q('[data-gallery-loop-streak]').textContent = String(state.streak).padStart(2, '0');
     q('[data-gallery-loop-best]').textContent = String(state.best).padStart(2, '0');
     q('[data-gallery-loop-restart]').disabled = busy;
@@ -71,6 +82,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       slot.setAttribute('data-status', filed ? 'filed' : held ? 'held' : 'empty');
       slot.setAttribute('aria-label', filed ? `持ち帰り済み「${record.seal.fragment}」` : held ? `仮押し「${record.seal.fragment}」` : '未回収');
     }
+    debugUI?.render();
   }
   function notice(title, text, result = 'loading') {
     veil.hidden = false; veil.setAttribute('data-result', result);
@@ -82,7 +94,8 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   async function prepare(title, note, result = 'loading', duration = 0) {
     const token = ++epoch;
     busy = true; retry = false; exhibition.stop(); render(); notice(title, note, result);
-    const [ready] = await Promise.all([exhibition.prepareLoop(active ? state.anomaly : null, state.round), delay(reduced.matches ? Math.min(duration, 450) : duration)]).catch(() => [false]);
+    let ready = false;
+    try { [ready] = await Promise.all([exhibition.prepareLoop(active ? state.anomaly : null, state.round), delay(reduced.matches ? Math.min(duration, 450) : duration)]); } catch {}
     if (disposed || token !== epoch) return false;
     if (!ready) {
       retry = true;
@@ -90,9 +103,10 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       q('[data-gallery-loop-retry]').hidden = false;
       // Switching to the accessible catalog remains possible after a graphics failure.
       for (const choice of choices) choice.disabled = false;
+      debugUI?.render();
       return false;
     }
-    busy = false; veil.hidden = true; render(); canvas.focus({ preventScroll: true }); exhibition.wake?.();
+    busy = false; veil.hidden = true; render(); if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true }); exhibition.wake?.();
     return true;
   }
   async function cross(direction) {
@@ -101,7 +115,13 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       void prepare('展示を確認しています', '画像を読み込み直しています。この巡回の判定と展示内容は変わりません。');
       return false;
     }
-    const verdict = judgeLoop(state, direction, random, { visitorsReady: exhibition.hasVisitors?.() === true });
+    const verdict = judgeLoop(state, direction, debugSelection ? () => 0 : random, { visitorsReady: exhibition.hasVisitors?.() === true });
+    if (debugSelection) {
+      heldSeal = null;
+      gallery.play(verdict.correct ? 'gallery-unseal' : 'transmission', { level: .5 });
+      void prepare(verdict.correct ? 'DEBUG / 判断は正解' : 'DEBUG / 判断は不正解', `${describeAnomaly(state.anomaly)} 検印・記録は保存せず、同じ異変で再開します。`, verdict.correct ? 'correct' : 'wrong', 1500);
+      return true;
+    }
     const carried = heldSeal;
     const confirmed = verdict.correct && carried !== null ? gallery.confirmSeal(carried) : null;
     heldSeal = null;
@@ -114,7 +134,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     return true;
   }
   function inspect(index) {
-    if (!active || busy || !Number.isInteger(index) || index < 0 || index >= records.length || modal.open) return false;
+    if (!active || busy || !Number.isInteger(index) || index < 0 || index >= records.length || document.querySelector('dialog[open]')) return false;
     exhibition.stop();
     inspected = index; imageReady = false;
     const appearance = paintingAppearance(index, state.anomaly);
@@ -134,7 +154,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     collectButton.hidden = !record?.seal;
     collectButton.disabled = !imageReady || state.round === 0 || heldSeal !== null || filed || !active || busy;
     collectButton.textContent = filed ? '持ち帰り済み' : heldSeal === record?.number ? `仮押し「${record.seal.fragment}」` : '⊹ 検印を仮押しする';
-    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。正しい扉を選ぶと、検印帳に残ります。' : '仮押しした後も、回廊をよく観察。異変があれば引き返してください。';
+    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : debugSelection ? 'DEBUG / 仮押しを試せます。検印・最高記録は保存されません。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。正しい扉を選ぶと、検印帳に残ります。' : '仮押しした後も、回廊をよく観察。異変があれば引き返してください。';
     modal.setAttribute('data-held', String(record?.number === heldSeal));
   }
   function collect() {
@@ -149,28 +169,101 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   collectButton.addEventListener('click', collect);
   modal.addEventListener('cancel', event => { event.preventDefault(); closeInspection(); });
   modal.addEventListener('click', event => { if (event.target === modal) closeInspection(); });
-  image.addEventListener('load', () => { imageReady = image.naturalWidth > 0; renderInspection(); });
-  image.addEventListener('error', () => { imageReady = false; renderInspection(); sealNote.textContent = '画像を読み込めませんでした。閉じて、もう一度お試しください。'; });
+  image.addEventListener('load', () => { if (!modal.open || inspected === null) return; imageReady = image.naturalWidth > 0; renderInspection(); });
+  image.addEventListener('error', () => { if (!modal.open || inspected === null) return; imageReady = false; renderInspection(); sealNote.textContent = '画像を読み込めませんでした。閉じて、もう一度お試しください。'; });
+  function canDebug() {
+    const open = document.querySelector('dialog[open]');
+    return available && !disposed && (!busy || retry) && gallery.state().phase === 'idle' && (!open || open === document.querySelector('[data-gallery-debug]'));
+  }
+  function clearTransient() { heldSeal = null; inspected = null; imageReady = false; modal.close(); exhibition.stop(); }
+  function startDebug(value) {
+    const selection = validateDebugSelection(value);
+    if (!canDebug() || !selection || (galleryDebugOptions.find(option => option.kind === selection.kind).visitors && !exhibition.hasVisitors?.())) return false;
+    if (!debugSelection) checkpoint = { state: { ...state }, active };
+    debugSelection = selection; clearTransient(); active = true;
+    state = { round: 1, streak: 0, best: checkpoint.state.best, anomaly: selection.kind === 'normal' ? null : { ...selection } };
+    return prepare('DEBUG / 展示を切り替えています', '入口から再開します。仮押しは破棄し、保存済みの検印と記録は変更しません。');
+  }
+  function stopDebug() {
+    if (!debugSelection || !canDebug()) return false;
+    clearTransient(); state = checkpoint.state; active = checkpoint.active; checkpoint = null; debugSelection = null;
+    return prepare('元の展示へ戻っています', '元の周回を入口から再開します。切り替え前の仮押しは復元しません。');
+  }
   async function setMode(mode) {
-    if (!['loop', 'gallery'].includes(mode) || (busy && !retry)) return false;
-    ++epoch; active = mode === 'loop'; heldSeal = null; modal.close(); exhibition.stop();
-    if (active) { state = newLoop(state.best); await prepare('正常な展示を開いています', '最初の一周で、絵の配置を覚えてください。'); }
-    else { busy = false; retry = false; veil.hidden = true; render(); await exhibition.prepareLoop(null, 0); }
-    return true;
+    if (disposed || !['loop', 'gallery'].includes(mode) || (busy && !retry)) return false;
+    if (debugSelection) { state = checkpoint.state; checkpoint = null; debugSelection = null; }
+    active = mode === 'loop'; clearTransient();
+    if (active) state = newLoop(state.best);
+    return prepare(active ? '正常な展示を開いています' : '作品鑑賞へ', active ? '最初の一周で、絵の配置を覚えてください。' : '異変を解除しています。');
   }
   for (const choice of choices) choice.addEventListener('click', () => { void setMode(choice.getAttribute('data-gallery-loop-mode')); });
-  function reset() { heldSeal = null; state = newLoop(state.best); if (active) void prepare('初回の展示へ', '検印と連続正解をリセットしました。最高記録は残っています。'); else { render(); canvas.focus({ preventScroll: true }); } }
+  function reset() { clearTransient(); if (debugSelection) { void prepare('DEBUG / 同じ展示を再開', '仮押しを破棄しました。保存済みの検印は変更しません。'); return; } state = newLoop(state.best); if (active) void prepare('初回の展示へ', '検印と連続正解をリセットしました。最高記録は残っています。'); else { render(); canvas.focus({ preventScroll: true }); } }
   q('[data-gallery-loop-restart]').addEventListener('click', () => { if (!busy) gallery.resetGallery(); });
   q('[data-gallery-loop-ledger]').addEventListener('click', () => { exhibition.stop(); document.querySelector('[data-ledger-toggle]').click(); });
   q('[data-gallery-loop-retry]').addEventListener('click', () => { void prepare('展示を読み込み直しています', 'この巡回の内容は変わりません。'); });
   q('[data-gallery-loop-ui]').hidden = false;
-  window.addEventListener('pagehide', event => { if (!event.persisted) { disposed = true; ++epoch; } });
+  window.addEventListener('pagehide', event => { if (!event.persisted) { disposed = true; ++epoch; debugUI?.dispose(); } });
   render();
   // Let the caller install the controller before the asynchronous preparation.
   queueMicrotask(() => { void prepare('正常な展示を開いています', '最初の一周で、絵の配置を覚えてください。'); });
-  const controller = { get active() { return active; }, get busy() { return busy; }, inspect, collect, closeInspection, cross, setMode, reset,
-    snapshot: () => ({ active, busy, round: state.round, streak: state.streak, best: state.best, baseline: state.round === 0, inspectionOpen: modal.open, inspectedRecord: modal.open ? records[inspected]?.number : null, heldSeal, filedSeals: gallery.state().count }),
-    fallback: () => { ++epoch; busy = false; active = false; heldSeal = null; modal.close(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };
+  const controller = { get active() { return active; }, get busy() { return busy; }, get debug() { return Boolean(debugSelection); }, inspect, collect, closeInspection, cross, setMode, reset, canDebug, startDebug, stopDebug, refreshDebug: () => debugUI?.render(),
+    snapshot: () => ({ active, busy, debug: debugSelection ? { ...debugSelection } : null, round: state.round, streak: state.streak, best: state.best, baseline: state.round === 0, inspectionOpen: modal.open, inspectedRecord: modal.open ? records[inspected]?.number : null, heldSeal, filedSeals: gallery.state().count }),
+    fallback: () => { ++epoch; available = false; busy = false; active = false; if (checkpoint) state = checkpoint.state; checkpoint = null; debugSelection = null; clearTransient(); debugUI?.dispose(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };
+  debugUI = mountGalleryDebugPanel({ controller, exhibition, canvas });
   gallery.setExpedition(controller);
   return controller;
+}
+
+export function mountGalleryDebugPanel({ controller, exhibition, canvas }) {
+  const dialog = document.querySelector('[data-gallery-debug]');
+  if (!dialog) return null;
+  const select = dialog.querySelector('[data-debug-kind]'), record = dialog.querySelector('[data-debug-record]');
+  const apply = dialog.querySelector('[data-debug-apply]'), leave = dialog.querySelector('[data-debug-exit]');
+  const status = dialog.querySelector('[data-debug-status]');
+  const badge = document.querySelector('[data-debug-active]');
+  const triggers = [...document.querySelectorAll('[data-debug-open]')];
+  let disposed = false;
+  function render() {
+    if (disposed) return;
+    const ready = exhibition.hasVisitors?.() === true;
+    for (const option of select.querySelectorAll('option')) option.disabled = galleryDebugOptions.find(item => item.kind === option.value)?.visitors && !ready;
+    const item = galleryDebugOptions.find(item => item.kind === select.value);
+    record.disabled = !item?.record;
+    apply.disabled = !controller.canDebug() || (item?.visitors && !ready);
+    leave.hidden = !controller.debug; leave.disabled = !controller.canDebug();
+    badge.hidden = !controller.debug;
+    status.textContent = !ready ? 'キャラクターの準備ができるまで、突進と巨大な顔は選べません。' : '読み込み・拡大表示・演出中は切り替えできません。';
+    for (const trigger of triggers) trigger.disabled = !controller.canDebug();
+  }
+  function close() { dialog.close(); canvas.focus({ preventScroll: true }); exhibition.wake?.(); }
+  function open() {
+    if (disposed || !controller.canDebug()) return;
+    exhibition.stop();
+    const selected = controller.snapshot().debug;
+    if (selected) { select.value = selected.kind; record.value = String((selected.index ?? 0) + 1); }
+    render(); dialog.showModal(); select.focus();
+  }
+  function key(event) {
+    if (disposed || event.repeat || event.isComposing || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || event.target?.closest?.('input,textarea,select,[contenteditable]')) return;
+    if (event.code !== 'KeyP' && event.key?.toLowerCase() !== 'p') return;
+    if (dialog.open) { event.preventDefault(); close(); }
+    else if (controller.canDebug()) { event.preventDefault(); open(); }
+  }
+  select.addEventListener('change', render);
+  apply.addEventListener('click', () => {
+    const result = controller.startDebug({ kind: select.value, index: Number(record.value) - 1 });
+    if (result === false) { render(); return; }
+    dialog.close(); void result;
+  });
+  leave.addEventListener('click', () => {
+    const result = controller.stopDebug();
+    if (result === false) { render(); return; }
+    dialog.close(); void result;
+  });
+  dialog.querySelector('[data-debug-close]').addEventListener('click', close);
+  dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  for (const trigger of triggers) trigger.addEventListener('click', open);
+  window.addEventListener('keydown', key);
+  render();
+  return { render, dispose() { if (disposed) return; disposed = true; dialog.close(); window.removeEventListener('keydown', key); for (const trigger of triggers) trigger.removeEventListener('click', open); badge.hidden = true; } };
 }

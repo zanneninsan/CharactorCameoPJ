@@ -494,11 +494,13 @@ function createExhibition(T) {
       }, onStep: (name, options) => gallery.play(name, options) });
       if (disposed || lost) { next.dispose(); return; }
       visitor = next; visitorLoading = false; visitor.setAnomaly(anomaly);
+      loop?.refreshDebug();
       visitorNote.textContent = 'いつもは残念院さんと誰念院さんが、一人ずつ散策しています。人数や様子もよく見て。';
       wake();
     } catch (error) {
       if (disposed || lost) return;
       visitorLoading = false; visitorError = String(error?.message || error);
+      loop?.refreshDebug();
       visitorNote.textContent = '二人を読み込めませんでした。今回は絵の異変だけで遊べます。再読み込みで再試行できます。';
     }
   }

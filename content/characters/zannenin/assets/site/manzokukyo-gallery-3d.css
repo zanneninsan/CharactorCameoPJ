@@ -502,6 +502,18 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
 .gallery-visitor-note { width: var(--gallery-3d-width); margin: .65rem auto .5rem; color: #c4b28b; font-size: .76rem; line-height: 1.65; }
 
 /* Walking is the primary interface. Keep the room visible around a compact HUD. */
+.gallery-debug { width: min(540px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid #c5ae71; border-radius: 10px; background: #132126; color: #f1e4c7; box-shadow: 0 24px 100px #000b; }
+.gallery-debug::backdrop { background: #070d14c9; backdrop-filter: blur(5px); }
+.gallery-debug header > span, .gallery-debug small { color: #b9b7a5; font-size: 11px; letter-spacing: .06em; }
+.gallery-debug h2 { margin: 8px 0 20px; font-size: 23px; }
+.gallery-debug label { display: grid; gap: 7px; margin: 14px 0; font-size: 13px; }
+.gallery-debug select { width: 100%; min-height: 46px; padding: 8px 12px; background: #203239; border: 1px solid #9e9369; border-radius: 4px; color: #fff0cf; font: inherit; }
+.gallery-debug p { font-size: 12px; line-height: 1.8; color: #c5c7bf; }
+.gallery-debug footer { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 14px; }
+.gallery-debug button, .gallery-debug-active { min-height: 40px; padding: 8px 12px; border: 1px solid #bea46c; background: #24373b; color: #f3e3b8; border-radius: 4px; cursor: pointer; }
+.gallery-debug [data-debug-apply] { background: #d9bf7f; color: #172024; font-weight: bold; }
+.gallery-debug :disabled { opacity: .45; cursor: not-allowed; }
+.gallery-debug-active { margin-top: 6px; background: #503b64; font-size: 11px; }
 .is-gallery-loop .gallery-3d-controls { display: none !important; }
 .gallery-3d-viewport .gallery-loop-ui { position: absolute; z-index: 5; top: 12px; left: 12px; width: min(470px, calc(100% - 24px)); margin: 0; pointer-events: none; }
 .gallery-loop-ui :is(button, summary, details[open]) { pointer-events: auto; }

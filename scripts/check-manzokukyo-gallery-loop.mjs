@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { newLoop, chooseAnomaly, judgeLoop, loopExit, paintingAppearance, mountGalleryLoop } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
+import { newLoop, chooseAnomaly, judgeLoop, loopExit, paintingAppearance, mountGalleryLoop, galleryDebugOptions } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 import { createHarness } from './check-manzokukyo-gallery.mjs';
 
@@ -61,11 +61,11 @@ globalThis.window = new Element();
 globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
 globalThis.matchMedia = () => ({ matches: false });
 globalThis.setTimeout = callback => timers.push(callback);
-let imageErrors = false, visitorsReady = false, wakes = 0;
+let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
 let randomDraw = 0;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
 const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .74 : [.9, .5, .9][randomDraw++ % 3],
-  exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
+  exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
 assert.equal(ui.busy, true); assert.equal(await ui.cross('forward'), false);
@@ -133,10 +133,66 @@ inspectSeal(2); ui.collect(); close();
 await ui.cross('back'); await finish();
 assert.equal(shared.state().count, 1, 'retreating from the four runners files the provisional seal');
 assert.match(nodes.get('[data-gallery-loop-transition-note]').textContent, /4体/);
+
+// Forced exhibitions share the real transition path but must never affect a save.
+inspectSeal(5); assert.equal(ui.collect(), true);
+assert.equal(ui.startDebug({ kind: 'normal' }), false, 'inspection blocks switching'); close();
+const normal = ui.snapshot(), normalExhibition = structuredClone(preparations.at(-1));
+const saves = [...shared.store], bestSave = [...storage];
+for (const selection of [null, { kind: 'unknown' }, ...[-1, 24, NaN, .5, '1'].map(index => ({ kind: 'frame-hand', index }))]) {
+  assert.equal(ui.startDebug(selection), false); assert.deepEqual(ui.snapshot(), normal);
+}
+visitorsReady = false;
+assert.equal(ui.startDebug({ kind: 'giant-darenin' }), false, 'unavailable models cannot become invisible anomalies');
+visitorsReady = true;
+let applying = ui.startDebug({ kind: 'frame-hand', index: 4 });
+assert.equal(ui.busy, true); assert.equal(ui.snapshot().heldSeal, null);
+assert.equal(ui.startDebug({ kind: 'normal' }), false, 'double apply is rejected synchronously');
+assert.equal(ui.stopDebug(), false); assert.equal(await ui.cross('back'), false);
+assert.equal(await ui.setMode('gallery'), false, 'mode switches cannot race a pending debug load');
+await finish(); assert.equal(await applying, true);
+assert.deepEqual(ui.snapshot().debug, { kind: 'frame-hand', index: 4 });
+const selected = structuredClone(preparations.at(-1));
+for (const direction of ['back', 'forward']) {
+  inspectSeal(5); ui.collect(); close();
+  await ui.cross(direction); await finish();
+  assert.deepEqual(preparations.at(-1), selected, 'both judgments replay the chosen anomaly');
+  assert.equal(ui.snapshot().heldSeal, null); assert.equal(ui.snapshot().streak, 0);
+  assert.deepEqual([...shared.store], saves); assert.deepEqual([...storage], bestSave);
+  assert.equal(shared.elements.ceremony.open, false);
+}
+inspectSeal(5); ui.collect(); close();
+shared.call('resetGallery'); await finish();
+assert.equal(ui.snapshot().heldSeal, null); assert.deepEqual(preparations.at(-1), selected);
+assert.deepEqual([...shared.store], saves, 'debug reset preserves the real seals and clear state');
+assert.equal(shared.call('submitWord', 'あかいとびら').unavailable, true);
+assert.deepEqual([...shared.store], saves);
+for (const option of galleryDebugOptions) {
+  applying = ui.startDebug({ kind: option.kind, index: 23 }); await finish(); assert.equal(await applying, true);
+  assert.deepEqual(preparations.at(-1).anomaly, option.kind === 'normal' ? null : option.record ? { kind: option.kind, index: 23 } : { kind: option.kind });
+}
+applying = ui.startDebug({ kind: 'negative', index: 0 }); await finish(false); assert.equal(await applying, false);
+assert.equal(ui.canDebug(), true, 'failed loads permit choosing a different exhibit or leaving');
+throwPreparation = true;
+assert.equal(await ui.startDebug({ kind: 'normal' }), false, 'synchronous renderer failure is contained');
+throwPreparation = false;
+applying = ui.startDebug({ kind: 'upside-down', index: 1 }); await finish(); assert.equal(await applying, true);
+let leaving = ui.stopDebug(); await finish(); assert.equal(await leaving, true);
+assert.deepEqual(ui.snapshot(), { ...normal, heldSeal: null }, 'original lap and score resume without provisional pickup');
+assert.deepEqual(preparations.at(-1), normalExhibition, 'the original randomly drawn anomaly is restored');
+assert.deepEqual([...shared.store], saves); assert.deepEqual([...storage], bestSave);
+let changing = ui.setMode('gallery'); await finish(); await changing;
+applying = ui.startDebug({ kind: 'normal' }); await finish(); await applying;
+leaving = ui.stopDebug(); await finish(); await leaving;
+assert.equal(ui.active, false, 'leaving debug restores viewing mode when entered there');
+applying = ui.startDebug({ kind: 'satisfaction' }); await finish(); await applying;
+changing = ui.setMode('loop'); await finish(); await changing;
+assert.equal(ui.debug, false); assert.equal(ui.snapshot().round, 0, 'explicit play mode ends debug with the normal learning lap');
 nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
 assert.equal(preparations.at(-1).anomaly, null, 'reset clears the running-row anomaly');
-const returning = ui.setMode('loop'); await Promise.resolve(); ui.fallback(); await finish(); await returning;
+const returning = ui.startDebug({ kind: 'giant-darenin' }); await Promise.resolve(); ui.fallback(); await finish(); await returning;
 assert.equal(ui.active, false, 'late preparation cannot re-enable a failed 3D scene');
+assert.equal(ui.debug, false); assert.equal(ui.canDebug(), false, 'graphics fallback clears and disables debug');
 assert.equal(storage.get('existing-gallery-seals'), 'keep-me');
 assert.equal(shared.store.get('other-room'), 'keep-me');
 assert.equal(storage.get('manzokukyo-gallery-loop-best-v1'), '4');
