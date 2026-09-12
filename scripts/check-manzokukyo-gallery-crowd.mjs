@@ -15,7 +15,7 @@ assert.notEqual(chooseAnomaly(() => .9, { visitorsReady: false }).kind, 'darenin
 for (const direction of ['back', 'forward']) assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, direction).correct, direction === 'back');
 assert.match(describeAnomaly(anomaly), /4体/);
 for (const visitorsReady of [false, true]) {
-  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction'];
+  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand'];
   for (let i = 0; i < allowed.length; i++) {
     const values = [.8, (i + .5) / allowed.length, .3];
     const picked = chooseAnomaly(() => values.shift(), { visitorsReady });

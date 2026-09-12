@@ -75,7 +75,7 @@ export async function buildManzokukyoPreview() {
   const html = (await readFile(path.join(source, 'index.html'), 'utf8')).replaceAll('{{TIKTOK_URL}}', escapeHtml(tiktok.url)).replaceAll('{{GAME_LINKS}}', gameLinks).replace('{{OFFERING_DIALOG}}', offeringDialog);
   const sourceNames = ['styles.css', 'site.js', 'corridor.js', 'audio.js', 'route.js', 'guestbook-adapter.js', 'offering.js', 'offering.css', 'app.js', 'app.css', 'rooms.js', 'room-bridge.js', 'audio-session.js', 'novel-view.js', 'truth/styles.css', 'truth/site.js', 'truth/chamber.js'];
   const sourceFiles = await Promise.all(sourceNames.map(name => readFile(path.join(source, name), 'utf8')));
-  const galleryFiles = await Promise.all(['manzokukyo-gallery.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-visitor.js'].map(name => readFile(path.join(characterRoot, 'assets/site', name), 'utf8')));
+  const galleryFiles = await Promise.all(['manzokukyo-gallery.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-hand.js', 'manzokukyo-gallery-visitor.js'].map(name => readFile(path.join(characterRoot, 'assets/site', name), 'utf8')));
   const version = createHash('sha256').update([...sourceFiles, ...galleryFiles].join('\n')).digest('hex').slice(0, 12);
   await mkdir(path.join(output, 'truth'), { recursive: true });
   for (const [index, name] of sourceNames.entries()) {

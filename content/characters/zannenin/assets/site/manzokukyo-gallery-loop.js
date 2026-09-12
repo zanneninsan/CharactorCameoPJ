@@ -1,4 +1,4 @@
-const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction'];
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand'];
 export function satisfactionLabel(anomaly) { return anomaly?.kind === 'satisfaction' ? 'あなた以外 100％' : '100％'; }
 export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
@@ -27,6 +27,7 @@ export function loopExit(position) {
 }
 export function describeAnomaly(anomaly) {
   if (!anomaly) return 'この巡回に異変はありませんでした。';
+  if (anomaly.kind === 'frame-hand') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} から、額縁の外へ手が伸びていました。`;
   if (anomaly.kind === 'giant-darenin') return '奥のアーチから、巨大な誰念院さんの顔がのぞいていました。';
   if (anomaly.kind === 'satisfaction') return '本日の満足度が「あなた以外 100％」になっていました。';
   if (anomaly.kind === 'darenin-rush') return '残念院さんが姿を消し、誰念院さんが4体、横一列で奥から迫ってきました。';

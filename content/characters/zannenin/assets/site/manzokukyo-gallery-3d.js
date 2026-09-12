@@ -9,6 +9,7 @@ const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}
 const { advanceWalk, walkKeys, walkRoom } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
 const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
+const { mountFrameHand } = await import(new URL(`manzokukyo-gallery-hand.js?${assetVersionQuery}`, import.meta.url));
 let exhibition, loop, selected = 0;
 function setCatalog(open) {
   catalog.hidden = !open; listButton.setAttribute('aria-expanded', String(open));
@@ -189,6 +190,7 @@ function createExhibition(T) {
     }
     frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
+  const frameHand = mountFrameHand(T, { frames, targets });
   let portalTexture = labelTexture('GALLERY', 'THE SAME CORRIDOR');
   function satisfactionTexture() {
     const c = document.createElement('canvas'); c.width = 1024; c.height = 320;
@@ -248,6 +250,7 @@ function createExhibition(T) {
   }
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
+    frameHand.setAnomaly(anomaly);
     satisfactionMap.dispose(); textures.delete(satisfactionMap);
     satisfactionMap = satisfactionTexture(); satisfactionMaterial.map = satisfactionMap;
     visitor?.setAnomaly(nextAnomaly);
@@ -384,10 +387,11 @@ function createExhibition(T) {
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
-    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera });
+    const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving;
     // Wandering uses at most 30 rendered frames/sec while the camera is still;
     // keyboard movement keeps the existing responsive refresh rate.
-    const visitorVisible = visitor?.isVisible();
+    const visitorVisible = visitor?.isVisible() || frameHand.isVisible();
     if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
       renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
@@ -474,6 +478,7 @@ function createExhibition(T) {
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     visitor?.dispose();
+    frameHand.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
