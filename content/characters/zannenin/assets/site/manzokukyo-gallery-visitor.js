@@ -111,24 +111,38 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
   resources.add(shadowGeometry); resources.add(shadowMaterial);
   const shadow = new T.Mesh(shadowGeometry, shadowMaterial); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .04; root.add(shadow);
   scene.add(root);
-  let state = createVisitorState(spawn), gait = 0, enabled = true, visible = false, disposed = false;
+  let state = createVisitorState(spawn), gait = 0, walkingWeight = 0, enabled = true, visible = false, disposed = false;
   const frustum = new T.Frustum(), projection = new T.Matrix4(), sphere = new T.Sphere(new T.Vector3(), 1.3);
   const bind = Object.fromEntries(Object.entries(bones).map(([name, bone]) => [name, bone.rotation.clone()]));
   const hairBones = official ? Object.keys(bones).filter(name => /^J_Sec_Hair\d+_02$/.test(name)) : [];
   function rotate(name, axis, radians) { const bone = bones[name]; if (bone) bone.rotation[axis] = bind[name][axis] + radians; }
   function pose(dt, viewer, running = false) {
     gait += (running ? Math.min(state.speed, 1) * 12 : state.speed * 10) * dt;
-    const stride = clamp(state.speed / .62, 0, 1), swing = Math.sin(gait) * stride;
+    const speedWeight = clamp(state.speed / .62, 0, 1);
+    walkingWeight += (speedWeight - walkingWeight) * (1 - Math.exp(-dt * 8));
+    const stride = official ? walkingWeight : speedWeight, swing = Math.sin(gait) * stride;
     for (const [side, sign] of [['L', 1], ['R', -1]]) {
       rotate(`J_Bip_${side}_UpperLeg`, 'x', swing * (running ? .66 : .24) * sign);
-      rotate(`J_Bip_${side}_LowerLeg`, 'x', Math.max(0, -swing * sign) * (running ? .8 : .28));
-      rotate(`J_Bip_${side}_UpperArm`, 'x', -swing * (running ? .58 : .18) * sign);
-      if (official) rotate(`J_Bip_${side}_UpperArm`, 'z', sign * 1.07);
-      rotate(`J_Bip_${side}_LowerArm`, 'x', (running ? -.6 : -.06) - Math.max(0, swing * sign) * .08);
+      rotate(`J_Bip_${side}_LowerLeg`, 'x', Math.max(0, -swing * sign) * (official ? -.32 : running ? .8 : .28));
+      rotate(`J_Bip_${side}_UpperArm`, 'x', -swing * (running ? .58 : official ? .15 : .18) * sign);
+      if (official) {
+        // This VRoid rig's arms extend along local X. Z lowers the shoulder;
+        // mirrored Y bends the elbow forward. X at the elbow only twists it.
+        rotate(`J_Bip_${side}_UpperArm`, 'z', sign * (1.36 + Math.cos(gait * 2) * stride * .012));
+        rotate(`J_Bip_${side}_LowerArm`, 'y', -sign * (.16 + Math.max(0, swing * sign) * .07));
+        rotate(`J_Bip_${side}_Hand`, 'z', sign * .035);
+        rotate(`J_Bip_${side}_Foot`, 'x', Math.max(0, -swing * sign) * .1);
+      } else {
+        rotate(`J_Bip_${side}_LowerArm`, 'x', (running ? -.6 : -.06) - Math.max(0, swing * sign) * .08);
+      }
       rotate(`J_Sec_${side}_TwinTail`, 'z', Math.sin(state.phase * 2.4 + sign) * .025 * (stride + .2));
     }
     rotate('J_Bip_C_Spine', 'z', swing * .016);
     rotate('J_Bip_C_Spine', 'x', running ? -.13 * stride : 0);
+    if (official) {
+      rotate('J_Bip_C_Hips', 'y', swing * .025);
+      rotate('J_Bip_C_Chest', 'y', -swing * .035);
+    }
     const viewerDistance = Math.hypot(viewer.x - state.x, viewer.z - state.z);
     const headTurn = viewerDistance < 5 ? clamp(angle(Math.atan2(state.x - viewer.x, state.z - viewer.z) - state.yaw), -.45, .45) : Math.sin(state.phase * .55) * .12;
     rotate('J_Bip_C_Head', 'y', headTurn);
@@ -159,7 +173,7 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
       root.visible = visible;
       return enabled && !paused && !reduced && !inspecting;
     },
-    reset() { state = createVisitorState(spawn); gait = 0; pose(0, { x: 0, z: .8 }); },
+    reset() { state = createVisitorState(spawn); gait = 0; walkingWeight = 0; pose(0, { x: 0, z: .8 }); },
     setEnabled(value) { enabled = value; visible = enabled; root.visible = enabled; },
     isVisible: () => visible,
     snapshot: () => ({ loaded: true, kind, enabled, visible, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws, blink: blinkMeshes.length > 0 }),

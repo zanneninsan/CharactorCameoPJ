@@ -48,12 +48,26 @@ assert.equal(visitor.snapshot().draws, 23);
 assert.ok(visitor.snapshot().blink);
 assert.ok(meshes.every(mesh => mesh.material.isMeshBasicMaterial));
 assert.equal(meshes.filter(mesh => mesh.material.map).length, 22, 'only the solid-color bare legs lack a texture');
-assert.ok(root.getObjectByName('J_Bip_L_UpperArm').rotation.z > 1, 'left arm lowered from T-pose');
-assert.ok(root.getObjectByName('J_Bip_R_UpperArm').rotation.z < -1, 'right arm lowered from T-pose');
+function joint(side, name) { return root.worldToLocal(root.getObjectByName(`J_Bip_${side}_${name}`).getWorldPosition(new T.Vector3())); }
+function checkRelaxedArms() {
+  root.updateMatrixWorld(true);
+  for (const side of ['L', 'R']) {
+    const shoulder = joint(side, 'UpperArm'), elbow = joint(side, 'LowerArm'), hand = joint(side, 'Hand');
+    const upper = elbow.clone().sub(shoulder).normalize();
+    assert.ok(upper.dot(new T.Vector3(0, -1, 0)) > Math.cos(22 * Math.PI / 180), 'upper arms stay beside the body, not in an A-pose');
+    assert.ok(hand.y < elbow.y && elbow.y < shoulder.y, 'hands hang below the elbows');
+    assert.ok(Math.abs(hand.x - shoulder.x) < .16, 'hands do not flare sideways');
+  }
+}
+checkRelaxedArms();
+for (const side of ['L', 'R']) assert.ok(joint(side, 'Hand').z < joint(side, 'LowerArm').z - .025, 'elbows bend forward instead of twisting the forearms');
+const restPose = root.getObjectByName('J_Bip_L_UpperArm').quaternion.clone();
 const face = meshes.find(mesh => mesh.morphTargetDictionary?.Blink !== undefined);
 let blinkSeen = false, maxSpan = 0;
 for (let i = 0; i < 360; i++) {
   visitor.update(1 / 30, { x: 0, z: .8 });
+  checkRelaxedArms();
+  for (const side of ['L', 'R']) assert.ok(root.getObjectByName(`J_Bip_${side}_LowerLeg`).rotation.x <= 0, 'knees flex backward, never hyperextend forward');
   blinkSeen ||= face.morphTargetInfluences[0] > .9;
   if (i % 30) continue;
   root.updateMatrixWorld(true);
@@ -67,10 +81,15 @@ for (let i = 0; i < 360; i++) {
 }
 assert.ok(blinkSeen, 'real Blink morph animates');
 const before = visitor.snapshot().position, blinkBefore = face.morphTargetInfluences[0];
+const armBefore = root.getObjectByName('J_Bip_L_UpperArm').quaternion.clone();
 visitor.update(.05, { x: 0, z: .8 }, { inspecting: true });
 assert.deepEqual(visitor.snapshot().position, before);
 assert.equal(face.morphTargetInfluences[0], blinkBefore);
 assert.equal(visitor.isVisible(), false, 'viewing a painting hides the model');
+assert.ok(root.getObjectByName('J_Bip_L_UpperArm').quaternion.equals(armBefore), 'inspection freezes the gait as well as navigation');
+visitor.reset();
+assert.ok(root.getObjectByName('J_Bip_L_UpperArm').quaternion.equals(restPose), 'anomaly changes restore the relaxed pose without residual gait');
+visitor.update(.05, { x: 0, z: .8 }, { reduced: true }); checkRelaxedArms();
 let disposed = 0;
 for (const resource of resources) resource.addEventListener('dispose', () => disposed++);
 visitor.dispose(); visitor.dispose();
