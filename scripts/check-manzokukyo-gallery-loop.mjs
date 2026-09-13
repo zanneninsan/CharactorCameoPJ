@@ -217,4 +217,23 @@ assert.equal(ui.debug, false); assert.equal(ui.canDebug(), false, 'graphics fall
 assert.equal(storage.get('existing-gallery-seals'), 'keep-me');
 assert.equal(shared.store.get('other-room'), 'keep-me');
 assert.equal(storage.get('manzokukyo-gallery-loop-best-v1'), '4');
+// A just-completed encounter must lose its bonus before the next draw, even
+// after an incorrect exit; a newly mounted controller must read the same save.
+storage.delete('manzokukyo-gallery-achievements-v1');
+function collector(draws) {
+  return mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery,
+    random: () => { assert(draws.length); return draws.shift(); },
+    exhibition: { stop() {}, hasVisitors: () => false, hasImageErrors: () => false,
+      prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
+}
+const collecting = collector([.9, .25, .9, .9, .205, .9]);
+await Promise.resolve(); await finish();
+assert.equal(preparations.at(-1).anomaly, null, 'fresh run still begins with a fixed normal exhibition');
+await collecting.cross('forward'); await finish(); assert.equal(preparations.at(-1).anomaly.kind, 'same-image');
+await collecting.cross('forward'); await finish(); assert.equal(preparations.at(-1).anomaly.kind, 'negative', 'just-encountered same-image loses its bonus immediately');
+assert.equal(collecting.achievements().encountered, 1); collecting.fallback();
+const reloadedCollector = collector([.9, .205, .9]);
+await Promise.resolve(); await finish(); await reloadedCollector.cross('forward'); await finish();
+assert.equal(preparations.at(-1).anomaly.kind, 'negative', 'persisted discoveries influence the first random lap after reload');
+reloadedCollector.fallback();
 console.log('Gallery loop passed: anomalies, provisional pickup, one seal per round, correct/incorrect exits, saved seals, image retries, no viewing-mode bypass, sixth-seal ceremony, passphrase, reset and late completion.');

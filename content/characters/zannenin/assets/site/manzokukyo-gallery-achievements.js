@@ -11,6 +11,10 @@ export function createGalleryAchievements(options, storage) {
   }
   function sync() { for (const [kind, level] of Object.entries(read())) memory[kind] = Math.max(memory[kind] || 0, level); }
   return {
+    encounteredKinds() {
+      sync();
+      return kinds.filter(({ kind }) => memory[kind]).map(({ kind }) => kind);
+    },
     record(kind, correct, debug = false) {
       if (debug || !kinds.some(option => option.kind === kind)) return false;
       sync(); const previous = memory[kind] || 0;

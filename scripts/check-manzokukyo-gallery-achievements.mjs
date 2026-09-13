@@ -7,10 +7,13 @@ assert.equal(book.snapshot().total, 15); assert.ok(book.snapshot().entries.every
 book.record('receding-exit', true, true); book.record('normal', true); book.record('unknown', true);
 assert.equal(values.size, 0, 'debug, normal and unknown exhibitions never unlock achievements');
 book.record('negative', false); assert.equal(book.snapshot().encountered, 1); assert.equal(book.snapshot().solved, 0);
+assert.deepEqual(book.encounteredKinds(), ['negative'], 'encountered, unsolved entries count as discovered for random draws');
+book.encounteredKinds().push('frame-hand'); assert.deepEqual(book.encounteredKinds(), ['negative'], 'callers cannot mutate stored discoveries');
 assert.equal(book.snapshot().entries[1].label, '絵の色が反転'); assert.equal(book.snapshot().entries[0].label, '？？？');
 book.record('negative', true); book.record('negative', false); assert.equal(book.snapshot().solved, 1, 'later mistakes cannot downgrade a solved anomaly');
 const second = createGalleryAchievements(galleryDebugOptions, storage); second.record('frame-hand', true); book.record('satisfaction', true);
 assert.equal(second.snapshot().solved, 3, 'reloaded/other boards merge progress without losing earlier discoveries');
+assert.deepEqual(new Set(second.encounteredKinds()), new Set(['negative', 'frame-hand', 'satisfaction']));
 values.set(achievementKey, '{broken'); assert.equal(createGalleryAchievements(galleryDebugOptions, storage).snapshot().encountered, 0);
 values.set(achievementKey, JSON.stringify({ unknown: 2, negative: 900, 'frame-hand': 2 }));
 assert.equal(createGalleryAchievements(galleryDebugOptions, storage).snapshot().encountered, 1, 'invalid saved fields cannot inflate completion');

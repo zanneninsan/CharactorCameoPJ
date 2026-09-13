@@ -23,10 +23,19 @@ export function satisfactionLabel(anomaly) { return anomaly?.kind === 'satisfact
 export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
 }
-export function chooseAnomaly(random = Math.random, { visitorsReady = false } = {}) {
+export function chooseAnomaly(random = Math.random, { visitorsReady = false, encounteredKinds = [] } = {}) {
   if (random() < .34) return null;
   const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd'] : kinds;
-  const kind = available[Math.min(available.length - 1, Math.floor(random() * available.length))];
+  // Keep the 66% occurrence roll separate. Only the choice of anomaly is biased:
+  // an unseen entry gets 1.5 tickets against one for an encountered entry.
+  const encountered = new Set(encounteredKinds);
+  const weights = available.map(kind => encountered.has(kind) ? 1 : 1.5);
+  let ticket = random() * weights.reduce((sum, weight) => sum + weight, 0);
+  let kind = available.at(-1);
+  for (let i = 0; i < available.length; i++) {
+    ticket -= weights[i];
+    if (ticket < 0) { kind = available[i]; break; }
+  }
   return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit', 'small-frames', 'meme-gallery', 'bowing-visitors', 'watching-crowd'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
@@ -139,7 +148,11 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
       void prepare('展示を確認しています', '画像を読み込み直しています。この巡回の判定と展示内容は変わりません。');
       return false;
     }
-    const verdict = judgeLoop(state, direction, debugSelection ? () => 0 : random, { visitorsReady: exhibition.hasVisitors?.() === true });
+    // The lap being judged is already encountered for the NEXT draw, even when
+    // its verdict is wrong. Persisting the achievement still happens below.
+    const encounteredKinds = achievements.encounteredKinds();
+    if (state.anomaly) encounteredKinds.push(state.anomaly.kind);
+    const verdict = judgeLoop(state, direction, debugSelection ? () => 0 : random, { visitorsReady: exhibition.hasVisitors?.() === true, encounteredKinds });
     if (debugSelection) {
       heldSeal = null;
       gallery.play(verdict.correct ? 'gallery-unseal' : 'transmission', { level: .5 });
