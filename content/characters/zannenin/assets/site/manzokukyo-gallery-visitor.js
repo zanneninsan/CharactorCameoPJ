@@ -114,43 +114,61 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
   let state = createVisitorState(spawn), gait = 0, walkingWeight = 0, enabled = true, visible = false, disposed = false;
   const frustum = new T.Frustum(), projection = new T.Matrix4(), sphere = new T.Sphere(new T.Vector3(), 1.3);
   const bind = Object.fromEntries(Object.entries(bones).map(([name, bone]) => [name, bone.rotation.clone()]));
+  const thighLength = official ? bones.J_Bip_L_UpperLeg.getWorldPosition(new T.Vector3()).distanceTo(bones.J_Bip_L_LowerLeg.getWorldPosition(new T.Vector3())) : 0;
+  const shinLength = official ? bones.J_Bip_L_LowerLeg.getWorldPosition(new T.Vector3()).distanceTo(bones.J_Bip_L_Foot.getWorldPosition(new T.Vector3())) : 0;
   const hairBones = official ? Object.keys(bones).filter(name => /^J_Sec_Hair\d+_02$/.test(name)) : [];
   function rotate(name, axis, radians) { const bone = bones[name]; if (bone) bone.rotation[axis] = bind[name][axis] + radians; }
   function pose(dt, viewer, running = false) {
-    gait += (running ? Math.min(state.speed, 1) * 12 : state.speed * 10) * dt;
+    gait += (running ? Math.min(state.speed, 1) * 12 : state.speed * (official ? 9.2 : 10)) * dt;
     const speedWeight = clamp(state.speed / .62, 0, 1);
     walkingWeight += (speedWeight - walkingWeight) * (1 - Math.exp(-dt * 8));
     const stride = official ? walkingWeight : speedWeight, swing = Math.sin(gait) * stride;
     for (const [side, sign] of [['L', 1], ['R', -1]]) {
-      rotate(`J_Bip_${side}_UpperLeg`, 'x', swing * (running ? .66 : .24) * sign);
-      rotate(`J_Bip_${side}_LowerLeg`, 'x', Math.max(0, -swing * sign) * (official ? -.32 : running ? .8 : .28));
-      rotate(`J_Bip_${side}_UpperArm`, 'x', -swing * (running ? .58 : official ? .15 : .18) * sign);
+      if (official) {
+        // A planted foot travels back while the body advances; only the return
+        // half-step lifts off the floor. Solve hip/knee angles to reach it.
+        const phase = gait + (sign < 0 ? Math.PI : 0);
+        const footForward = -Math.cos(phase) * .17 * stride;
+        const lift = Math.max(0, Math.sin(phase)) ** 2 * .055 * stride;
+        const down = thighLength + shinLength - .025 * stride - lift;
+        const reach = clamp(Math.hypot(footForward, down), .01, thighLength + shinLength - .00001);
+        const bend = Math.acos(clamp((thighLength ** 2 + shinLength ** 2 - reach ** 2) / (2 * thighLength * shinLength), -1, 1));
+        const hip = Math.atan2(footForward, down) + Math.acos(clamp((thighLength ** 2 + reach ** 2 - shinLength ** 2) / (2 * thighLength * reach), -1, 1));
+        rotate(`J_Bip_${side}_UpperLeg`, 'x', hip * stride);
+        rotate(`J_Bip_${side}_LowerLeg`, 'x', (bend - Math.PI) * stride);
+        rotate(`J_Bip_${side}_Foot`, 'x', -(hip + bend - Math.PI) * stride + Math.max(0, -Math.sin(phase)) * .06 * stride);
+      } else {
+        rotate(`J_Bip_${side}_UpperLeg`, 'x', swing * (running ? .66 : .24) * sign);
+        rotate(`J_Bip_${side}_LowerLeg`, 'x', Math.max(0, -swing * sign) * (running ? .8 : .28));
+      }
+      rotate(`J_Bip_${side}_UpperArm`, 'x', (official ? Math.cos(gait + .18) * stride * .13 : -swing * (running ? .58 : .18)) * sign);
       if (official) {
         // This VRoid rig's arms extend along local X. Z lowers the shoulder;
         // mirrored Y bends the elbow forward. X at the elbow only twists it.
-        rotate(`J_Bip_${side}_UpperArm`, 'z', sign * (1.36 + Math.cos(gait * 2) * stride * .012));
-        rotate(`J_Bip_${side}_LowerArm`, 'y', -sign * (.16 + Math.max(0, swing * sign) * .07));
+        rotate(`J_Bip_${side}_UpperArm`, 'z', sign * (1.37 + Math.cos(gait * 2 + .3) * stride * .012));
+        rotate(`J_Bip_${side}_LowerArm`, 'y', -sign * (.22 + Math.max(0, Math.cos(gait) * sign) * stride * .08));
         rotate(`J_Bip_${side}_Hand`, 'z', sign * .035);
-        rotate(`J_Bip_${side}_Foot`, 'x', Math.max(0, -swing * sign) * .1);
       } else {
         rotate(`J_Bip_${side}_LowerArm`, 'x', (running ? -.6 : -.06) - Math.max(0, swing * sign) * .08);
       }
       rotate(`J_Sec_${side}_TwinTail`, 'z', Math.sin(state.phase * 2.4 + sign) * .025 * (stride + .2));
     }
-    rotate('J_Bip_C_Spine', 'z', swing * .016);
+    rotate('J_Bip_C_Spine', 'z', swing * (official ? .022 : .016));
     rotate('J_Bip_C_Spine', 'x', running ? -.13 * stride : 0);
     if (official) {
-      rotate('J_Bip_C_Hips', 'y', swing * .025);
-      rotate('J_Bip_C_Chest', 'y', -swing * .035);
+      rotate('J_Bip_C_Hips', 'y', Math.cos(gait) * stride * .035);
+      rotate('J_Bip_C_Hips', 'z', -swing * .015);
+      rotate('J_Bip_C_Chest', 'y', -Math.cos(gait + .12) * stride * .04);
     }
     const viewerDistance = Math.hypot(viewer.x - state.x, viewer.z - state.z);
     const headTurn = viewerDistance < 5 ? clamp(angle(Math.atan2(state.x - viewer.x, state.z - viewer.z) - state.yaw), -.45, .45) : Math.sin(state.phase * .55) * .12;
     rotate('J_Bip_C_Head', 'y', headTurn);
+    if (official) { rotate('J_Bip_C_Head', 'z', -swing * .012); rotate('J_Bip_C_Chest', 'x', Math.sin(state.phase * 1.7) * .006); }
     for (const [index, name] of hairBones.entries()) rotate(name, 'x', Math.sin(state.phase * 2.1 + index * .6) * .018 * (stride + .15));
     const blinkPhase = state.phase % 5.3;
     const blink = blinkPhase > 4.95 ? Math.sin((blinkPhase - 4.95) / .35 * Math.PI) : 0;
     for (const mesh of blinkMeshes) mesh.morphTargetInfluences[mesh.morphTargetDictionary.Blink] = blink;
-    root.position.set(state.x, Math.abs(Math.sin(gait)) * stride * (running ? .045 : .012), state.z); root.rotation.y = state.yaw;
+    root.position.set(state.x, official ? -.018 * stride + Math.cos(gait * 2) * .005 * stride : Math.abs(Math.sin(gait)) * stride * (running ? .045 : .012), state.z); root.rotation.y = state.yaw;
   }
   const api = {
     update(dt, viewer, { paused = false, reduced = false, inspecting = false, camera, formation } = {}) {

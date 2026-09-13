@@ -1,3 +1,4 @@
+import { galleryMemeImages } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-artworks.js';
 import { mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -6,6 +7,12 @@ import sharp from 'sharp';
 // request the untouched source PNG only when a visitor opens an artwork.
 export async function buildGalleryRoomImages(sourceDir, outputDir) {
   await mkdir(outputDir, { recursive: true });
+  for (const [index, image] of galleryMemeImages.entries()) {
+    await sharp(path.resolve(sourceDir, '../..', image.path))
+      .resize({ width: 512, height: 512, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 74, effort: 5 })
+      .toFile(path.join(outputDir, `meme-${String(index + 1).padStart(2, '0')}-room.webp`));
+  }
   const files = (await readdir(sourceDir)).filter(file => /^gallery-\d+\.png$/i.test(file)).sort();
   for (const file of files) {
     await sharp(path.join(sourceDir, file))

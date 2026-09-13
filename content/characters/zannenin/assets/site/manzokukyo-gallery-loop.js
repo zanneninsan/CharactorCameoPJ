@@ -1,11 +1,14 @@
+import { galleryImagePath } from './manzokukyo-gallery-artworks.js';
+export { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
 import { createGalleryAchievements, mountAchievementBoard } from './manzokukyo-gallery-achievements.js';
-const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait'];
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery'];
 export const galleryDebugOptions = [
   ['normal', '異変なし'], ['upside-down', '絵が逆さま', true], ['negative', '絵の色が反転', true],
   ['same-image', '全部同じ絵', true], ['satisfaction', '満足度の掲示'], ['frame-hand', '額縁の外の手', true],
   ['darenin-rush', '誰念院さん4体の突進', false, true], ['giant-darenin', '巨大な誰念院さん', false, true],
   ['receding-exit', '出口が遠ざかる'], ['approaching-portrait', '近づいてくる肖像', true],
+  ['small-frames', 'すべての額縁が小さい'], ['meme-gallery', '残念院さんミーム展'],
 ].map(([kind, label, record = false, visitors = false]) => ({ kind, label, record, visitors }));
 export function validateDebugSelection(value) {
   const option = galleryDebugOptions.find(option => option.kind === value?.kind);
@@ -17,10 +20,10 @@ export function newLoop(best = 0) {
   return { round: 0, streak: 0, best: Number.isSafeInteger(best) && best >= 0 ? best : 0, anomaly: null };
 }
 export function chooseAnomaly(random = Math.random, { visitorsReady = false } = {}) {
-  if (random() < .45) return null;
+  if (random() < .34) return null;
   const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin'] : kinds;
   const kind = available[Math.min(available.length - 1, Math.floor(random() * available.length))];
-  return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
+  return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit', 'small-frames', 'meme-gallery'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
   return { imageIndex: anomaly?.kind === 'same-image' ? anomaly.index : index,
@@ -40,6 +43,8 @@ export function loopExit(position, exitOffset = 0) {
   return position.z <= -62.1 - extension ? 'forward' : position.z >= 2.65 ? 'back' : null;
 }
 export function describeAnomaly(anomaly) {
+  if (anomaly?.kind === 'meme-gallery') return 'すべての絵が、残念院さんのミームや表情イラストに入れ替わっていました。';
+  if (anomaly?.kind === 'small-frames') return 'すべての額縁が、いつもよりひと回り小さくなっていました。';
   if (!anomaly) return 'この巡回に異変はありませんでした。';
   if (anomaly.kind === 'receding-exit') return '近づくほど、奥の出口が遠ざかっていました。';
   if (anomaly.kind === 'approaching-portrait') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の肖像が、額縁ごとこちらへ近づいていました。`;
@@ -152,7 +157,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     const appearance = paintingAppearance(index, state.anomaly);
     image.style.transform = appearance.upsideDown ? 'rotate(180deg)' : '';
     image.style.filter = appearance.negative ? 'invert(1)' : '';
-    loadGalleryImage(image, new URL(`../../../assets/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}.png?${assetVersionQuery}`, document.baseURI).href, () => {
+    loadGalleryImage(image, new URL(`${galleryImagePath(index, state.anomaly, records)}?${assetVersionQuery}`, document.baseURI).href, () => {
       if (!modal.open || inspected !== index) return;
       imageReady = true; renderInspection();
     }, () => {

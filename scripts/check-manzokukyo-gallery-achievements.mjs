@@ -3,7 +3,7 @@ import { createGalleryAchievements, achievementKey, mountAchievementBoard } from
 import { galleryDebugOptions } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 const values = new Map(), storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
 const book = createGalleryAchievements(galleryDebugOptions, storage);
-assert.equal(book.snapshot().total, 9); assert.ok(book.snapshot().entries.every(entry => entry.label === '？？？'));
+assert.equal(book.snapshot().total, 11); assert.ok(book.snapshot().entries.every(entry => entry.label === '？？？'));
 book.record('receding-exit', true, true); book.record('normal', true); book.record('unknown', true);
 assert.equal(values.size, 0, 'debug, normal and unknown exhibitions never unlock achievements');
 book.record('negative', false); assert.equal(book.snapshot().encountered, 1); assert.equal(book.snapshot().solved, 0);
@@ -35,7 +35,7 @@ const trigger = new Element(); let busy = false, stopped = 0, viewing = false, s
 globalThis.document = { querySelector: selector => selector === '[data-gallery-achievements]' ? dialog : dialog.open ? dialog : null, querySelectorAll: () => [trigger] };
 values.clear(); const displayBook = createGalleryAchievements(galleryDebugOptions, storage);
 const board = mountAchievementBoard({ achievements: displayBook, canvas: { focus() {} }, exhibition: { stop() { stopped++; } }, canOpen: () => !busy, isViewing: () => viewing, enterViewing: () => { switches++; viewing = true; } });
-assert.equal(trigger.textContent, '実績 0 / 9'); assert.ok(cards.every(card => card.children.strong.textContent === '？？？'));
+assert.equal(trigger.textContent, '実績 0 / 11'); assert.ok(cards.every(card => card.children.strong.textContent === '？？？'));
 busy = true; trigger.events.click(); assert.equal(dialog.open, false); busy = false; trigger.events.click(); assert.equal(dialog.open, true); assert.equal(stopped, 1);
 displayBook.record('receding-exit', true); board.render(); assert.equal(cards.filter(card => card.children.strong.textContent !== '？？？').length, 1);
 assert.equal(dialog.children['[data-achievement-complete]'].hidden, true);
@@ -52,4 +52,4 @@ busy = false; node('data-viewing-accept').events.click(); assert.equal(switches,
 node('data-viewing-accept').events.click(); assert.equal(switches, 1, 'double confirmation cannot reset twice');
 trigger.events.click(); assert.equal(node('data-achievements-viewing').disabled, true); assert.equal(node('data-viewing-confirm').hidden, true);
 board.dispose(); assert.equal(dialog.open, false); assert.equal(trigger.events.click, undefined);
-console.log('Achievements passed: all nine hidden slots, encounter/solve, persistence/merge/corruption/storage denial, debug exclusion, visible completion and modal teardown.');
+console.log('Achievements passed: all eleven hidden slots, encounter/solve, persistence/merge/corruption/storage denial, debug exclusion, visible completion and modal teardown.');

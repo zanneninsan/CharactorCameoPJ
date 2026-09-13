@@ -3,10 +3,13 @@ import { newLoop, chooseAnomaly, judgeLoop, loopExit, paintingAppearance, mountG
 import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 import { createHarness } from './check-manzokukyo-gallery.mjs';
 
+assert.equal(Array.from({ length: 10000 }, (_, i) => {
+  let draw = 0; return chooseAnomaly(() => draw++ === 0 ? i / 10000 : 0);
+}).filter(Boolean).length, 6600, '66 percent anomaly probability after the fixed normal introduction');
 assert.deepEqual(newLoop(NaN), newLoop());
 assert.deepEqual(newLoop(-1), newLoop());
 assert.equal(chooseAnomaly(() => 0), null);
-for (const [kind, draw] of [['upside-down', .1], ['negative', .2], ['same-image', .35]]) {
+for (const [kind, draw] of [['upside-down', .1], ['negative', .2], ['same-image', 2.5 / 9]]) {
   const sequence = [.8, draw, .54];
   const anomaly = chooseAnomaly(() => sequence.shift());
   assert.equal(anomaly.kind, kind); assert.equal(anomaly.index, 12);
@@ -68,7 +71,7 @@ globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
 let randomDraw = 0;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
-const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .84 : [.9, .35, .9][randomDraw++ % 3],
+const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .84 : [.9, 2.5 / 9, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();

@@ -12,7 +12,7 @@ export function mountGallerySpatial(T, { frames, exitGroup, extension }) {
   const toward = new T.Vector3(), target = new T.Vector3(), rotation = new T.Quaternion(), up = new T.Vector3(0, 1, 0);
   let anomaly = null, offset = 0, portrait = null, activated = false;
   function reset(next) {
-    for (let i = 0; i < frames.length; i++) { frames[i].group.position.copy(bases[i].position); frames[i].group.quaternion.copy(bases[i].quaternion); }
+    for (let i = 0; i < frames.length; i++) { frames[i].group.position.copy(bases[i].position); frames[i].group.quaternion.copy(bases[i].quaternion); frames[i].group.scale.setScalar(next?.kind === 'small-frames' ? .84 : 1); }
     anomaly = next; offset = 0; activated = false; portrait = next?.kind === 'approaching-portrait' ? frames[next.index] : null;
     exitGroup.position.z = 0; extension.visible = next?.kind === 'receding-exit';
   }

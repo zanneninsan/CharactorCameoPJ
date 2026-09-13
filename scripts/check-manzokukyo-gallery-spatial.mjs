@@ -48,8 +48,15 @@ for (const index of [0, 1, 22, 23]) {
   assert.ok(frame.group.position.distanceTo(base) > 2, 'reduced motion retains a static visible clue');
   spatial.reset(null);
 }
-for (const [kind, draw] of [['receding-exit', 5.5 / 7], ['approaching-portrait', 6.5 / 7]]) {
+for (const [kind, draw] of [['receding-exit', 5.5 / 9], ['approaching-portrait', 6.5 / 9]]) {
   const values = [.8, draw, .2], anomaly = chooseAnomaly(() => values.shift()); assert.equal(anomaly.kind, kind);
   assert.ok(judgeLoop({ ...newLoop(), round: 1, anomaly }, 'back').correct);
 }
 console.log('Spatial anomalies passed: entrance spacing, receding exit and reachable boundaries, portrait motion/raycast/pause/reduced motion, and full reset.');
+
+spatial.reset({ kind: 'small-frames' });
+assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(.84, .84, .84))));
+for (const next of [null, { kind: 'approaching-portrait', index: 0 }, { kind: 'receding-exit' }, { kind: 'meme-gallery' }]) {
+  spatial.reset({ kind: 'small-frames' }); spatial.reset(next);
+  assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(1, 1, 1))), 'size cannot leak into the following exhibition');
+}

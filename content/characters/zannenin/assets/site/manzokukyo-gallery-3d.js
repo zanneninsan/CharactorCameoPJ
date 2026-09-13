@@ -8,7 +8,7 @@ const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
 const { mountGallerySpatial } = await import(new URL(`manzokukyo-gallery-spatial.js?${assetVersionQuery}`, import.meta.url));
-const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
+const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel, galleryImagePath } = await import(new URL(`manzokukyo-gallery-loop.js?${assetVersionQuery}`, import.meta.url));
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const { mountFrameHand } = await import(new URL(`manzokukyo-gallery-hand.js?${assetVersionQuery}`, import.meta.url));
 let exhibition, loop, selected = 0;
@@ -180,6 +180,32 @@ function createExhibition(T) {
     ctx.font = '12px sans-serif'; ctx.fillText(detail, 128, 69);
     const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
   }
+  function sealTexture(collected) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 320;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = collected ? '#254c47' : '#8c3046';
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(128 + side * 18, 172); ctx.lineTo(128 + side * 75, 305);
+      ctx.lineTo(128 + side * 82, 275); ctx.lineTo(128 + side * 112, 280); ctx.lineTo(128 + side * 72, 156); ctx.fill();
+    }
+    const goldLeaf = ctx.createRadialGradient(90, 64, 10, 128, 125, 115);
+    goldLeaf.addColorStop(0, '#fff0b9'); goldLeaf.addColorStop(.6, '#d4ac59'); goldLeaf.addColorStop(1, '#886028');
+    ctx.fillStyle = goldLeaf; ctx.beginPath();
+    for (let i = 0; i < 64; i++) {
+      const a = i * Math.PI / 32, radius = i % 2 ? 104 : 114;
+      const x = 128 + Math.cos(a) * radius, y = 122 + Math.sin(a) * radius;
+      if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = collected ? '#183b36' : '#492032'; ctx.beginPath(); ctx.arc(128, 122, 94, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#f8d78c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(128, 122, 85, 0, Math.PI * 2); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c9'; ctx.font = 'bold 50px serif'; ctx.fillText(collected ? '済' : '検印', 128, 132);
+    ctx.font = 'bold 20px sans-serif'; ctx.fillText(collected ? '回収済み' : '未回収', 128, 172);
+    ctx.font = '25px serif'; ctx.fillText('✦', 128, 77);
+    const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
+  }
+  const sealMaps = [sealTexture(false), sealTexture(true)];
+  const sealMaterials = sealMaps.map(map => basic({ map, transparent: true, alphaTest: .1, toneMapped: false, depthWrite: false }));
   for (let index = 0; index < 24; index++) {
     const roomIndex = Math.floor(index / 6), local = index % 6, side = local % 2 === 0 ? -1 : 1, z = galleryFrameZ(index);
     const group = new T.Group(); group.position.set(side * 5.13, 2.82, z); group.rotation.y = -side * Math.PI / 2; scene.add(group);
@@ -202,8 +228,9 @@ function createExhibition(T) {
     box(group, [.52, .025, .17], [0, height / 2 + .31, .17], warm);
     let seal;
     if (records[index].seal) {
-      const shape = new T.TorusGeometry(.125, .025, 6, 28); geometry.add(shape);
-      seal = new T.Mesh(shape, gold); seal.position.set(width / 2 + .12, height / 2 + .12, .17); group.add(seal);
+      seal = new T.Mesh(plane, sealMaterials[0]); seal.scale.set(.76, .95, 1);
+      seal.position.set(width / 2 + .04, height / 2 - .14, .20); seal.userData.index = index;
+      group.add(seal); targets.push(seal);
     }
     frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
@@ -240,8 +267,7 @@ function createExhibition(T) {
     for (const frame of frames.filter(frame => frame.roomIndex === r)) {
       if (loaded.has(frame.index) || pending.has(frame.index)) continue;
       const generation = textureGeneration;
-      const appearance = paintingAppearance(frame.index, anomaly);
-      const url = new URL(`../../../assets/generated/manzokukyo/gallery/gallery-${records[appearance.imageIndex].id}-room.webp?${assetVersionQuery}`, document.baseURI).href;
+      const url = new URL(`${galleryImagePath(frame.index, anomaly, records, true)}?${assetVersionQuery}`, document.baseURI).href;
       pending.set(frame.index, generation);
       loader.load(url, texture => {
         if (generation !== textureGeneration) { texture.dispose(); return; }
@@ -388,7 +414,7 @@ function createExhibition(T) {
     syncWalkingSelection(direction); wake();
   }
   function syncSeals() {
-    for (const frame of frames) if (frame.seal) { frame.seal.material = document.querySelector(`[data-gallery-index="${frame.index}"]`).classList.contains('is-collected') ? green : gold; }
+    for (const frame of frames) if (frame.seal) { frame.seal.material = document.querySelector(`[data-gallery-index="${frame.index}"]`).classList.contains('is-collected') ? sealMaterials[1] : sealMaterials[0]; }
     wake();
   }
   const sealObserver = new MutationObserver(syncSeals); sealObserver.observe(catalog, { subtree: true, attributes: true, attributeFilter: ['class'] });

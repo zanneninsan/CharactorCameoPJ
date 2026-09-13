@@ -1,3 +1,4 @@
+import { galleryMemeImages } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-artworks.js';
 import { readFile, writeFile, cp, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -12,12 +13,17 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const galleryImages = path.join(root, 'content/characters/zannenin/assets/manzokukyo/gallery');
 await buildGalleryRoomImages(galleryImages, path.join(root, 'dist/zannenin/assets/generated/manzokukyo/gallery'));
 await cp(galleryImages, path.join(root, 'dist/zannenin/assets/manzokukyo/gallery'), { recursive: true });
+for (const image of galleryMemeImages) {
+  const destination = path.join(root, 'dist/zannenin/assets', image.path);
+  await mkdir(path.dirname(destination), { recursive: true });
+  await cp(path.join(root, 'content/characters/zannenin/assets', image.path), destination);
+}
 const source = path.join(root, 'content/characters/zannenin/assets/site');
 const target = path.join(root, 'dist/zannenin/assets/site');
 const filename = path.join(root, 'dist/zannenin/manzokukyo/truth/gallery/index.html');
 const previous = await readFile(filename, 'utf8');
 const character = JSON.parse(await readFile(path.join(root, 'content/characters/zannenin/character.json'), 'utf8'));
-const files = ['manzokukyo-gallery-image.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-hand.js', 'manzokukyo-gallery-visitor.js', 'manzokukyo-gallery-spatial.js', 'manzokukyo-gallery-achievements.js'];
+const files = ['manzokukyo-gallery-artworks.js', 'manzokukyo-gallery-image.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-hand.js', 'manzokukyo-gallery-visitor.js', 'manzokukyo-gallery-spatial.js', 'manzokukyo-gallery-achievements.js'];
 const texts = await Promise.all(files.map(file => readFile(path.join(source, file), 'utf8')));
 const renderers = await Promise.all(['render-manzokukyo-gallery.mjs', 'render-manzokukyo-gallery-3d.mjs'].map(file => readFile(new URL(file, import.meta.url), 'utf8')));
 const version = createHash('sha256').update([...texts, ...renderers].join('\n')).digest('hex').slice(0, 12);
