@@ -69,9 +69,9 @@ globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (
 globalThis.matchMedia = () => ({ matches: false });
 globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
-let randomDraw = 0;
+let randomDraw = 0, drawNormal = false;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
-const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => visitorsReady ? .7 : [.9, 2.5 / 10, .9][randomDraw++ % 3],
+const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => drawNormal ? 0 : visitorsReady ? .7 : [.9, 2.5 / 10, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
@@ -101,12 +101,17 @@ await ui.cross('forward'); await finish();
 assert.equal(ui.snapshot().heldSeal, null); assert.equal(shared.state().count, 0, 'a wrong exit discards the provisional seal');
 assert.equal(ui.achievements().encountered, 1); assert.equal(ui.achievements().solved, 0, 'completed encounter is recorded even when the judgment was wrong');
 inspectSeal(2); ui.collect(); close();
-await ui.cross('back'); await finish(); assert.equal(ui.snapshot().streak, 1); assert.equal(shared.state().count, 1);
+drawNormal = true;
+await ui.cross('back'); await finish(); assert.equal(ui.snapshot().streak, 1); assert.equal(shared.state().count, 0, 'a correct retreat scores but never files a seal');
+assert.equal(ui.snapshot().heldSeal, null); assert.equal(shared.elements.ceremony.open, false);
+assert.match(nodes.get('[data-gallery-loop-transition-note]').textContent, /引き返した周回の仮押しは消えます/);
+inspectSeal(2); ui.collect(); close(); drawNormal = false;
+await ui.cross('forward'); await finish(); assert.equal(shared.state().count, 1, 'only a normal forward exit files the seal');
 assert.equal(ui.achievements().solved, 1, 'a correct retreat upgrades the same achievement');
 assert.deepEqual(JSON.parse(shared.store.get('manzokukyo-gallery-seals-v2')), [2], 'the existing saved progress is used');
 inspectSeal(2); assert.equal(ui.collect(), false, 'a confirmed seal cannot be collected again'); close();
 inspectSeal(5); ui.collect(); close();
-await ui.cross('forward'); await finish(); assert.equal(ui.snapshot().streak, 0); assert.equal(ui.snapshot().best, 1);
+await ui.cross('forward'); await finish(); assert.equal(ui.snapshot().streak, 0); assert.equal(ui.snapshot().best, 2);
 assert.equal(shared.state().count, 1, 'a mistake keeps seals from previous correct rounds');
 assert.ok(sounds.includes('gallery-unseal')); assert.ok(sounds.includes('transmission'));
 inspectSeal(5); ui.collect(); close();
@@ -117,7 +122,9 @@ assert.equal(ui.snapshot().heldSeal, 5, 'an image retry keeps the provisional se
 assert.equal(nodes.get('[data-gallery-loop-retry]').hidden, false);
 imageErrors = false; nodes.get('[data-gallery-loop-retry]').fire('click'); await finish();
 assert.equal(ui.snapshot().round, beforeError.round, 'retrying images does not reroll or judge a round');
-await ui.cross('back'); await finish(); assert.equal(shared.state().count, 2);
+drawNormal = true;
+await ui.cross('back'); await finish(); assert.equal(shared.state().count, 1, 'retreat preserves previously filed seals');
+inspectSeal(5); ui.collect(); close(); await ui.cross('forward'); await finish(); assert.equal(shared.state().count, 2);
 inspectSeal(9); ui.collect(); close();
 const beforeViewing = ui.snapshot(); assert.ok(beforeViewing.streak > 0);
 const switching = ui.setMode('gallery'); await finish(); await switching;
@@ -129,7 +136,7 @@ assert.equal(shared.call('collectSeal'), false, 'the viewing mode cannot bypass 
 const resuming = ui.setMode('loop'); await finish(); await resuming;
 await ui.cross('forward'); await finish();
 for (const number of [9, 14, 17, 21]) {
-  inspectSeal(number); ui.collect(); close(); await ui.cross('back'); await finish();
+  inspectSeal(number); ui.collect(); close(); await ui.cross('forward'); await finish();
 }
 assert.equal(shared.state().count, 6); assert.equal(shared.elements.ceremony.open, true, 'the sixth confirmed seal opens the existing ceremony');
 shared.call('closeCeremony'); assert.equal(shared.call('submitWord', 'ちがう').accepted, false);
@@ -138,12 +145,12 @@ assert.equal(shared.state().cleared, true); assert.equal(shared.elements.exit.ge
 nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
 assert.equal(ui.snapshot().round, 0); assert.equal(ui.snapshot().best, 4); assert.equal(preparations.at(-1).anomaly, null);
 assert.equal(shared.state().count, 0); assert.equal(shared.state().cleared, false); assert.equal(shared.elements.ceremony.open, false);
-visitorsReady = true;
+visitorsReady = true; drawNormal = false;
 await ui.cross('forward'); await finish();
 assert.equal(preparations.at(-1).anomaly.kind, 'darenin-rush', 'only ready character models enter the anomaly draw');
 inspectSeal(2); ui.collect(); close();
 await ui.cross('back'); await finish();
-assert.equal(shared.state().count, 1, 'retreating from the four runners files the provisional seal');
+assert.equal(shared.state().count, 0, 'retreating from the four runners scores without filing the provisional seal');
 assert.match(nodes.get('[data-gallery-loop-transition-note]').textContent, /4体/);
 
 // Forced exhibitions share the real transition path but must never affect a save.
@@ -157,7 +164,7 @@ for (const selection of [null, { kind: 'unknown' }, ...[-1, 24, NaN, .5, '1'].ma
 }
 visitorsReady = false;
 assert.equal(ui.startDebug({ kind: 'giant-darenin' }), false, 'unavailable models cannot become invisible anomalies');
-visitorsReady = true;
+visitorsReady = true; drawNormal = false;
 let applying = ui.startDebug({ kind: 'frame-hand', index: 4 });
 assert.equal(ui.busy, true); assert.equal(ui.snapshot().heldSeal, null);
 assert.equal(ui.startDebug({ kind: 'normal' }), false, 'double apply is rejected synchronously');

@@ -93,8 +93,8 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     q('[data-gallery-loop-best]').textContent = String(state.best).padStart(2, '0');
     q('[data-gallery-loop-restart]').disabled = busy;
     const progress = gallery.state();
-    q('[data-gallery-loop-hint]').textContent = state.round === 0 ? 'まずは正常な24枚を覚えて奥へ。次の巡回から、検印を1枚仮押しして持ち帰ろう。' : '金色の印を1周1枚仮押し。異変があれば入口へ、なければ奥へ。正しい判断で検印が確定。';
-    q('[data-gallery-loop-carry]').textContent = heldSeal ? `仮押し「${records.find(record => record.number === heldSeal).seal.fragment}」 / 正しい扉で確定` : progress.count === 6 ? '6枚を持ち帰った。検印帳で文字を並べ、赤い扉へ。' : state.round === 0 ? '初回は観察のみ / 次の巡回から回収' : '仮押し なし / 金色の印がある絵を探そう';
+    q('[data-gallery-loop-hint]').textContent = state.round === 0 ? 'まずは正常な24枚を覚えて奥へ。次の巡回から、検印を1枚仮押しして持ち帰ろう。' : '金色の印を1周1枚仮押し。異変があれば入口へ。異変のない回廊を奥まで進むと検印が確定。';
+    q('[data-gallery-loop-carry]').textContent = heldSeal ? `仮押し「${records.find(record => record.number === heldSeal).seal.fragment}」 / 異変なしで奥へ進むと確定` : progress.count === 6 ? '6枚を持ち帰った。検印帳で文字を並べ、赤い扉へ。' : state.round === 0 ? '初回は観察のみ / 次の巡回から回収' : '仮押し なし / 金色の印がある絵を探そう';
     q('[data-gallery-loop-filed]').textContent = `${progress.count} / 6`;
     q('[data-gallery-loop-bag]').setAttribute('data-held', String(heldSeal !== null));
     for (const slot of stage.querySelectorAll('[data-gallery-loop-slot]')) {
@@ -148,13 +148,13 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     }
     achievements.record(state.anomaly?.kind, verdict.correct);
     const carried = heldSeal;
-    const confirmed = verdict.correct && carried !== null ? gallery.confirmSeal(carried) : null;
+    const confirmed = verdict.correct && direction === 'forward' && !verdict.baseline && carried !== null ? gallery.confirmSeal(carried) : null;
     heldSeal = null;
     state = verdict.next; rememberBest();
     gallery.play(verdict.correct ? 'gallery-unseal' : 'transmission', { level: verdict.correct ? .55 : .65 });
     const title = verdict.baseline && verdict.correct ? '正常な展示を記憶しました' : verdict.correct ? '判断は、正しかった。' : 'また、最初から。';
-    const sealResult = confirmed ? `検印「${confirmed.fragment}」を持ち帰りました。${confirmed.count} / 6` : carried !== null && !verdict.correct ? '仮押しの印が消えました。持ち帰り済みの検印は残っています。' : verdict.correct ? '今回は仮押しなし。次の巡回で金色の印を探してください。' : '連続正解が 00 に戻りました。持ち帰り済みの検印は残っています。';
-    const note = verdict.baseline && verdict.correct ? 'ここからは、検印を仮押しして正しい扉へ。異変があるなら引き返してください。' : `${describeAnomaly(verdict.previous)} ${sealResult}`;
+    const sealResult = confirmed ? `検印「${confirmed.fragment}」を持ち帰りました。${confirmed.count} / 6` : verdict.correct && verdict.previous ? '異変を見破りました。引き返した周回の仮押しは消えます。検印は、異変のない回廊を奥まで進むと持ち帰れます。' : carried !== null && !verdict.correct ? '仮押しの印が消えました。持ち帰り済みの検印は残っています。' : verdict.correct ? '今回は仮押しなし。次の巡回で金色の印を探してください。' : '連続正解が 00 に戻りました。持ち帰り済みの検印は残っています。';
+    const note = verdict.baseline && verdict.correct ? 'ここからは検印を仮押しし、異変のない回廊を奥まで進むと持ち帰れます。異変があれば引き返してください。' : `${describeAnomaly(verdict.previous)} ${sealResult}`;
     void prepare(title, note, verdict.correct ? 'correct' : 'wrong', 2200).then(ready => { if (ready && confirmed?.complete && active && !disposed) gallery.celebrateSeals(); });
     return true;
   }
@@ -184,7 +184,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     collectButton.hidden = !record?.seal;
     collectButton.disabled = !imageReady || state.round === 0 || heldSeal !== null || filed || !active || busy;
     collectButton.textContent = filed ? '持ち帰り済み' : heldSeal === record?.number ? `仮押し「${record.seal.fragment}」` : '⊹ 検印を仮押しする';
-    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : debugSelection ? 'DEBUG / 仮押しを試せます。検印・最高記録は保存されません。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。正しい扉を選ぶと、検印帳に残ります。' : '';
+    sealNote.textContent = !imageReady ? '絵を読み込んでいます。' : debugSelection ? 'DEBUG / 仮押しを試せます。検印・最高記録は保存されません。' : !record?.seal ? 'この額縁に検印はありません。絵の違和感もよく見て。' : filed ? 'この検印は、すでに検印帳に記録されています。' : state.round === 0 ? '最初の一周は観察。次の巡回から仮押しできます。' : heldSeal !== null ? '1周に持ち歩ける印は1枚。異変のない回廊を奥まで進むと、検印帳に残ります。' : '';
     modal.setAttribute('data-held', String(record?.number === heldSeal));
   }
   function collect() {

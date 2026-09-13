@@ -180,7 +180,7 @@ function showRecord(index, openingButton) {
   imprint.querySelector('small').textContent = collected ? 'FILED / 照合済' : 'UNFILED / 未照合';
   collect.hidden = !record.seal || collected || Boolean(expedition); collect.disabled = false;
   note.textContent = record.seal ? collected ? `文字「${record.seal.fragment}」は検印帳に記録されています。` : '金箔の下に、ひとつの文字が眠っている。印を押して、写し取る。' : 'この記録に検印はない。ひと息置いて、次の額縁へ。';
-  if (expedition && record.seal && !collected) note.textContent = '検印は「異変と検印の回廊」で仮押しし、正しい判断で持ち帰ってください。';
+  if (expedition && record.seal && !collected) note.textContent = '検印は「異変と検印の回廊」で仮押しし、異変のない回廊を奥まで進むと持ち帰れます。';
   if (!dialog.open) { opener = openingButton || document.querySelector(`[data-gallery-index="${current}"]`); dialog.showModal(); syncModalLock(); }
   play(record.seal && !collected ? 'gallery-reveal' : 'tap', { level: .55 });
   return true;

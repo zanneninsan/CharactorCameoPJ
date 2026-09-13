@@ -5,6 +5,7 @@ const loading = stage.querySelector('.gallery-3d-loading');
 const catalog = document.querySelector('.gallery-3d-catalog');
 const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
+const { mountGalleryDecor } = await import(new URL(`manzokukyo-gallery-decor.js?${assetVersionQuery}`, import.meta.url));
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
 const { mountGallerySpatial } = await import(new URL(`manzokukyo-gallery-spatial.js?${assetVersionQuery}`, import.meta.url));
@@ -92,10 +93,9 @@ function createExhibition(T) {
   const green = basic({ color: 0x94cbb8 });
   const rose = basic({ color: 0xd6a9a7 });
   function box(parent, size, at, m) { const mesh = new T.Mesh(cube, m); mesh.scale.set(...size); mesh.position.set(...at); parent.add(mesh); return mesh; }
-  scene.add(new T.HemisphereLight(0xfff2d8, 0x4b595f, 2.1));
-  const sun = new T.DirectionalLight(0xffe4b8, 2.3); sun.position.set(-4, 8, 5); scene.add(sun);
-  const fill = new T.DirectionalLight(0x9cb4bf, 1.1); fill.position.set(5, 4, -12); scene.add(fill);
-  const ambience = new T.PointLight(0xe7c78f, 35, 22, 2); ambience.position.set(0, 4.4, -5); scene.add(ambience);
+  scene.add(new T.HemisphereLight(0xfff2d8, 0x4b595f, 1.8));
+  const sun = new T.DirectionalLight(0xffe4b8, 1.7); sun.position.set(-4, 8, 5); scene.add(sun);
+  const fill = new T.DirectionalLight(0x9cb4bf, .8); fill.position.set(5, 4, -12); scene.add(fill);
 
   // Repeated architecture uses shared geometry; the rooms are deliberately well lit.
   box(scene, [11.4, .25, 69], [0, -.15, -30], baseStone);
@@ -113,11 +113,9 @@ function createExhibition(T) {
     box(scene, [.24, .065, 69], [side * 5.29, .9, -30], gold);
     box(scene, [.28, .13, 69], [side * 5.28, 5.15, -30], cornice);
     box(scene, [.32, .04, 69], [side * 5.25, 5.25, -30], gold);
-    box(scene, [.16, .06, 69], [side * 5.2, 5.7, -30], warm);
     box(scene, [.025, .025, 69], [side * 3.75, .03, -30], gold);
   }
-  box(scene, [11.4, .18, 69], [0, 6.45, -30], baseStone);
-  box(scene, [2.4, .05, 69], [0, 6.33, -30], warm);
+  box(scene, [11.4, .18, 69], [0, 6.45, -30], cornice);
   // Walking lets visitors turn back toward the entrance as well.
   box(scene, [11.4, 6.4, .3], [0, 3.15, 4.5], stone);
   box(scene, [3.3, 4.8, .18], [0, 2.4, 4.2], gold);
@@ -138,12 +136,9 @@ function createExhibition(T) {
   // A red doorway anchors the far end, with the same heraldic silhouette as the other rooms.
   const exitGroup = new T.Group(), extension = new T.Group(); scene.add(exitGroup, extension);
   box(exitGroup, [11.4, 6.4, .3], [0, 3.15, -64.5], stone);
-  box(exitGroup, [3.3, 4.8, .18], [0, 2.4, -64.2], gold);
-  box(exitGroup, [2.95, 4.55, .18], [0, 2.28, -64.07], material({ color: 0x642b3c, roughness: .62 }));
-  box(exitGroup, [.018, 4.45, .1], [0, 2.27, -63.96], warm);
+
   box(extension, [11.4, .25, 18], [0, -.15, -73.5], baseStone);
-  box(extension, [11.4, .18, 18], [0, 6.45, -73.5], baseStone);
-  box(extension, [2.4, .05, 18], [0, 6.33, -73.5], warm);
+  box(extension, [11.4, .18, 18], [0, 6.45, -73.5], cornice);
   for (const side of [-1, 1]) {
     box(extension, [.32, 6.4, 18], [side * 5.55, 3.15, -73.5], stone);
     box(extension, [.24, .065, 18], [side * 5.29, .9, -73.5], gold);
@@ -156,6 +151,7 @@ function createExhibition(T) {
     extension.add(tiles);
   }
   extension.visible = false;
+  const decor = mountGalleryDecor(T, { scene, exitGroup, extension, geometry, textures, material, basic, box, plane, gold, black });
   const frames = [], targets = [];
   const loader = new T.TextureLoader();
   const roomCache = [];
@@ -277,7 +273,7 @@ function createExhibition(T) {
   }
   const portalLabels = [4.03, -63.93].map((z, index) => {
     const sign = new T.Mesh(plane, basic({ map: portalTexture, toneMapped: false }));
-    sign.scale.set(2.3, .86, 1); sign.position.set(0, 5.3, z); sign.rotation.y = index === 0 ? Math.PI : 0; (index === 0 ? scene : exitGroup).add(sign); return sign;
+    sign.scale.set(2.3, .64, 1); sign.position.set(0, 5.65, z); sign.rotation.y = index === 0 ? Math.PI : 0; (index === 0 ? scene : exitGroup).add(sign); return sign;
   });
   const skyPanels = [green, rose, warm, green];
   for (let r = 0; r < 4; r++) for (const side of [-1, 1]) box(scene, [.045, 1.6, .15], [side * 5.18, 3.4, -15 - r * 16], skyPanels[r]);
@@ -307,7 +303,7 @@ function createExhibition(T) {
       if (anomaly?.kind === 'returned-portrait' && anomaly.index === frame.index) receive(labelTexture('',''));
       else loader.load(url, receive, undefined, () => { if (generation !== textureGeneration || disposed) return; pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
     }
-    ambience.position.z = -6 - activeRoom * 16; refreshLoading();
+    refreshLoading();
   }
   function inspectionImage(index) {
     if (!['returned-portrait', 'backwards-frame'].includes(anomaly?.kind) || anomaly.index !== index) return null;
@@ -485,7 +481,7 @@ function createExhibition(T) {
     // keyboard movement keeps the existing responsive refresh rate.
     const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible();
     if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
-      renderer.render(scene, camera); lastRender = time;
+      decor.update(camera); renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
     }
     if ((moving || walking || visitorMoving) && !paused && !raf) raf = requestAnimationFrame(animate);
@@ -570,7 +566,7 @@ function createExhibition(T) {
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     visitor?.dispose();
-    frameHand.dispose();
+    frameHand.dispose(); decor.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
@@ -598,7 +594,7 @@ function createExhibition(T) {
   }
   void loadVisitors();
   return { select, overview, prepareLoop, inspectionImage, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

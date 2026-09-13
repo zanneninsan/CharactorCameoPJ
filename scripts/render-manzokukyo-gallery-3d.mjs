@@ -30,7 +30,7 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
   const transition = `<div class="gallery-loop-transition" data-gallery-loop-transition role="status" hidden><div class="gallery-loop-eye" aria-hidden="true"><i></i></div><span>MANZOKUKYO / RECURSION</span><strong data-gallery-loop-transition-title></strong><p data-gallery-loop-transition-note></p><button type="button" data-gallery-loop-retry hidden>展示を読み込み直す</button></div>`;
   const exhibition = stage.replace('<div class="gallery-3d-viewport">', '<div class="gallery-3d-viewport">' + loopPanel + transition);
   let body = original.body.slice(0, introStart) + exhibition + original.body.slice(puzzleStart);
-  body = body.replace('金色の検印が付いた記録を開き、照合していく。集まった六つの文字を並べ替えれば、次の扉を呼ぶ言葉になる。', '金色の印を1周に1枚仮押しし、異変の判断に正解すると検印帳に残る。間違えた周回の仮押しは消える。6枚を持ち帰ったら、文字を並べ替えて次の扉を呼ぼう。');
+  body = body.replace('金色の検印が付いた記録を開き、照合していく。集まった六つの文字を並べ替えれば、次の扉を呼ぶ言葉になる。', '金色の印を1周に1枚仮押しし、異変のない回廊を奥まで進むと検印帳に残る。引き返した周回・間違えた周回の仮押しは消える。6枚を持ち帰ったら、文字を並べ替えて次の扉を呼ぼう。');
   body = body.replace('<main class="gallery-page" data-gallery-experience>', '<main class="gallery-page gallery-3d-page" data-gallery-experience data-gallery-3d>');
   body = body.replace('<main class="gallery-page gallery-3d-page"', `<link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-3d.css?${assetVersionQuery}">\n      <main class="gallery-page gallery-3d-page"`);
   body += `\n      <script type="module" src="../../../assets/site/manzokukyo-gallery-3d.js?${assetVersionQuery}"></script>\n`;
@@ -44,7 +44,7 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
   const options = {
     ...original,
     title: '記憶の画廊 | 満足教',
-    description: '異変があれば引き返す、終わりのない「記憶の画廊」。24枚の絵を観察して検印を仮押しし、正しい判断で6枚を持ち帰って次の扉へ。',
+    description: '異変があれば引き返す、終わりのない「記憶の画廊」。24枚の絵を観察して検印を仮押しし、異変のない回廊を抜けて6枚を持ち帰り、次の扉へ。',
     urlPath: `${character.id}/manzokukyo/truth/gallery/`,
     imagePath: `${character.id}/assets/manzokukyo/gallery-ogp-v1.png`,
     robots: alias ? 'noindex,follow' : 'index,follow,max-image-preview:large',
