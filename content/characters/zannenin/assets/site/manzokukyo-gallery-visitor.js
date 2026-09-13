@@ -363,7 +363,9 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       } else if (bowing) {
         advanceBowing(bow, dt, viewer, options);
         [official, copies[0]].forEach((actor, index) => {
-          const x = bow.x + (index ? -1 : 1) * .95;
+          const screenHalfWidth = options.camera ? Math.max(3.2, Math.hypot(viewer.x - bow.x, viewer.z - bow.z)) * Math.tan(options.camera.fov * Math.PI / 360) * options.camera.aspect : 2;
+          const spacing = Math.min(.95, Math.max(.34, screenHalfWidth * .5));
+          const x = bow.x + (index ? -1 : 1) * spacing;
           moving = actor.update(dt, viewer, { ...options, formation: { x, z: bow.z, yaw: Math.atan2(x - viewer.x, bow.z - viewer.z), speed: bow.speed, bow: bow.bow, running: false } }) || moving;
         });
       } else {

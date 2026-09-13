@@ -179,3 +179,8 @@ assert.equal(watching.z, -12);
 const polite = createBowingState(); advanceBowing(polite, .05, { x: 0, z: -10 }, { reduced: true });
 assert.equal(polite.bow, 1.25); const stillPolite = structuredClone(polite);
 advanceBowing(polite, .05, { x: 1, z: -20 }, { inspecting: true }); assert.deepEqual(polite, stillPolite);
+
+const mobilePolite = createBowingState();
+for (let i = 0; i < 1600; i++) advanceBowing(mobilePolite, .05, { x: 0, z: .8 }, { camera: { aspect: .5 } });
+assert.ok(.8 - mobilePolite.z > 4.35, 'on mobile the bowing pair stays far enough away to remain visible');
+assert.ok(mobilePolite.cycles > 5);

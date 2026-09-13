@@ -1,20 +1,21 @@
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export function createBowingState() { return { x: 0, z: -8, phase: 0, bow: 0, speed: 0, cycles: 0 }; }
-export function advanceBowing(state, seconds, viewer, { paused = false, inspecting = false, reduced = false } = {}) {
+export function advanceBowing(state, seconds, viewer, { paused = false, inspecting = false, reduced = false, camera } = {}) {
   if (paused || inspecting) return state;
   const dt = clamp(Number.isFinite(seconds) ? seconds : 0, 0, .05);
   const dx = viewer.x - state.x, dz = viewer.z - state.z, distance = Math.hypot(dx, dz);
+  const stopDistance = camera && camera.aspect < .8 ? 4.4 : 3.2;
   state.speed = 0;
-  if (reduced) { state.x = clamp(viewer.x, -2, 2); state.z = clamp(viewer.z - 3, -58, 0); state.bow = 1.25; return state; }
-  if (!state.phase && distance > 4.5) {
+  if (reduced) { state.x = clamp(viewer.x, -2, 2); state.z = clamp(viewer.z - stopDistance, -58, 0); state.bow = 1.25; return state; }
+  if (!state.phase && distance > stopDistance + 1.3) {
     state.speed = .7; state.x = clamp(state.x + dx / distance * dt * state.speed, -2, 2); state.z = clamp(state.z + dz / distance * dt * state.speed, -58, 0);
   } else {
     state.phase += dt;
-    if (state.phase < .8 && distance > 3.2) {
+    if (state.phase < .8 && distance > stopDistance) {
       state.speed = .4; state.x = clamp(state.x + dx / distance * dt * state.speed, -2, 2); state.z = clamp(state.z + dz / distance * dt * state.speed, -58, 0);
     }
     const t = clamp((state.phase - .8) / 2.8, 0, 1);
-    state.bow = Math.sin(Math.PI * t) ** 2 * (1.2 + clamp((4.5 - distance) / 1.3, 0, 1) * .4);
+    state.bow = Math.sin(Math.PI * t) ** 2 * (1.2 + clamp((stopDistance + 1.3 - distance) / 1.3, 0, 1) * .4);
     if (state.phase > 4.2) { state.phase = 0; state.bow = 0; state.cycles++; }
   }
   return state;
