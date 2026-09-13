@@ -2,7 +2,7 @@ import { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 export { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
 import { createGalleryAchievements, mountAchievementBoard } from './manzokukyo-gallery-achievements.js';
-const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame'];
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world'];
 export const galleryDebugOptions = [
   ['normal', '異変なし'], ['upside-down', '絵が逆さま', true], ['negative', '絵の色が反転', true],
   ['same-image', '全部同じ絵', true], ['satisfaction', '満足度の掲示'], ['frame-hand', '額縁の外の手', true],
@@ -13,6 +13,7 @@ export const galleryDebugOptions = [
   ['bowing-visitors', '礼儀正しすぎる二人', false, true],
   ['backwards-frame', '額縁の裏側', true],
   ['watching-crowd', '振り返ったら満員', false, true],
+  ['other-world', '額縁の中の別世界', true],
 ].map(([kind, label, record = false, visitors = false]) => ({ kind, label, record, visitors }));
 export function validateDebugSelection(value) {
   const option = galleryDebugOptions.find(option => option.kind === value?.kind);
@@ -56,6 +57,7 @@ export function loopExit(position, exitOffset = 0) {
   return position.z <= -62.1 - extension ? 'forward' : position.z >= 2.65 ? 'back' : null;
 }
 export function describeAnomaly(anomaly) {
+  if (anomaly?.kind === 'other-world') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の向こうに、草原と赤い扉が広がっていました。`;
   if (anomaly?.kind === 'watching-crowd') return '振り返ると、背後の壁際に誰念院さんたちが整列していました。';
   if (anomaly?.kind === 'backwards-frame') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} が裏返り、裏板と吊り紐が見えていました。`;
   if (anomaly?.kind === 'bowing-visitors') return '二人が近づいては、異様に深いお辞儀を繰り返していました。';

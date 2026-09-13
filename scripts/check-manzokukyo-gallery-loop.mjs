@@ -9,7 +9,7 @@ assert.equal(Array.from({ length: 10000 }, (_, i) => {
 assert.deepEqual(newLoop(NaN), newLoop());
 assert.deepEqual(newLoop(-1), newLoop());
 assert.equal(chooseAnomaly(() => 0), null);
-for (const [kind, draw] of [['upside-down', .05], ['negative', .15], ['same-image', 2.5 / 10]]) {
+for (const [kind, draw] of [['upside-down', .05], ['negative', .15], ['same-image', 2.5 / 11]]) {
   const sequence = [.8, draw, .54];
   const anomaly = chooseAnomaly(() => sequence.shift());
   assert.equal(anomaly.kind, kind); assert.equal(anomaly.index, 12);
@@ -71,7 +71,7 @@ globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
 let randomDraw = 0, drawNormal = false;
 const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
-const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => drawNormal ? 0 : visitorsReady ? .7 : [.9, 2.5 / 10, .9][randomDraw++ % 3],
+const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => drawNormal ? 0 : visitorsReady ? .7 : [.9, 2.5 / 11, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
 await Promise.resolve();
@@ -226,13 +226,13 @@ function collector(draws) {
     exhibition: { stop() {}, hasVisitors: () => false, hasImageErrors: () => false,
       prepareLoop(anomaly, round) { preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 }
-const collecting = collector([.9, .25, .9, .9, .205, .9]);
+const collecting = collector([.9, .25, .9, .9, .185, .9]);
 await Promise.resolve(); await finish();
 assert.equal(preparations.at(-1).anomaly, null, 'fresh run still begins with a fixed normal exhibition');
 await collecting.cross('forward'); await finish(); assert.equal(preparations.at(-1).anomaly.kind, 'same-image');
 await collecting.cross('forward'); await finish(); assert.equal(preparations.at(-1).anomaly.kind, 'negative', 'just-encountered same-image loses its bonus immediately');
 assert.equal(collecting.achievements().encountered, 1); collecting.fallback();
-const reloadedCollector = collector([.9, .205, .9]);
+const reloadedCollector = collector([.9, .185, .9]);
 await Promise.resolve(); await finish(); await reloadedCollector.cross('forward'); await finish();
 assert.equal(preparations.at(-1).anomaly.kind, 'negative', 'persisted discoveries influence the first random lap after reload');
 reloadedCollector.fallback();

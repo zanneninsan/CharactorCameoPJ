@@ -43,3 +43,7 @@ The gallery files are original 24 kHz mono PCM16 WAVs. Reproduce them with `pyth
 ## Regenerate
 
 Run `python generate_sounds.py` with NumPy and SciPy available. Generation uses a fixed seed and writes assets plus `validation.json` beside the script. The generator performs PCM format, finite sample, peak, and silent-tail assertions.
+
+## Framed-world breeze
+
+`gallery-world-wind.wav` is a four-second, mono 22050 Hz meadow breeze synthesized by `generate_world_wind.py` from seeded filtered noise. It uses no external recordings. Peak is 0.52; both ends fade to silence. Playback uses the existing effects volume and sound consent, only near the visible framed world; leaving, inspection, mute and page transitions stop the gust.

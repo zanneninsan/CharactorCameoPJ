@@ -5,6 +5,7 @@ const loading = stage.querySelector('.gallery-3d-loading');
 const catalog = document.querySelector('.gallery-3d-catalog');
 const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
+const { mountGalleryWorld } = await import(new URL(`manzokukyo-gallery-world.js?${assetVersionQuery}`, import.meta.url));
 const { mountGalleryDecor } = await import(new URL(`manzokukyo-gallery-decor.js?${assetVersionQuery}`, import.meta.url));
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
@@ -236,6 +237,7 @@ function createExhibition(T) {
     }
     frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
+  const otherWorld = mountGalleryWorld(T, { frames, targets, gallery });
   function backTexture() {
     const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
     const ctx = c.getContext('2d'); ctx.fillStyle = '#766047'; ctx.fillRect(0, 0, 768, 1080);
@@ -306,7 +308,7 @@ function createExhibition(T) {
     refreshLoading();
   }
   function inspectionImage(index) {
-    if (!['returned-portrait', 'backwards-frame'].includes(anomaly?.kind) || anomaly.index !== index) return null;
+    if (!['returned-portrait', 'backwards-frame', 'other-world'].includes(anomaly?.kind) || anomaly.index !== index) return null;
     const frame = frames[index], target = new T.WebGLRenderTarget(768, 1080); target.texture.colorSpace = T.SRGBColorSpace;
     const shot = new T.OrthographicCamera(-1.4, 1.4, 1.97, -1.97, .1, 12);
     scene.updateMatrixWorld(true);
@@ -314,7 +316,7 @@ function createExhibition(T) {
     shot.position.set(frame.side * (5.13 - 5), 2.82, frame.z); shot.lookAt(frame.side * 5.13, 2.82, frame.z);
     const previous = renderer.getRenderTarget();
     try {
-      renderer.setRenderTarget(target); renderer.render(scene, shot);
+      otherWorld.render(renderer, shot, true); renderer.setRenderTarget(target); renderer.render(scene, shot);
       const pixels = new Uint8Array(768 * 1080 * 4); renderer.readRenderTargetPixels(target, 0, 0, 768, 1080, pixels);
       const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
       const ctx = c.getContext('2d'), data = ctx.createImageData(768, 1080);
@@ -334,7 +336,7 @@ function createExhibition(T) {
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
     frameHand.setAnomaly(anomaly);
-    spatial.reset(anomaly);
+    spatial.reset(anomaly); otherWorld.setAnomaly(anomaly);
     backBoard.removeFromParent(); const backTarget = targets.indexOf(backBoard); if (backTarget >= 0) targets.splice(backTarget, 1);
     if (anomaly?.kind === 'backwards-frame') { backBoard.userData.index = anomaly.index; frames[anomaly.index].group.add(backBoard); targets.push(backBoard); }
     satisfactionMap.dispose(); textures.delete(satisfactionMap);
@@ -474,14 +476,15 @@ function createExhibition(T) {
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
+    const worldMoving = otherWorld.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const spatialMoving = spatial.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
-    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving;
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving || worldMoving;
     // Wandering uses at most 30 rendered frames/sec while the camera is still;
     // keyboard movement keeps the existing responsive refresh rate.
-    const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible();
+    const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible() || otherWorld.isVisible();
     if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
-      decor.update(camera); renderer.render(scene, camera); lastRender = time;
+      decor.update(camera); otherWorld.render(renderer, camera); renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
     }
     if ((moving || walking || visitorMoving) && !paused && !raf) raf = requestAnimationFrame(animate);
@@ -494,7 +497,7 @@ function createExhibition(T) {
     if (mode === 'artwork') select(selectedIndex, true); else wake();
   }
   const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(viewport);
-  const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; last = 0; if (inView) wake(); else stopWalk(); }, { rootMargin: '80px' }); intersection.observe(canvas);
+  const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; last = 0; if (inView) wake(); else { otherWorld.silence(); stopWalk(); } }, { rootMargin: '80px' }); intersection.observe(canvas);
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
   let down;
   canvas.addEventListener('pointerdown', event => {
@@ -553,20 +556,20 @@ function createExhibition(T) {
     if (event.key === 'Escape') stopWalk();
   });
   window.addEventListener('blur', stopWalk);
-  const visibility = () => { stopWalk(); last = 0; if (!document.hidden) wake(); };
+  const visibility = () => { otherWorld.silence(); stopWalk(); last = 0; if (!document.hidden) wake(); };
   document.addEventListener('visibilitychange', visibility);
   motion.addEventListener('change', () => { if (motion.matches) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; wake(); } });
-  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); stopWalk(); lost = true; preparationResolve?.(false); preparationResolve = null; cancelAnimationFrame(raf); fallback(); });
+  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); otherWorld.silence(); stopWalk(); lost = true; preparationResolve?.(false); preparationResolve = null; cancelAnimationFrame(raf); fallback(); });
   // Keep the accessible catalog after a graphics reset. Reloading just the
   // hosted iframe would leave the parent's old sound subscriptions attached.
   window.addEventListener('pagehide', event => {
-    stopWalk();
+    otherWorld.silence(); stopWalk();
     cancelAnimationFrame(raf); raf = 0; last = 0;
     if (event.persisted) return;
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     visitor?.dispose();
-    frameHand.dispose(); decor.dispose();
+    frameHand.dispose(); decor.dispose(); otherWorld.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
@@ -594,7 +597,7 @@ function createExhibition(T) {
   }
   void loadVisitors();
   return { select, overview, prepareLoop, inspectionImage, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };
