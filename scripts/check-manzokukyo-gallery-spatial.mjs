@@ -55,7 +55,7 @@ for (const [kind, draw] of [['receding-exit', 5.5 / 10], ['approaching-portrait'
 console.log('Spatial anomalies passed: entrance spacing, receding exit and reachable boundaries, portrait motion/raycast/pause/reduced motion, and full reset.');
 
 spatial.reset({ kind: 'small-frames' });
-assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(.84, .84, .84))));
+assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(.70, .70, .70))));
 for (const next of [null, { kind: 'approaching-portrait', index: 0 }, { kind: 'receding-exit' }, { kind: 'meme-gallery' }]) {
   spatial.reset({ kind: 'small-frames' }); spatial.reset(next);
   assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(1, 1, 1))), 'size cannot leak into the following exhibition');
