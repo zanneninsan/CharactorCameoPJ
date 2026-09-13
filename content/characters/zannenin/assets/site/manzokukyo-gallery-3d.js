@@ -181,27 +181,33 @@ function createExhibition(T) {
     const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
   }
   function sealTexture(collected) {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 320;
+    const c = document.createElement('canvas'); c.width = 256; c.height = 288;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = collected ? '#254c47' : '#8c3046';
-    for (const side of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(128 + side * 18, 172); ctx.lineTo(128 + side * 75, 305);
-      ctx.lineTo(128 + side * 82, 275); ctx.lineTo(128 + side * 112, 280); ctx.lineTo(128 + side * 72, 156); ctx.fill();
+    const brass = collected ? '#8daca0' : '#c5ad72';
+    const border = (inset, cut) => {
+      ctx.beginPath(); ctx.moveTo(inset + cut, inset); ctx.lineTo(256 - inset - cut, inset);
+      ctx.lineTo(256 - inset, inset + cut); ctx.lineTo(256 - inset, 288 - inset - cut);
+      ctx.lineTo(256 - inset - cut, 288 - inset); ctx.lineTo(inset + cut, 288 - inset);
+      ctx.lineTo(inset, 288 - inset - cut); ctx.lineTo(inset, inset + cut); ctx.closePath();
+    };
+    border(9, 16); ctx.fillStyle = '#142b29'; ctx.fill();
+    ctx.strokeStyle = brass; ctx.lineWidth = 4; ctx.stroke();
+    border(19, 12); ctx.lineWidth = 1; ctx.stroke();
+    // A restrained engraved eye echoes the corridor's watchful walls.
+    ctx.strokeStyle = brass; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(91, 65); ctx.quadraticCurveTo(128, 34, 165, 65);
+    ctx.quadraticCurveTo(128, 96, 91, 65); ctx.stroke();
+    ctx.beginPath(); ctx.arc(128, 65, 10, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = brass; ctx.beginPath(); ctx.arc(128, 65, 3, 0, Math.PI * 2); ctx.fill();
+    for (const y of [102, 185]) {
+      ctx.beginPath(); ctx.moveTo(42, y); ctx.lineTo(110, y);
+      ctx.moveTo(146, y); ctx.lineTo(214, y); ctx.stroke();
+      ctx.save(); ctx.translate(128, y); ctx.rotate(Math.PI / 4); ctx.fillRect(-3, -3, 6, 6); ctx.restore();
     }
-    const goldLeaf = ctx.createRadialGradient(90, 64, 10, 128, 125, 115);
-    goldLeaf.addColorStop(0, '#fff0b9'); goldLeaf.addColorStop(.6, '#d4ac59'); goldLeaf.addColorStop(1, '#886028');
-    ctx.fillStyle = goldLeaf; ctx.beginPath();
-    for (let i = 0; i < 64; i++) {
-      const a = i * Math.PI / 32, radius = i % 2 ? 104 : 114;
-      const x = 128 + Math.cos(a) * radius, y = 122 + Math.sin(a) * radius;
-      if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = collected ? '#183b36' : '#492032'; ctx.beginPath(); ctx.arc(128, 122, 94, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#f8d78c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(128, 122, 85, 0, Math.PI * 2); ctx.stroke();
-    ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c9'; ctx.font = 'bold 50px serif'; ctx.fillText(collected ? '済' : '検印', 128, 132);
-    ctx.font = 'bold 20px sans-serif'; ctx.fillText(collected ? '回収済み' : '未回収', 128, 172);
-    ctx.font = '25px serif'; ctx.fillText('✦', 128, 77);
+    ctx.textAlign = 'center'; ctx.fillStyle = collected ? '#b9cdc1' : '#e5d7b5';
+    ctx.font = 'bold 54px "Yu Mincho", "Hiragino Mincho ProN", serif'; ctx.fillText(collected ? '済' : '検印', 128, 163);
+    ctx.font = '22px "Yu Mincho", serif'; ctx.fillText(collected ? '回収済み' : '未回収', 128, 223);
+    ctx.fillStyle = brass; ctx.font = '15px "Yu Mincho", serif'; ctx.fillText('満 足 教 蔵', 128, 253);
     const texture = new T.CanvasTexture(c); texture.colorSpace = T.SRGBColorSpace; textures.add(texture); return texture;
   }
   const sealMaps = [sealTexture(false), sealTexture(true)];
@@ -228,7 +234,7 @@ function createExhibition(T) {
     box(group, [.52, .025, .17], [0, height / 2 + .31, .17], warm);
     let seal;
     if (records[index].seal) {
-      seal = new T.Mesh(plane, sealMaterials[0]); seal.scale.set(.76, .95, 1);
+      seal = new T.Mesh(plane, sealMaterials[0]); seal.scale.set(.76, .855, 1);
       seal.position.set(width / 2 + .04, height / 2 - .14, .20); seal.userData.index = index;
       group.add(seal); targets.push(seal);
     }
