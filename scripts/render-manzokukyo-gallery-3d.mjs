@@ -46,6 +46,7 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
     title: '記憶の画廊 | 満足教',
     description: '異変があれば引き返す、終わりのない「記憶の画廊」。24枚の絵を観察して検印を仮押しし、正しい判断で6枚を持ち帰って次の扉へ。',
     urlPath: `${character.id}/manzokukyo/truth/gallery/`,
+    imagePath: `${character.id}/assets/manzokukyo/gallery-ogp-v1.png`,
     robots: alias ? 'noindex,follow' : 'index,follow,max-image-preview:large',
     body,
   };

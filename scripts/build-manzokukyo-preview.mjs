@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const relativeUrl = (from, to) => path.relative(from, to).split(path.sep).join('/') || '.';
 
-function renderRoomShell({ title, assets, fallback, version, description }) {
+function renderRoomShell({ title, assets, fallback, version, description, socialMetadata = '' }) {
   return `<!doctype html>
 <html lang="ja">
 <head>
@@ -17,6 +17,7 @@ function renderRoomShell({ title, assets, fallback, version, description }) {
   <meta name="theme-color" content="#121922">
   <meta name="robots" content="noindex, nofollow">
   ${description || ''}
+  ${socialMetadata}
   <title>${escapeHtml(title)}</title>
   <link rel="stylesheet" href="${escapeHtml(assets)}app.css">
   <script type="module" src="${escapeHtml(assets)}app.js?v=${version}"></script>
@@ -114,6 +115,11 @@ export async function buildManzokukyoPreview() {
       title: room.title,
       version,
       description: roomHtml.match(/<meta\b(?=[^>]*\bname=["']description["'])[^>]*>/i)?.[0],
+      socialMetadata: ['gallery', 'gallery-3d'].includes(room.id)
+        ? (roomHtml.match(/<meta\b(?=[^>]*\b(?:property|name)=["'](?:og:|twitter:))[^>]*>/gi) || []).map(tag =>
+          /\bproperty=["']og:url["']/i.test(tag) ? tag.replace('/manzokukyo/', '/manzokukyo-preview/') : tag
+        ).join('\n  ')
+        : '',
       assets: `${relativeUrl(shellDirectory, output)}/`,
       fallback: `${relativeUrl(shellDirectory, room.fallback || original)}/`
     }), 'utf8');

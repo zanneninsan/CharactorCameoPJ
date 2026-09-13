@@ -13,6 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const galleryImages = path.join(root, 'content/characters/zannenin/assets/manzokukyo/gallery');
 await buildGalleryRoomImages(galleryImages, path.join(root, 'dist/zannenin/assets/generated/manzokukyo/gallery'));
 await cp(galleryImages, path.join(root, 'dist/zannenin/assets/manzokukyo/gallery'), { recursive: true });
+await cp(path.join(root, 'content/characters/zannenin/assets/manzokukyo/gallery-ogp-v1.png'), path.join(root, 'dist/zannenin/assets/manzokukyo/gallery-ogp-v1.png'));
 for (const image of galleryMemeImages) {
   const destination = path.join(root, 'dist/zannenin/assets', image.path);
   await mkdir(path.dirname(destination), { recursive: true });
@@ -51,6 +52,15 @@ for (const route of ['gallery', 'gallery-3d']) {
   head = setMeta(head, 'property', 'og:title', options.title);
   head = setMeta(head, 'property', 'og:description', options.description);
   head = setMeta(head, 'property', 'og:url', canonical);
+  const imageUrl = new URL(options.imagePath, deploymentRoot).href;
+  head = setMeta(head, 'property', 'og:image', imageUrl);
+  head = setMeta(head, 'property', 'og:image:secure_url', imageUrl);
+  head = setMeta(head, 'property', 'og:image:width', '1200');
+  head = setMeta(head, 'property', 'og:image:height', '630');
+  head = setMeta(head, 'property', 'og:image:type', 'image/png');
+  head = setMeta(head, 'property', 'og:image:alt', `${options.title} OGP card`);
+  head = setMeta(head, 'name', 'twitter:card', 'summary_large_image');
+  head = setMeta(head, 'name', 'twitter:image', imageUrl);
   head = setMeta(head, 'name', 'twitter:title', options.title);
   head = setMeta(head, 'name', 'twitter:description', options.description);
   const output = path.join(root, 'dist/zannenin/manzokukyo/truth', route, 'index.html');
