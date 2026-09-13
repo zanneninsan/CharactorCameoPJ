@@ -1,3 +1,4 @@
+import { createBowingState, advanceBowing, createWatchingState, advanceWatching } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-uncanny.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as T from '../content/static-sites/zannenin/manzokukyo-preview/vendor/three.module.js';
@@ -9,13 +10,13 @@ import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 const html = renderGallery3DExperience({ id: 'zannenin', theme: {} }, { htmlPage: page => page, escapeHtml: String, assetVersionQuery: 'test' }).body;
 assert.ok(!html.includes('data-gallery-visitor-model') && !html.includes('data-gallery-visitor-toggle'), 'both characters are always present without a selector or a way to hide the anomaly');
 
-const anomaly = chooseAnomaly(() => .84, { visitorsReady: true });
+const anomaly = chooseAnomaly(() => .7, { visitorsReady: true });
 assert.equal(anomaly.kind, 'darenin-rush');
 assert.notEqual(chooseAnomaly(() => .9, { visitorsReady: false }).kind, 'darenin-rush', 'unloaded actors cannot create an invisible anomaly');
 for (const direction of ['back', 'forward']) assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, direction).correct, direction === 'back');
 assert.match(describeAnomaly(anomaly), /4体/);
 for (const visitorsReady of [false, true]) {
-  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'darenin-rush', 'giant-darenin'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery'];
+  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame'];
   for (let i = 0; i < allowed.length; i++) {
     const values = [.8, (i + .5) / allowed.length, .3];
     const picked = chooseAnomaly(() => values.shift(), { visitorsReady });
@@ -53,7 +54,30 @@ for (const [kind, file] of [['zannenin', 'zannenin-v11-gallery.glb'], ['darenin'
   urls[kind] = new URL(`data:model/gltf-binary;base64,${bytes.toString('base64')}`);
 }
 const scene = new T.Scene(), steps = [];
-const crowd = await loadGalleryVisitors(T, { scene, urls, Loader: TestLoader, cloneSkeleton, onStep: (...args) => steps.push(args) });
+const frames = [{ group: new T.Group(), height: 2.98 }];
+const crowd = await loadGalleryVisitors(T, { scene, frames, urls, Loader: TestLoader, cloneSkeleton, onStep: (...args) => steps.push(args) });
+const officialRoot = scene.getObjectByName('Zannenin gallery visitor');
+const normalRotation = officialRoot.getObjectByName('J_Bip_C_Hips').rotation.clone();
+crowd.setAnomaly({ kind: 'returned-portrait', index: 0 }); crowd.update(.05, { x: 0, z: .8 });
+assert.equal(officialRoot.parent, frames[0].group); assert.ok(officialRoot.scale.z < .1);
+assert.equal(crowd.snapshot().people[0].behavior, 'portrait');
+const wave = officialRoot.getObjectByName('J_Bip_L_Hand').quaternion.clone();
+for (let i = 0; i < 10; i++) crowd.update(.05, { x: 0, z: .8 });
+assert.ok(!officialRoot.getObjectByName('J_Bip_L_Hand').quaternion.equals(wave));
+crowd.setAnomaly(null); assert.equal(officialRoot.parent, scene); assert.equal(officialRoot.scale.z, 1);
+crowd.setAnomaly({ kind: 'bowing-visitors' });
+for (let i = 0; i < 550; i++) crowd.update(.05, { x: 0, z: .8 });
+assert.ok(crowd.snapshot().bowing.cycles >= 2, 'the pair repeatedly approaches and bows');
+const pauseBow = structuredClone(crowd.snapshot()); crowd.update(.05, { x: 0, z: .8 }, { paused: true });
+assert.deepEqual(crowd.snapshot(), pauseBow);
+crowd.setAnomaly(null); assert.ok(officialRoot.getObjectByName('J_Bip_C_Hips').rotation.equals(normalRotation));
+const turnCamera = new T.PerspectiveCamera(49, 1.5, .1, 100); turnCamera.position.set(0, 2.32, -12); turnCamera.lookAt(0, 2.32, -50);
+crowd.setAnomaly({ kind: 'watching-crowd' }); crowd.update(.05, turnCamera.position, { camera: turnCamera });
+assert.equal(crowd.snapshot().watching.revealed, false);
+turnCamera.lookAt(0, 2.32, 2); crowd.update(.05, turnCamera.position, { camera: turnCamera });
+assert.equal(crowd.snapshot().watching.count, 24);
+const watchers = scene.getObjectByName('Silent Darenin spectators'); assert.equal(watchers.count, 24); assert.ok(watchers.visible);
+crowd.setAnomaly(null); assert.equal(watchers.visible, false);
 assert.equal(downloads, 2, 'four copies do not download four VRMs');
 assert.equal(crowd.snapshot().count, 2);
 assert.deepEqual(crowd.snapshot().people.map(actor => actor.kind), ['zannenin', 'darenin']);
@@ -144,3 +168,14 @@ await assert.rejects(loadGalleryVisitors(T, { scene, urls, Loader: FailingLoader
 assert.equal(scene.children.length, 0);
 assert.equal(closed, 44, 'partially successful loading also releases decoded images');
 console.log('Gallery crowd: two normal visitors; four shared-mesh runners; anomaly judgment, loading guard, alignment, sound, pause, reduced motion, restoration and disposal passed.');
+
+const watching = createWatchingState();
+assert.equal(advanceWatching(watching, { z: .8 }, { z: 1 }), false, 'turning at the entrance does not spawn figures on the player');
+advanceWatching(watching, { z: -15 }, { z: -1 });
+assert.equal(advanceWatching(watching, { z: -15 }, { z: 1 }, { paused: true }), false);
+assert.equal(advanceWatching(watching, { z: -15 }, { z: 1 }), true);
+assert.equal(advanceWatching(watching, { z: -25 }, { z: 1 }), false, 'spectators stay where they appeared instead of chasing');
+assert.equal(watching.z, -12);
+const polite = createBowingState(); advanceBowing(polite, .05, { x: 0, z: -10 }, { reduced: true });
+assert.equal(polite.bow, 1.25); const stillPolite = structuredClone(polite);
+advanceBowing(polite, .05, { x: 1, z: -20 }, { inspecting: true }); assert.deepEqual(polite, stillPolite);

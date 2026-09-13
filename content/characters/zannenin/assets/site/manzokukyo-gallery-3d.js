@@ -234,6 +234,24 @@ function createExhibition(T) {
     }
     frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
   }
+  function backTexture() {
+    const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#766047'; ctx.fillRect(0, 0, 768, 1080);
+    for (let i = 0; i < 160; i++) {
+      ctx.strokeStyle = i % 2 ? '#49392933' : '#baa17b33'; ctx.lineWidth = 1 + i % 3;
+      ctx.beginPath(); ctx.moveTo(0, i * 7); ctx.bezierCurveTo(220, i * 7 + Math.sin(i) * 12, 510, i * 7 - 9, 768, i * 7 + 4); ctx.stroke();
+    }
+    ctx.strokeStyle = '#372c21'; ctx.lineWidth = 40; ctx.strokeRect(23, 23, 722, 1034);
+    ctx.fillStyle = '#bca67f';
+    for (const x of [70, 688]) for (let y = 80; y < 1080; y += 160) ctx.fillRect(x, y, 10, 26);
+    ctx.strokeStyle = '#ded1a6'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(90, 570); ctx.lineTo(384, 230); ctx.lineTo(678, 570); ctx.stroke();
+    ctx.fillStyle = '#d9c8a5'; ctx.fillRect(137, 727, 494, 143); ctx.fillStyle = '#4c3429';
+    ctx.textAlign = 'center'; ctx.font = '28px serif'; ctx.fillText('こちら側を見ないでください', 384, 791);
+    ctx.font = '16px sans-serif'; ctx.fillText('満足教  収蔵管理', 384, 835);
+    const map = new T.CanvasTexture(c); map.colorSpace = T.SRGBColorSpace; textures.add(map); return map;
+  }
+  const backBoard = new T.Mesh(plane, basic({ map: backTexture(), toneMapped: false }));
+  backBoard.name = 'Reversed frame backing'; backBoard.scale.set(2.58, 3.44, 1); backBoard.position.z = -.14; backBoard.rotation.y = Math.PI;
   const frameHand = mountFrameHand(T, { frames, targets });
   let portalTexture = labelTexture('GALLERY', 'THE SAME CORRIDOR');
   function satisfactionTexture() {
@@ -269,19 +287,38 @@ function createExhibition(T) {
       const generation = textureGeneration;
       const url = new URL(`${galleryImagePath(frame.index, anomaly, records, true)}?${assetVersionQuery}`, document.baseURI).href;
       pending.set(frame.index, generation);
-      loader.load(url, texture => {
+      const receive = texture => {
         if (generation !== textureGeneration) { texture.dispose(); return; }
         pending.delete(frame.index);
         if (disposed || !roomCache.includes(frame.roomIndex)) { texture.dispose(); return; }
         texture.colorSpace = T.SRGBColorSpace; texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
         // Fit the original aspect ratio inside its matte; never crop a texture.
-        const aspect = texture.image.width / texture.image.height;
+        const aspect = anomaly?.kind === 'returned-portrait' && anomaly.index === frame.index ? frame.width / frame.height : texture.image.width / texture.image.height;
         const w = Math.min(frame.width, frame.height * aspect), h = w / aspect;
         frame.painting.scale.set(w, h, 1); frame.surface.map = texture; frame.surface.fog = true; frame.surface.needsUpdate = true;
         textures.add(texture); loaded.set(frame.index, texture); failed.delete(frame.index); refreshLoading(); wake();
-      }, undefined, () => { if (generation !== textureGeneration || disposed) return; pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
+      };
+      if (anomaly?.kind === 'returned-portrait' && anomaly.index === frame.index) receive(labelTexture('',''));
+      else loader.load(url, receive, undefined, () => { if (generation !== textureGeneration || disposed) return; pending.delete(frame.index); failed.add(frame.index); refreshLoading(); });
     }
     ambience.position.z = -6 - activeRoom * 16; refreshLoading();
+  }
+  function inspectionImage(index) {
+    if (!['returned-portrait', 'backwards-frame'].includes(anomaly?.kind) || anomaly.index !== index) return null;
+    const frame = frames[index], target = new T.WebGLRenderTarget(768, 1080); target.texture.colorSpace = T.SRGBColorSpace;
+    const shot = new T.OrthographicCamera(-1.4, 1.4, 1.97, -1.97, .1, 12);
+    scene.updateMatrixWorld(true);
+    // The camera faces the wall, even when the frame itself is reversed.
+    shot.position.set(frame.side * (5.13 - 5), 2.82, frame.z); shot.lookAt(frame.side * 5.13, 2.82, frame.z);
+    const previous = renderer.getRenderTarget();
+    try {
+      renderer.setRenderTarget(target); renderer.render(scene, shot);
+      const pixels = new Uint8Array(768 * 1080 * 4); renderer.readRenderTargetPixels(target, 0, 0, 768, 1080, pixels);
+      const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
+      const ctx = c.getContext('2d'), data = ctx.createImageData(768, 1080);
+      for (let y = 0; y < 1080; y++) data.data.set(pixels.subarray((1079 - y) * 768 * 4, (1080 - y) * 768 * 4), y * 768 * 4);
+      ctx.putImageData(data, 0, 0); return c.toDataURL('image/png');
+    } finally { renderer.setRenderTarget(previous); target.dispose(); }
   }
   function refreshLoading() {
     const roomFrames = frames.filter(frame => frame.roomIndex === activeRoom);
@@ -296,6 +333,8 @@ function createExhibition(T) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
     frameHand.setAnomaly(anomaly);
     spatial.reset(anomaly);
+    backBoard.removeFromParent(); const backTarget = targets.indexOf(backBoard); if (backTarget >= 0) targets.splice(backTarget, 1);
+    if (anomaly?.kind === 'backwards-frame') { backBoard.userData.index = anomaly.index; frames[anomaly.index].group.add(backBoard); targets.push(backBoard); }
     satisfactionMap.dispose(); textures.delete(satisfactionMap);
     satisfactionMap = satisfactionTexture(); satisfactionMaterial.map = satisfactionMap;
     visitor?.setAnomaly(nextAnomaly);
@@ -535,7 +574,7 @@ function createExhibition(T) {
     visitorNote.textContent = '散策する二人が来館準備中……。先に絵を見ていても大丈夫です。';
     try {
       const { loadGalleryVisitors } = await import(new URL(`manzokukyo-gallery-visitor.js?${assetVersionQuery}`, import.meta.url));
-      const next = await loadGalleryVisitors(T, { scene, urls: {
+      const next = await loadGalleryVisitors(T, { scene, frames, urls: {
         zannenin: new URL(`../models/zannenin-v11-gallery.glb?${assetVersionQuery}`, import.meta.url),
         darenin: new URL(`../models/darenin-gallery.glb?${assetVersionQuery}`, import.meta.url),
       }, onStep: (name, options) => gallery.play(name, options) });
@@ -552,7 +591,7 @@ function createExhibition(T) {
     }
   }
   void loadVisitors();
-  return { select, overview, prepareLoop, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
+  return { select, overview, prepareLoop, inspectionImage, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
     state: () => ({ ready: !disposed && !lost, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 

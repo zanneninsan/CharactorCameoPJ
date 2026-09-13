@@ -48,7 +48,7 @@ for (const index of [0, 1, 22, 23]) {
   assert.ok(frame.group.position.distanceTo(base) > 2, 'reduced motion retains a static visible clue');
   spatial.reset(null);
 }
-for (const [kind, draw] of [['receding-exit', 5.5 / 9], ['approaching-portrait', 6.5 / 9]]) {
+for (const [kind, draw] of [['receding-exit', 5.5 / 10], ['approaching-portrait', 6.5 / 10]]) {
   const values = [.8, draw, .2], anomaly = chooseAnomaly(() => values.shift()); assert.equal(anomaly.kind, kind);
   assert.ok(judgeLoop({ ...newLoop(), round: 1, anomaly }, 'back').correct);
 }
@@ -60,3 +60,8 @@ for (const next of [null, { kind: 'approaching-portrait', index: 0 }, { kind: 'r
   spatial.reset({ kind: 'small-frames' }); spatial.reset(next);
   assert.ok(frames.every(frame => frame.group.scale.equals(new T.Vector3(1, 1, 1))), 'size cannot leak into the following exhibition');
 }
+
+const originalBackRotation = frames[0].group.quaternion.clone();
+spatial.reset({ kind: 'backwards-frame', index: 0 });
+assert.ok(Math.abs(frames[0].group.quaternion.angleTo(originalBackRotation) - Math.PI) < .0001);
+spatial.reset(null); assert.ok(frames[0].group.quaternion.equals(originalBackRotation));

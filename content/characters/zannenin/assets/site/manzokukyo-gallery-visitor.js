@@ -1,3 +1,4 @@
+import { createBowingState, advanceBowing, createWatchingState, advanceWatching, bakeGallerySpectator } from './manzokukyo-gallery-uncanny.js';
 // A single gallery visitor. Route decisions are independent of anomaly/seal RNG.
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const angle = value => Math.atan2(Math.sin(value), Math.cos(value));
@@ -178,7 +179,13 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
         if (formation) {
           Object.assign(state, formation, { behavior: formation.speed ? 'running' : 'watching' });
           if (!reduced) state.phase += clamp(Number.isFinite(dt) ? dt : 0, 0, .05);
-          pose(reduced ? 0 : dt, viewer, true);
+          pose(reduced ? 0 : dt, viewer, formation.running !== false);
+          if (formation.bow) {
+            rotate('J_Bip_C_Hips', 'x', 0);
+            rotate('J_Bip_C_Spine', 'x', -formation.bow * .8);
+            rotate('J_Bip_C_Chest', 'x', -formation.bow * .2);
+            state.behavior = 'bowing';
+          } else { rotate('J_Bip_C_Hips', 'x', 0); rotate('J_Bip_C_Chest', 'x', 0); }
         } else if (!reduced) { advanceVisitor(state, dt, viewer); pose(dt, viewer); }
       }
       const distance = Math.hypot(viewer.x - state.x, viewer.z - state.z);
@@ -191,11 +198,24 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
       root.visible = visible;
       return enabled && !paused && !reduced && !inspecting;
     },
-    reset() { state = createVisitorState(spawn); gait = 0; walkingWeight = 0; pose(0, { x: 0, z: .8 }); },
+    showInFrame(frame, dt, { paused = false, reduced = false, inspecting = false } = {}) {
+      if (disposed || !frame) return false;
+      if (root.parent !== frame.group) frame.group.add(root);
+      if (!paused && !reduced && !inspecting) state.phase += clamp(dt, 0, .05);
+      pose(0, { x: 0, z: .8 });
+      state.behavior = 'portrait';
+      shadow.visible = false;
+      root.position.set(0, -frame.height / 2 + .035, .20); root.rotation.set(0, Math.PI, 0); root.scale.set(1.24, 1.24, .045);
+      rotate('J_Bip_L_UpperArm', 'z', .3); rotate('J_Bip_L_LowerArm', 'z', -1.7); rotate('J_Bip_L_LowerArm', 'y', -.1);
+      rotate('J_Bip_L_Hand', 'z', Math.sin(state.phase * 3.5) * .28);
+      visible = enabled && !inspecting; root.visible = visible;
+      return visible && !paused && !reduced;
+    },
+    reset() { shadow.visible = true; scene.add(root); root.scale.set(1, 1, 1); root.rotation.set(0, 0, 0); for (const [name, bone] of Object.entries(bones)) bone.rotation.copy(bind[name]); state = createVisitorState(spawn); gait = 0; walkingWeight = 0; pose(0, { x: 0, z: .8 }); },
     setEnabled(value) { enabled = value; visible = enabled; root.visible = enabled; },
     isVisible: () => visible,
     snapshot: () => ({ loaded: true, kind, enabled, visible, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws, blink: blinkMeshes.length > 0 }),
-    dispose() { if (disposed) return; disposed = true; scene.remove(root); for (const resource of resources) resource.dispose(); for (const bitmap of bitmaps) bitmap.close(); for (const skeleton of skeletons) skeleton.dispose(); },
+    dispose() { if (disposed) return; disposed = true; root.removeFromParent(); for (const resource of resources) resource.dispose(); for (const bitmap of bitmaps) bitmap.close(); for (const skeleton of skeletons) skeleton.dispose(); },
   };
   api.reset(); return api;
 }
@@ -277,7 +297,7 @@ export function createGiantBustGeometry(T, figure) {
 
 // Two downloads total. Four independent Darenin skeletons reuse one geometry;
 // the three extra actors stay hidden outside the running-row anomaly.
-export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleton, onStep = () => {} }) {
+export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleton, onStep = () => {}, frames = [] }) {
   if (!Loader || !cloneSkeleton) {
     const url = new URL('../../manzokukyo-preview/vendor/GLTFLoader.js', import.meta.url);
     url.search = new URL(import.meta.url).search;
@@ -304,12 +324,20 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
   const plinth = new T.Mesh(plinthGeometry, plinthMaterial); plinth.position.y = .85;
   giant.add(bust, plinth);
   scene.add(giant);
+  const watchingGeometry = bakeGallerySpectator(T, template);
+  const spectators = new T.InstancedMesh(watchingGeometry, sharedFinish, 24); spectators.name = 'Silent Darenin spectators'; spectators.visible = false; scene.add(spectators);
+  const spectatorMatrix = new T.Object3D(), viewingDirection = new T.Vector3();
+  let watching = false, watch = createWatchingState();
   const copies = rushLanes.map(() => createGalleryVisitor(T, { scene, figure: cloneSkeleton(template), sharedFinish, spawn: { x: -1.65, z: -5.4, wait: 1.8 } }));
   const everyone = [official, ...copies];
+  let portraitFrame = null, bowing = false, bow = createBowingState();
   let rushing = false, giantActive = false, giantTime = 0, rush = createRushState(), disposed = false, step = 0;
   const api = {
     setAnomaly(anomaly) {
       if (disposed) return;
+      watching = anomaly?.kind === 'watching-crowd'; watch = createWatchingState(); spectators.visible = false;
+      bowing = anomaly?.kind === 'bowing-visitors'; bow = createBowingState();
+      portraitFrame = anomaly?.kind === 'returned-portrait' ? frames[anomaly.index] : null;
       rushing = anomaly?.kind === 'darenin-rush'; rush = createRushState(); step = 0;
       giantActive = anomaly?.kind === 'giant-darenin'; giantTime = 0;
       giant.visible = giantActive; giant.position.set(-1.1, 0, -60.6); giant.rotation.set(0, Math.PI, 0);
@@ -332,10 +360,27 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
           const distance = Math.abs(viewer.z - rush.z);
           if (distance < 28) onStep(step % 2 ? 'step-1' : 'step-2', { level: .15 + .42 * (1 - distance / 28), rate: .78 });
         }
+      } else if (bowing) {
+        advanceBowing(bow, dt, viewer, options);
+        [official, copies[0]].forEach((actor, index) => {
+          const x = bow.x + (index ? -1 : 1) * .95;
+          moving = actor.update(dt, viewer, { ...options, formation: { x, z: bow.z, yaw: Math.atan2(x - viewer.x, bow.z - viewer.z), speed: bow.speed, bow: bow.bow, running: false } }) || moving;
+        });
       } else {
-        moving = official.update(dt, viewer, options);
+        moving = portraitFrame ? official.showInFrame(portraitFrame, dt, options) : official.update(dt, viewer, options);
         moving = copies[0].update(dt, viewer, options) || moving;
       }
+      if (watching && options.camera) {
+        options.camera.getWorldDirection(viewingDirection);
+        if (advanceWatching(watch, viewer, viewingDirection, options)) {
+          for (let i = 0; i < 24; i++) {
+            const x = [-3.8, -1.6, 1.6, 3.8][i % 4], z = watch.z + Math.floor(i / 4) * 1.2;
+            spectatorMatrix.position.set(x, .03, z); spectatorMatrix.rotation.y = Math.atan2(x - viewer.x, z - viewer.z); spectatorMatrix.updateMatrix(); spectators.setMatrixAt(i, spectatorMatrix.matrix);
+          }
+          spectators.instanceMatrix.needsUpdate = true; spectators.computeBoundingSphere();
+        }
+      }
+      spectators.visible = watching && watch.revealed && !options.inspecting;
       giant.visible = giantActive && !options.inspecting;
       if (giantActive && !options.paused && !options.inspecting) {
         if (!options.reduced) giantTime += clamp(Number.isFinite(dt) ? dt : 0, 0, .05);
@@ -344,12 +389,12 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       }
       return moving;
     },
-    isVisible: () => giant.visible || everyone.some(actor => actor.isVisible()),
-    snapshot: () => ({ loaded: true, count: rushing ? 4 : giantActive ? 3 : 2, people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, framing: 'bust', position: giant.position.toArray(), yaw: giant.rotation.y + bust.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
+    isVisible: () => spectators.visible || giant.visible || everyone.some(actor => actor.isVisible()),
+    snapshot: () => ({ loaded: true, ...(bowing ? { bowing: { ...bow } } : {}), ...(watching ? { watching: { ...watch, count: watch.revealed ? 24 : 0 } } : {}), count: (rushing ? 4 : giantActive ? 3 : 2) + (watching && watch.revealed ? 24 : 0), people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, framing: 'bust', position: giant.position.toArray(), yaw: giant.rotation.y + bust.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
     dispose() {
       if (disposed) return; disposed = true;
       for (const actor of everyone) actor.dispose();
-      scene.remove(giant); giantGeometry.dispose(); plinthGeometry.dispose(); plinthMaterial.dispose();
+      scene.remove(giant, spectators); watchingGeometry.dispose(); spectators.dispose(); giantGeometry.dispose(); plinthGeometry.dispose(); plinthMaterial.dispose();
       releaseModel(template); sharedFinish.dispose();
     },
   };

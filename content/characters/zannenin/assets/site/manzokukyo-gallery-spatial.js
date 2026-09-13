@@ -13,6 +13,7 @@ export function mountGallerySpatial(T, { frames, exitGroup, extension }) {
   let anomaly = null, offset = 0, portrait = null, activated = false;
   function reset(next) {
     for (let i = 0; i < frames.length; i++) { frames[i].group.position.copy(bases[i].position); frames[i].group.quaternion.copy(bases[i].quaternion); frames[i].group.scale.setScalar(next?.kind === 'small-frames' ? .84 : 1); }
+    if (next?.kind === 'backwards-frame' && frames[next.index]) frames[next.index].group.rotateY(Math.PI);
     anomaly = next; offset = 0; activated = false; portrait = next?.kind === 'approaching-portrait' ? frames[next.index] : null;
     exitGroup.position.z = 0; extension.visible = next?.kind === 'receding-exit';
   }
