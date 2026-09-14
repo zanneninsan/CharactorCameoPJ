@@ -112,7 +112,8 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
   resources.add(shadowGeometry); resources.add(shadowMaterial);
   const shadow = new T.Mesh(shadowGeometry, shadowMaterial); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .04; root.add(shadow);
   scene.add(root);
-  let state = createVisitorState(spawn), gait = 0, walkingWeight = 0, enabled = true, visible = false, disposed = false;
+  let state = createVisitorState(spawn), gait = 0, walkingWeight = 0, enabled = true, visible = false, disposed = false, ceiling = false;
+  const ceilingHeight = 6.36;
   const frustum = new T.Frustum(), projection = new T.Matrix4(), sphere = new T.Sphere(new T.Vector3(), 1.3);
   const bind = Object.fromEntries(Object.entries(bones).map(([name, bone]) => [name, bone.rotation.clone()]));
   const thighLength = official ? bones.J_Bip_L_UpperLeg.getWorldPosition(new T.Vector3()).distanceTo(bones.J_Bip_L_LowerLeg.getWorldPosition(new T.Vector3())) : 0;
@@ -169,7 +170,10 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
     const blinkPhase = state.phase % 5.3;
     const blink = blinkPhase > 4.95 ? Math.sin((blinkPhase - 4.95) / .35 * Math.PI) : 0;
     for (const mesh of blinkMeshes) mesh.morphTargetInfluences[mesh.morphTargetDictionary.Blink] = blink;
-    root.position.set(state.x, official ? -.018 * stride + Math.cos(gait * 2) * .005 * stride : Math.abs(Math.sin(gait)) * stride * (running ? .045 : .012), state.z); root.rotation.y = state.yaw;
+    const bob = official ? -.018 * stride + Math.cos(gait * 2) * .005 * stride : Math.abs(Math.sin(gait)) * stride * (running ? .045 : .012);
+    root.position.set(state.x, ceiling ? ceilingHeight - bob : bob, state.z);
+    root.rotation.set(0, state.yaw, ceiling ? Math.PI : 0, 'YXZ');
+    if (ceiling) rotate('J_Bip_C_Head', 'x', viewerDistance < 3 ? .42 : 0);
   }
   const api = {
     update(dt, viewer, { paused = false, reduced = false, inspecting = false, camera, formation } = {}) {
@@ -186,13 +190,19 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
             rotate('J_Bip_C_Chest', 'x', -formation.bow * .2);
             state.behavior = 'bowing';
           } else { rotate('J_Bip_C_Hips', 'x', 0); rotate('J_Bip_C_Chest', 'x', 0); }
-        } else if (!reduced) { advanceVisitor(state, dt, viewer); pose(dt, viewer); }
+        } else if (!reduced) {
+          if (ceiling && Math.hypot(state.x - viewer.x, state.z - viewer.z) < 2.8) {
+            state.speed = 0; state.phase += dt; state.behavior = 'ceiling-watching';
+            state.yaw += angle(Math.atan2(state.x - viewer.x, state.z - viewer.z) - state.yaw) * (1 - Math.exp(-dt * 2.5));
+          } else advanceVisitor(state, dt, viewer);
+          pose(dt, viewer);
+        }
       }
       const distance = Math.hypot(viewer.x - state.x, viewer.z - state.z);
-      visible = enabled && !inspecting && distance > .7 && distance < (formation ? 70 : 30);
+      visible = enabled && !inspecting && (ceiling || distance > .7) && distance < (formation ? 70 : 30);
       if (visible && camera) {
         camera.updateMatrixWorld(); projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-        frustum.setFromProjectionMatrix(projection); sphere.center.set(state.x, 1, state.z);
+        frustum.setFromProjectionMatrix(projection); sphere.center.set(state.x, ceiling ? ceilingHeight - 1 : 1, state.z);
         visible = frustum.intersectsSphere(sphere);
       }
       root.visible = visible;
@@ -211,10 +221,11 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
       visible = enabled && !inspecting; root.visible = visible;
       return visible && !paused && !reduced;
     },
-    reset() { shadow.visible = true; scene.add(root); root.scale.set(1, 1, 1); root.rotation.set(0, 0, 0); for (const [name, bone] of Object.entries(bones)) bone.rotation.copy(bind[name]); state = createVisitorState(spawn); gait = 0; walkingWeight = 0; pose(0, { x: 0, z: .8 }); },
+    reset() { ceiling = false; shadow.visible = true; scene.add(root); root.scale.set(1, 1, 1); root.rotation.set(0, 0, 0); for (const [name, bone] of Object.entries(bones)) bone.rotation.copy(bind[name]); state = createVisitorState(spawn); gait = 0; walkingWeight = 0; pose(0, { x: 0, z: .8 }); },
+    setCeiling(value) { ceiling = Boolean(value); pose(0, { x: 0, z: .8 }); },
     setEnabled(value) { enabled = value; visible = enabled; root.visible = enabled; },
     isVisible: () => visible,
-    snapshot: () => ({ loaded: true, kind, enabled, visible, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws, blink: blinkMeshes.length > 0 }),
+    snapshot: () => ({ loaded: true, kind, enabled, visible, ceiling, height: root.position.y, behavior: state.behavior, position: [state.x, state.z], yaw: state.yaw, decisions: state.decisions, draws, blink: blinkMeshes.length > 0 }),
     dispose() { if (disposed) return; disposed = true; root.removeFromParent(); for (const resource of resources) resource.dispose(); for (const bitmap of bitmaps) bitmap.close(); for (const skeleton of skeletons) skeleton.dispose(); },
   };
   api.reset(); return api;
@@ -343,6 +354,7 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       giant.visible = giantActive; giant.position.set(-1.1, 0, -60.6); giant.rotation.set(0, Math.PI, 0);
       bust.rotation.set(0, 0, 0);
       for (const actor of everyone) actor.reset();
+      copies[0].setCeiling(anomaly?.kind === 'ceiling-visitor');
       official.setEnabled(!rushing);
       copies.forEach((actor, index) => actor.setEnabled(rushing || index === 0));
     },

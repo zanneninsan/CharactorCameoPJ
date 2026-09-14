@@ -10,13 +10,13 @@ import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 const html = renderGallery3DExperience({ id: 'zannenin', theme: {} }, { htmlPage: page => page, escapeHtml: String, assetVersionQuery: 'test' }).body;
 assert.ok(!html.includes('data-gallery-visitor-model') && !html.includes('data-gallery-visitor-toggle'), 'both characters are always present without a selector or a way to hide the anomaly');
 
-const anomaly = chooseAnomaly(() => .7, { visitorsReady: true });
+const anomaly = chooseAnomaly(() => .71, { visitorsReady: true });
 assert.equal(anomaly.kind, 'darenin-rush');
 assert.notEqual(chooseAnomaly(() => .9, { visitorsReady: false }).kind, 'darenin-rush', 'unloaded actors cannot create an invisible anomaly');
 for (const direction of ['back', 'forward']) assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, direction).correct, direction === 'back');
 assert.match(describeAnomaly(anomaly), /4体/);
 for (const visitorsReady of [false, true]) {
-  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world', 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world'];
+  const allowed = visitorsReady ? ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world', 'facing-frames', 'sand-painting', 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd', 'ceiling-visitor'] : ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world', 'facing-frames', 'sand-painting'];
   for (let i = 0; i < allowed.length; i++) {
     const values = [.8, (i + .5) / allowed.length, .3];
     const picked = chooseAnomaly(() => values.shift(), { visitorsReady });
@@ -58,6 +58,29 @@ const frames = [{ group: new T.Group(), height: 2.98 }];
 const crowd = await loadGalleryVisitors(T, { scene, frames, urls, Loader: TestLoader, cloneSkeleton, onStep: (...args) => steps.push(args) });
 const officialRoot = scene.getObjectByName('Zannenin gallery visitor');
 const normalRotation = officialRoot.getObjectByName('J_Bip_C_Hips').rotation.clone();
+const ceilingActor = scene.getObjectByName('Darenin gallery visitor');
+const ceilingCamera = new T.PerspectiveCamera(49, 1.5, .1, 100);
+ceilingCamera.position.set(-1.65, 2.32, -5.4); ceilingCamera.lookAt(-1.65, 5.3, -5.6);
+crowd.setAnomaly({ kind: 'ceiling-visitor' });
+crowd.update(.05, ceilingCamera.position, { camera: ceilingCamera });
+assert.equal(crowd.snapshot().count, 2);
+assert.equal(crowd.snapshot().people[1].ceiling, true);
+assert.equal(crowd.snapshot().people[1].behavior, 'ceiling-watching');
+assert.equal(crowd.snapshot().people[1].visible, true, 'the upside-down visitor remains visible directly overhead');
+assert(Math.abs(ceilingActor.position.y - 6.36) < .05);
+assert(new T.Vector3(0, 1, 0).applyQuaternion(ceilingActor.quaternion).y < -.99, 'feet face the ceiling');
+assert.equal(crowd.snapshot().people[0].ceiling, false);
+for (const options of [{ paused: true }, { reduced: true }, { inspecting: true }]) {
+  const before = crowd.snapshot().people[1]; crowd.update(.05, ceilingCamera.position, options);
+  assert.deepEqual(crowd.snapshot().people[1].position, before.position);
+}
+const originalCeilingPosition = crowd.snapshot().people[1].position;
+for (let i = 0; i < 300; i++) crowd.update(.05, { x: 3, y: 2.32, z: -40 });
+assert.notDeepEqual(crowd.snapshot().people[1].position, originalCeilingPosition, 'ceiling wandering resumes when the viewer leaves');
+crowd.setAnomaly(null);
+assert.equal(crowd.snapshot().people[1].ceiling, false);
+assert(Math.abs(ceilingActor.position.y) < .05);
+assert(new T.Vector3(0, 1, 0).applyQuaternion(ceilingActor.quaternion).y > .99, 'the next loop restores upright walking');
 crowd.setAnomaly({ kind: 'returned-portrait', index: 0 }); crowd.update(.05, { x: 0, z: .8 });
 assert.equal(officialRoot.parent, frames[0].group); assert.ok(officialRoot.scale.z < .1);
 assert.equal(crowd.snapshot().people[0].behavior, 'portrait');

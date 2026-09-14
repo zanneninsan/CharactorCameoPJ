@@ -28,6 +28,27 @@ export function mountGallerySpatial(T, { frames, exitGroup, extension }) {
     update(seconds, camera, { paused = false, reduced = false } = {}) {
       if (paused) return false;
       track(camera);
+      if (anomaly?.kind === 'facing-frames') {
+        let moving = false;
+        const ease = reduced ? 1 : 1 - Math.exp(-clamp(Number.isFinite(seconds) ? seconds : 0, 0, .05) * 2.4);
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i], base = bases[i].position, group = frame.group;
+          // Lift the centre just far enough that the turning frame's rear edge
+          // stays in front of the wall. Plaques, seals and hit targets travel with it.
+          const side = Math.sign(base.x), radius = (frame.width + .5) / 2;
+          target.copy(base);
+          for (let n = 0; n < 12; n++) {
+            const delta = Math.atan2(camera.position.x - target.x, camera.position.z - target.z) + side * Math.PI / 2;
+            const inset = radius * Math.abs(Math.sin(delta)) + .15;
+            // Monotonic clearance also handles viewers close to either wall.
+            target.x = side * Math.min(Math.abs(target.x), Math.abs(base.x) - inset);
+          }
+          rotation.setFromAxisAngle(up, Math.atan2(camera.position.x - target.x, camera.position.z - target.z));
+          group.position.lerp(target, ease); group.quaternion.slerp(rotation, ease);
+          moving ||= group.position.distanceTo(target) > .002 || group.quaternion.angleTo(rotation) > .002;
+        }
+        return !reduced && moving;
+      }
       if (!portrait) return false;
       const base = bases[portrait.index].position, group = portrait.group;
       // Only a nearby, loaded painting can begin approaching. The whole frame
@@ -47,7 +68,7 @@ export function mountGallerySpatial(T, { frames, exitGroup, extension }) {
       if (reduced) group.quaternion.copy(rotation); else group.quaternion.slerp(rotation, 1 - Math.exp(-dt * .7));
       return !reduced && (group.position.distanceTo(target) > .005 || group.quaternion.angleTo(rotation) > .005);
     },
-    isVisible: () => Boolean(portrait && activated),
-    snapshot: () => ({ exitOffset: offset, portrait: portrait ? { record: portrait.index + 1, activated, position: portrait.group.position.toArray() } : null }),
+    isVisible: () => anomaly?.kind === 'facing-frames' || Boolean(portrait && activated),
+    snapshot: () => ({ exitOffset: offset, facingFrames: anomaly?.kind === 'facing-frames' ? frames.length : 0, portrait: portrait ? { record: portrait.index + 1, activated, position: portrait.group.position.toArray() } : null }),
   };
 }

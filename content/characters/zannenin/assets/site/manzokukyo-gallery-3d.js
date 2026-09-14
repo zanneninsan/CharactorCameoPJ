@@ -6,6 +6,7 @@ const catalog = document.querySelector('.gallery-3d-catalog');
 const listButton = stage.querySelector('[data-gallery-3d-list]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const { mountGalleryWorld } = await import(new URL(`manzokukyo-gallery-world.js?${assetVersionQuery}`, import.meta.url));
+const { mountGallerySand } = await import(new URL(`manzokukyo-gallery-sand.js?${assetVersionQuery}`, import.meta.url));
 const { mountGalleryDecor } = await import(new URL(`manzokukyo-gallery-decor.js?${assetVersionQuery}`, import.meta.url));
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
@@ -218,12 +219,22 @@ function createExhibition(T) {
     box(group, [width + .2, height + .2, .08], [0, 0, .065], backing);
     const surface = basic({ color: 0xffffff, toneMapped: false, fog: true });
     const inversion = { value: 0 };
+    const erosion = { value: 0 };
     surface.onBeforeCompile = shader => {
       shader.uniforms.galleryNegative = inversion;
+      shader.uniforms.gallerySand = erosion;
       shader.vertexShader = 'varying float galleryViewDistance;\n' + shader.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\ngalleryViewDistance = length(mvPosition.xyz);');
       shader.fragmentShader = 'uniform float galleryNegative;\nvarying float galleryViewDistance;\n' + shader.fragmentShader.replace('#include <colorspace_fragment>', '#include <colorspace_fragment>\n#ifdef USE_MAP\nfloat nearView = 1.0 - smoothstep(5.0, 13.0, galleryViewDistance);\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0) - gl_FragColor.rgb, galleryNegative * nearView);\n#endif');
+      shader.vertexShader = 'varying vec2 galleryArtworkUv;\n' + shader.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\ngalleryArtworkUv = uv;');
+      shader.fragmentShader = 'uniform float gallerySand;\nvarying vec2 galleryArtworkUv;\n' + shader.fragmentShader.replace('#include <colorspace_fragment>', `#include <colorspace_fragment>
+        if (gallerySand > .5) {
+          float edge = .44 + .018 * sin(galleryArtworkUv.x * 37.0) + .012 * sin(galleryArtworkUv.x * 91.0);
+          if (galleryArtworkUv.y < edge) discard;
+          float rim = 1.0 - smoothstep(0.0, .018, galleryArtworkUv.y - edge);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(.88, .64, .24), rim * .9);
+        }`);
     };
-    surface.customProgramCacheKey = () => 'gallery-negative-distance-v2';
+    surface.customProgramCacheKey = () => 'gallery-negative-sand-v3';
     const painting = new T.Mesh(plane, surface); painting.scale.set(width, height, 1); painting.position.z = .118; painting.userData.index = index; group.add(painting); targets.push(painting);
     const plaque = new T.Mesh(plane, basic({ map: labelTexture(`ARCHIVE ${records[index].id}`, records[index].seal ? 'SEALED RECORD' : 'UNFILED IMAGE'), toneMapped: false }));
     plaque.scale.set(1.22, .46, 1); plaque.position.set(0, -height / 2 - .64, .11); group.add(plaque);
@@ -235,9 +246,10 @@ function createExhibition(T) {
       seal.position.set(width / 2 + .04, height / 2 - .14, .20); seal.userData.index = index;
       group.add(seal); targets.push(seal);
     }
-    frames.push({ group, painting, surface, inversion, index, roomIndex, side, z, width, height, seal });
+    frames.push({ group, painting, surface, inversion, erosion, index, roomIndex, side, z, width, height, seal });
   }
   const otherWorld = mountGalleryWorld(T, { frames, targets, gallery });
+  const sand = mountGallerySand(T, { frames });
   function backTexture() {
     const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
     const ctx = c.getContext('2d'); ctx.fillStyle = '#766047'; ctx.fillRect(0, 0, 768, 1080);
@@ -308,21 +320,24 @@ function createExhibition(T) {
     refreshLoading();
   }
   function inspectionImage(index) {
-    if (!['returned-portrait', 'backwards-frame', 'other-world'].includes(anomaly?.kind) || anomaly.index !== index) return null;
+    if (!['returned-portrait', 'backwards-frame', 'other-world', 'sand-painting'].includes(anomaly?.kind) || anomaly.index !== index) return null;
     const frame = frames[index], target = new T.WebGLRenderTarget(768, 1080); target.texture.colorSpace = T.SRGBColorSpace;
     const shot = new T.OrthographicCamera(-1.4, 1.4, 1.97, -1.97, .1, 12);
     scene.updateMatrixWorld(true);
     // The camera faces the wall, even when the frame itself is reversed.
     shot.position.set(frame.side * (5.13 - 5), 2.82, frame.z); shot.lookAt(frame.side * 5.13, 2.82, frame.z);
     const previous = renderer.getRenderTarget();
+    // A passing visitor must not cover the damaged artwork in its still image.
+    const hidden = anomaly.kind === 'sand-painting' ? scene.children.filter(object => object !== frame.group && !object.isLight && object.visible) : [];
     try {
+      for (const object of hidden) object.visible = false;
       otherWorld.render(renderer, shot, true); renderer.setRenderTarget(target); renderer.render(scene, shot);
       const pixels = new Uint8Array(768 * 1080 * 4); renderer.readRenderTargetPixels(target, 0, 0, 768, 1080, pixels);
       const c = document.createElement('canvas'); c.width = 768; c.height = 1080;
       const ctx = c.getContext('2d'), data = ctx.createImageData(768, 1080);
       for (let y = 0; y < 1080; y++) data.data.set(pixels.subarray((1079 - y) * 768 * 4, (1080 - y) * 768 * 4), y * 768 * 4);
       ctx.putImageData(data, 0, 0); return c.toDataURL('image/png');
-    } finally { renderer.setRenderTarget(previous); target.dispose(); }
+    } finally { for (const object of hidden) object.visible = true; renderer.setRenderTarget(previous); target.dispose(); }
   }
   function refreshLoading() {
     const roomFrames = frames.filter(frame => frame.roomIndex === activeRoom);
@@ -336,7 +351,7 @@ function createExhibition(T) {
   function prepareLoop(nextAnomaly, round) {
     stopWalk(); moving = false; anomaly = nextAnomaly; textureGeneration++;
     frameHand.setAnomaly(anomaly);
-    spatial.reset(anomaly); otherWorld.setAnomaly(anomaly);
+    spatial.reset(anomaly); otherWorld.setAnomaly(anomaly); sand.setAnomaly(anomaly);
     backBoard.removeFromParent(); const backTarget = targets.indexOf(backBoard); if (backTarget >= 0) targets.splice(backTarget, 1);
     if (anomaly?.kind === 'backwards-frame') { backBoard.userData.index = anomaly.index; frames[anomaly.index].group.add(backBoard); targets.push(backBoard); }
     satisfactionMap.dispose(); textures.delete(satisfactionMap);
@@ -479,10 +494,11 @@ function createExhibition(T) {
     const worldMoving = otherWorld.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const spatialMoving = spatial.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
-    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving || worldMoving;
+    const sandMoving = sand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving || worldMoving || sandMoving;
     // Wandering uses at most 30 rendered frames/sec while the camera is still;
     // keyboard movement keeps the existing responsive refresh rate.
-    const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible() || otherWorld.isVisible();
+    const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible() || otherWorld.isVisible() || sand.isVisible();
     if (cameraActive || !visitorMoving || ((visitorVisible || visitorWasVisible) && time - lastRender >= 1000 / 30)) {
       decor.update(camera); otherWorld.render(renderer, camera); renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
@@ -510,7 +526,8 @@ function createExhibition(T) {
     if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > 7) down.dragged = true;
     if (down.dragged && startWalk()) {
       yaw -= (event.clientX - down.lastX) * .004;
-      pitch = Math.max(-.65, Math.min(.65, pitch - (event.clientY - down.lastY) * .003));
+      // Let players inspect the ceiling even when its visitor is overhead.
+      pitch = Math.max(-.65, Math.min(1.4, pitch - (event.clientY - down.lastY) * .003));
       lookDirty = true; wake();
     }
     down.lastX = event.clientX; down.lastY = event.clientY;
@@ -569,7 +586,7 @@ function createExhibition(T) {
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     visitor?.dispose();
-    frameHand.dispose(); decor.dispose(); otherWorld.dispose();
+    frameHand.dispose(); decor.dispose(); otherWorld.dispose(); sand.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
@@ -597,7 +614,7 @@ function createExhibition(T) {
   }
   void loadVisitors();
   return { select, overview, prepareLoop, inspectionImage, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), sand: sand.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

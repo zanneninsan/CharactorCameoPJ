@@ -53,7 +53,7 @@ portal.update(.05, viewer); assert.equal(portal.snapshot().visible, false); asse
 portal.setAnomaly(null); assert.equal(targets.length, 0); assert.equal(portal.snapshot().record, null);
 portal.setAnomaly({ kind: 'other-world', index: 0 }); portal.dispose(); assert.equal(targets.length, 0); portal.dispose();
 const total = galleryDebugOptions.filter(option => !option.visitors && option.kind !== 'normal').length;
-const draws = [.8, (total - .5) / total, .4], anomaly = chooseAnomaly(() => draws.shift());
+const draws = [.8, (10 + .5) / total, .4], anomaly = chooseAnomaly(() => draws.shift());
 assert.equal(anomaly.kind, 'other-world'); assert.equal(anomaly.index, 9);
 assert.equal(judgeLoop({ ...newLoop(), round: 1, anomaly }, 'back').correct, true);
 console.log('Framed world passed: off-axis parallax, both walls, raycast identity, bounded target reuse, consent/nearby sound, pause/reduced motion, cleanup and anomaly judgment.');

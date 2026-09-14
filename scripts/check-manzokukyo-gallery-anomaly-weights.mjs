@@ -14,15 +14,15 @@ function distribution(options, samples) {
   }
   return counts;
 }
-const weighted = distribution({ visitorsReady: true, encounteredKinds }, 16500);
+const weighted = distribution({ visitorsReady: true, encounteredKinds }, 19500);
 assert.equal(weighted.get(unseen), 1500);
 for (const kind of encounteredKinds) assert.equal(weighted.get(kind), 1000, 'all discovered kinds remain equally available');
 for (const known of [[], allKinds]) {
-  const uniform = distribution({ visitorsReady: true, encounteredKinds: known }, 16000);
-  assert.equal(uniform.size, 16); assert([...uniform.values()].every(count => count === 1000), 'fresh and completed collections are uniform');
+  const uniform = distribution({ visitorsReady: true, encounteredKinds: known }, 19000);
+  assert.equal(uniform.size, 19); assert([...uniform.values()].every(count => count === 1000), 'fresh and completed collections are uniform');
 }
-const withoutVisitors = distribution({ visitorsReady: false, encounteredKinds }, 11000);
-assert.equal(withoutVisitors.size, 11);
+const withoutVisitors = distribution({ visitorsReady: false, encounteredKinds }, 13000);
+assert.equal(withoutVisitors.size, 13);
 for (const option of galleryDebugOptions.filter(option => option.visitors)) assert(!withoutVisitors.has(option.kind), 'unloaded models cannot enter the weighted pool');
 assert([...withoutVisitors.values()].every(count => count === 1000), 'an unavailable missing entry cannot steal probability');
 for (const known of [[], encounteredKinds, allKinds]) {
@@ -33,5 +33,5 @@ for (const known of [[], encounteredKinds, allKinds]) {
   }
   assert.equal(anomalies, 6600, 'discovery progress never changes the 66% anomaly occurrence rate');
 }
-assert.deepEqual(distribution({ visitorsReady: true, encounteredKinds: [...encounteredKinds, ...encounteredKinds, 'unknown'] }, 16500), weighted, 'duplicate and stale saved names do not affect weights');
+assert.deepEqual(distribution({ visitorsReady: true, encounteredKinds: [...encounteredKinds, ...encounteredKinds, 'unknown'] }, 19500), weighted, 'duplicate and stale saved names do not affect weights');
 console.log('Anomaly weights passed: unseen 1.5:1, uniform fresh/completed collections, unavailable actors excluded, and 66% occurrence at every progress level.');

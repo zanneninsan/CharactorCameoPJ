@@ -48,7 +48,7 @@ for (const index of [0, 1, 22, 23]) {
   assert.ok(frame.group.position.distanceTo(base) > 2, 'reduced motion retains a static visible clue');
   spatial.reset(null);
 }
-for (const [kind, draw] of [['receding-exit', 5.5 / 11], ['approaching-portrait', 6.5 / 11]]) {
+for (const [kind, draw] of [['receding-exit', 5.5 / 13], ['approaching-portrait', 6.5 / 13]]) {
   const values = [.8, draw, .2], anomaly = chooseAnomaly(() => values.shift()); assert.equal(anomaly.kind, kind);
   assert.ok(judgeLoop({ ...newLoop(), round: 1, anomaly }, 'back').correct);
 }

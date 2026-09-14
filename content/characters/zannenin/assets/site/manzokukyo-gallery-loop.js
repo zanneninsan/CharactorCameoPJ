@@ -2,7 +2,7 @@ import { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 export { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
 import { createGalleryAchievements, mountAchievementBoard } from './manzokukyo-gallery-achievements.js';
-const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world'];
+const kinds = ['upside-down', 'negative', 'same-image', 'satisfaction', 'frame-hand', 'receding-exit', 'approaching-portrait', 'small-frames', 'meme-gallery', 'backwards-frame', 'other-world', 'facing-frames', 'sand-painting'];
 export const galleryDebugOptions = [
   ['normal', '異変なし'], ['upside-down', '絵が逆さま', true], ['negative', '絵の色が反転', true],
   ['same-image', '全部同じ絵', true], ['satisfaction', '満足度の掲示'], ['frame-hand', '額縁の外の手', true],
@@ -14,6 +14,9 @@ export const galleryDebugOptions = [
   ['backwards-frame', '額縁の裏側', true],
   ['watching-crowd', '振り返ったら満員', false, true],
   ['other-world', '額縁の中の別世界', true],
+  ['ceiling-visitor', '天井を散策する誰念院さん', false, true],
+  ['facing-frames', 'すべての額縁がこちらを向く'],
+  ['sand-painting', '絵から砂がこぼれている', true],
 ].map(([kind, label, record = false, visitors = false]) => ({ kind, label, record, visitors }));
 export function validateDebugSelection(value) {
   const option = galleryDebugOptions.find(option => option.kind === value?.kind);
@@ -26,7 +29,7 @@ export function newLoop(best = 0) {
 }
 export function chooseAnomaly(random = Math.random, { visitorsReady = false, encounteredKinds = [] } = {}) {
   if (random() < .34) return null;
-  const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd'] : kinds;
+  const available = visitorsReady ? [...kinds, 'darenin-rush', 'giant-darenin', 'returned-portrait', 'bowing-visitors', 'watching-crowd', 'ceiling-visitor'] : kinds;
   // Keep the 66% occurrence roll separate. Only the choice of anomaly is biased:
   // an unseen entry gets 1.5 tickets against one for an encountered entry.
   const encountered = new Set(encounteredKinds);
@@ -37,7 +40,7 @@ export function chooseAnomaly(random = Math.random, { visitorsReady = false, enc
     ticket -= weights[i];
     if (ticket < 0) { kind = available[i]; break; }
   }
-  return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit', 'small-frames', 'meme-gallery', 'bowing-visitors', 'watching-crowd'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
+  return ['darenin-rush', 'giant-darenin', 'satisfaction', 'receding-exit', 'small-frames', 'meme-gallery', 'bowing-visitors', 'watching-crowd', 'ceiling-visitor', 'facing-frames'].includes(kind) ? { kind } : { kind, index: Math.min(23, Math.floor(random() * 24)) };
 }
 export function paintingAppearance(index, anomaly) {
   return { imageIndex: anomaly?.kind === 'same-image' ? anomaly.index : index,
@@ -57,6 +60,9 @@ export function loopExit(position, exitOffset = 0) {
   return position.z <= -62.1 - extension ? 'forward' : position.z >= 2.65 ? 'back' : null;
 }
 export function describeAnomaly(anomaly) {
+  if (anomaly?.kind === 'ceiling-visitor') return '誰念院さんが天井を歩き、逆さまの顔をこちらへ向けていました。';
+  if (anomaly?.kind === 'facing-frames') return 'すべての額縁が壁から傾き、こちらを向き続けていました。';
+  if (anomaly?.kind === 'sand-painting') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} が下から崩れ、金色の砂が床に積もっていました。`;
   if (anomaly?.kind === 'other-world') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} の向こうに、草原と赤い扉が広がっていました。`;
   if (anomaly?.kind === 'watching-crowd') return '振り返ると、背後の壁際に誰念院さんたちが整列していました。';
   if (anomaly?.kind === 'backwards-frame') return `記録 ${String(anomaly.index + 1).padStart(2, '0')} が裏返り、裏板と吊り紐が見えていました。`;
