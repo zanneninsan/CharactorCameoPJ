@@ -32,7 +32,19 @@ export function renderGallery3DExperience(character, { htmlPage, escapeHtml, ass
   let body = original.body.slice(0, introStart) + exhibition + original.body.slice(puzzleStart);
   body = body.replace('金色の検印が付いた記録を開き、照合していく。集まった六つの文字を並べ替えれば、次の扉を呼ぶ言葉になる。', '金色の印を1周に1枚仮押しし、異変のない回廊を奥まで進むと検印帳に残る。引き返した周回・間違えた周回の仮押しは消える。6枚を持ち帰ったら、文字を並べ替えて次の扉を呼ぼう。');
   body = body.replace('<main class="gallery-page" data-gallery-experience>', '<main class="gallery-page gallery-3d-page" data-gallery-experience data-gallery-3d>');
-  body = body.replace('<main class="gallery-page gallery-3d-page"', `<link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-3d.css?${assetVersionQuery}">\n      <main class="gallery-page gallery-3d-page"`);
+  body = body.replace('<main class="gallery-page gallery-3d-page"', `<link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-3d.css?${assetVersionQuery}">\n      <link rel="stylesheet" href="../../../assets/site/manzokukyo-gallery-opening.css?${assetVersionQuery}">\n      <main class="gallery-page gallery-3d-page"`);
+  body += `<dialog class="gallery-opening" data-gallery-opening open aria-labelledby="gallery-opening-heading">
+        <header class="gallery-opening-header"><span class="gallery-opening-brand">満足教蔵 / AFTER HOURS</span><button type="button" class="gallery-opening-skip" data-opening-skip>スキップ →</button></header>
+        <section class="gallery-opening-letter" data-opening-letter><span class="gallery-opening-kicker">PRIVATE VIEWING / AFTER HOURS</span>
+          <h2 id="gallery-opening-heading">閉館後の、来館者さまへ。</h2>
+          <p>お待ちしておりました。<br>お預かりした記憶は、<br>奥の画廊に掛けてあります。</p>
+          <p>ただし、展示が変わっていたら、<br><em>どうか、引き返してください。</em></p>
+          <div class="gallery-opening-actions"><button type="button" class="gallery-opening-enter" data-opening-enter disabled>扉を開ける <span aria-hidden="true">→</span></button><button type="button" class="gallery-opening-sound" data-opening-sound aria-pressed="false">音：オフ</button></div>
+          <small class="gallery-opening-status" data-opening-status role="status">扉の向こうに、灯りがともる。</small>
+        </section>
+        <div class="gallery-opening-title" data-opening-title hidden><span>GALLERY OF UNFILED IMAGES</span><strong>記憶の画廊</strong><p>最初の巡回は、正常な展示です。</p></div>
+        <small class="gallery-opening-footnote">展示室の灯りは、まだ消していません。</small>
+      </dialog><noscript><style>.gallery-opening{display:none!important}</style></noscript>`;
   body += `\n      <script type="module" src="../../../assets/site/manzokukyo-gallery-3d.js?${assetVersionQuery}"></script>\n`;
   body += `<dialog class="gallery-loop-inspection" data-gallery-loop-inspection aria-labelledby="gallery-loop-inspection-title"><div><img alt="展示中の記録"><footer><strong id="gallery-loop-inspection-title" data-gallery-loop-inspection-title></strong><button type="button" data-gallery-loop-collect hidden>⊹ 検印を仮押しする</button><button type="button" data-gallery-loop-inspection-close>展示室へ戻る</button><p data-gallery-loop-seal-note role="status"></p></footer></div></dialog>`;
   body = body.replace('</div></details><div class="gallery-loop-count">', '<button type="button" data-debug-open>異変デバッグ（P）</button></div></details><div class="gallery-loop-count">');

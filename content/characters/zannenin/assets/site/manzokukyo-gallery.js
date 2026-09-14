@@ -93,7 +93,8 @@ const sound = createSound(audio, { soundPath: new URL('sounds/', previewRoot).hr
 updateSound(sound.state());
 function play(name, options = {}) { const cancel = sound.play(name, options); if (cancel) { playing.add(cancel); return () => { playing.delete(cancel); cancel(); }; } }
 function stopSounds() { for (const cancel of playing) cancel(); playing.clear(); }
-audioPanel.querySelector('[data-gallery-sound-toggle]').addEventListener('click', () => { consent = true; if (sound.enabled) sound.mute(); else void sound.enable(); updateSound(sound.state()); });
+async function toggleSound() { consent = true; if (sound.enabled) sound.mute(); else await sound.enable(); updateSound(sound.state()); return sound.state(); }
+audioPanel.querySelector('[data-gallery-sound-toggle]').addEventListener('click', () => { void toggleSound(); });
 audioPanel.querySelector('[data-gallery-silent]').addEventListener('click', () => { consent = true; sound.mute(); updateSound(sound.state()); });
 audioPanel.querySelector('[data-gallery-music]').addEventListener('input', event => sound.setMusicVolume(Number(event.target.value) / 100));
 audioPanel.querySelector('[data-gallery-effects]').addEventListener('input', event => sound.setEffectsVolume(Number(event.target.value) / 100));
@@ -305,4 +306,4 @@ function confirmSeal(number) {
 function celebrateSeals() { if (found.size === 6 && !cleared && phase === 'idle') beginCeremony('gather'); }
 
 // The expedition commits only seals carried through a correctly chosen exit.
-export { showRecord, play, state, setExpedition, confirmSeal, celebrateSeals, resetGallery };
+export { showRecord, play, state, toggleSound, setExpedition, confirmSeal, celebrateSeals, resetGallery };

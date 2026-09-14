@@ -8,6 +8,7 @@ const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-
 const { mountGalleryWorld } = await import(new URL(`manzokukyo-gallery-world.js?${assetVersionQuery}`, import.meta.url));
 const { mountGallerySand } = await import(new URL(`manzokukyo-gallery-sand.js?${assetVersionQuery}`, import.meta.url));
 const { mountGalleryDecor } = await import(new URL(`manzokukyo-gallery-decor.js?${assetVersionQuery}`, import.meta.url));
+const { createGalleryArrival, mountGalleryOpening } = await import(new URL(`manzokukyo-gallery-opening.js?${assetVersionQuery}`, import.meta.url));
 const gallery = await import(new URL(`manzokukyo-gallery.js?${assetVersionQuery}`, import.meta.url));
 const { advanceWalk, walkKeys, walkRoom, galleryFrameZ } = await import(new URL(`manzokukyo-gallery-walk.js?${assetVersionQuery}`, import.meta.url));
 const { mountGallerySpatial } = await import(new URL(`manzokukyo-gallery-spatial.js?${assetVersionQuery}`, import.meta.url));
@@ -15,11 +16,13 @@ const { mountGalleryLoop, paintingAppearance, loopExit, satisfactionLabel, galle
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const { mountFrameHand } = await import(new URL(`manzokukyo-gallery-hand.js?${assetVersionQuery}`, import.meta.url));
 let exhibition, loop, selected = 0;
+const opening = mountGalleryOpening({ gallery, wake: () => exhibition?.wake(), onFinish: () => exhibition?.finishOpening() });
 function setCatalog(open) {
   catalog.hidden = !open; listButton.setAttribute('aria-expanded', String(open));
   listButton.textContent = open ? '一覧を閉じる' : '24枚の一覧';
 }
 function fallback() {
+  opening?.fallback();
   loop?.fallback();
   document.body.classList.remove('has-gallery-3d'); document.body.classList.add('gallery-3d-fallback');
   loading.hidden = false; loading.textContent = '3D展示を開けませんでした。下の一覧から、すべての絵を鑑賞できます。';
@@ -118,10 +121,7 @@ function createExhibition(T) {
     box(scene, [.025, .025, 69], [side * 3.75, .03, -30], gold);
   }
   box(scene, [11.4, .18, 69], [0, 6.45, -30], cornice);
-  // Walking lets visitors turn back toward the entrance as well.
-  box(scene, [11.4, 6.4, .3], [0, 3.15, 4.5], stone);
-  box(scene, [3.3, 4.8, .18], [0, 2.4, 4.2], gold);
-  box(scene, [2.95, 4.55, .18], [0, 2.28, 4.07], baseStone);
+  const arrival = createGalleryArrival(T, { scene, box, material, basic, gold, stone, cornice });
   const curve = new T.CatmullRomCurve3([new T.Vector3(-4.95, 3.8, 0), new T.Vector3(-4.5, 4.8, 0), new T.Vector3(-2.8, 5.8, 0), new T.Vector3(0, 6.2, 0), new T.Vector3(2.8, 5.8, 0), new T.Vector3(4.5, 4.8, 0), new T.Vector3(4.95, 3.8, 0)]);
   const arch = new T.TubeGeometry(curve, 40, .12, 6, false); geometry.add(arch);
   for (let r = 0; r <= 4; r++) {
@@ -377,7 +377,7 @@ function createExhibition(T) {
     loadRoom(1, true);
     camera.position.z = .8; endPosition.copy(camera.position); wake();
     if (disposed || lost) { preparationResolve?.(false); preparationResolve = null; }
-    return ready;
+    return ready.then(success => { if (opening?.active) opening.setReady(success); return success; });
   }
   function destination(position, target, immediate = false) {
     endPosition.copy(position); lookCamera.position.copy(position); lookCamera.lookAt(target); endQuaternion.copy(lookCamera.quaternion);
@@ -410,6 +410,14 @@ function createExhibition(T) {
     sprintLatched = false; sprintButton.setAttribute('aria-pressed', 'false');
     sprintButton.textContent = 'ダッシュ OFF';
     for (const button of walkButtons) button.classList.remove('is-held');
+  }
+  function finishOpening() {
+    arrival.close();
+    camera.position.set(0, 2.32, .8); camera.lookAt(0, 2.32, -12);
+    endPosition.copy(camera.position); endQuaternion.copy(camera.quaternion); moving = false; last = 0;
+    resize(); loop?.refreshDebug();
+    if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true });
+    wake();
   }
   function canWalk() { return !disposed && !lost && !loop?.busy && !document.hidden && inView && !document.querySelector('dialog[open]'); }
   function startWalk() {
@@ -484,13 +492,15 @@ function createExhibition(T) {
     const paused = document.querySelector('dialog[open]') || loop?.busy;
     const dt = last ? Math.min((time - last) / 1000, .05) : 0; last = time;
     const walking = mode === 'walking' && (heldKeys.size || heldPointers.size) && !paused;
-    const cameraActive = moving || walking || lookDirty;
+    const cameraActive = moving || walking || lookDirty || Boolean(opening?.active);
     if (walking || (lookDirty && !paused)) { applyWalk(walking ? dt : 0); lookDirty = false; }
     if (moving && !paused) {
       const ease = 1 - Math.exp(-dt * 5.4);
       camera.position.lerp(endPosition, ease); camera.quaternion.slerp(endQuaternion, ease);
       if (camera.position.distanceTo(endPosition) < .008 && camera.quaternion.angleTo(endQuaternion) < .002) { camera.position.copy(endPosition); camera.quaternion.copy(endQuaternion); moving = false; }
     }
+    const arrivalMoving = opening?.advance(dt) || false;
+    if (opening?.active) arrival.update(camera, opening.elapsed);
     const worldMoving = otherWorld.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const spatialMoving = spatial.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
@@ -503,7 +513,7 @@ function createExhibition(T) {
       decor.update(camera); otherWorld.render(renderer, camera); renderer.render(scene, camera); lastRender = time;
       visitorWasVisible = visitorVisible;
     }
-    if ((moving || walking || visitorMoving) && !paused && !raf) raf = requestAnimationFrame(animate);
+    if ((arrivalMoving || ((moving || walking || visitorMoving) && !paused)) && !raf) raf = requestAnimationFrame(animate);
   }
   function wake() { if (!raf && !disposed && !lost) raf = requestAnimationFrame(animate); }
   function resize() {
@@ -586,7 +596,7 @@ function createExhibition(T) {
     preparationResolve?.(false); preparationResolve = null;
     disposed = true; resizeObserver.disconnect(); intersection.disconnect(); sealObserver.disconnect(); modalObserver.disconnect();
     visitor?.dispose();
-    frameHand.dispose(); decor.dispose(); otherWorld.dispose(); sand.dispose();
+    frameHand.dispose(); decor.dispose(); otherWorld.dispose(); sand.dispose(); arrival.dispose(); opening?.dispose();
     for (const item of textures) item.dispose(); for (const item of materials) item.dispose(); for (const item of geometry) item.dispose(); renderer.dispose();
   });
   window.addEventListener('pageshow', event => { if (event.persisted) { resize(); wake(); } });
@@ -613,8 +623,8 @@ function createExhibition(T) {
     }
   }
   void loadVisitors();
-  return { select, overview, prepareLoop, inspectionImage, wake, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, lighting: decor.snapshot(), sand: sand.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+  return { select, overview, prepareLoop, inspectionImage, wake, finishOpening, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
+    state: () => ({ ready: !disposed && !lost, opening: opening?.snapshot(), lighting: decor.snapshot(), sand: sand.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

@@ -1,0 +1,65 @@
+.gallery-opening {
+  position: fixed; inset: 0; box-sizing: border-box; width: 100vw; height: 100dvh;
+  max-width: none; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0;
+  color: #eee4cb; background: #080f11; overflow: auto; z-index: 10000;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", Georgia, serif;
+}
+.gallery-opening:not([open]) { display: none; }
+.gallery-opening::backdrop { background: transparent; }
+.gallery-opening[data-ready="true"] { background: transparent; }
+.gallery-opening::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(90deg, #070e10fa 0%, #070e10ed 32%, #070e1080 52%, #070e1010 80%), radial-gradient(ellipse at 67% 45%, transparent 15%, #05090ba8 95%); transition: opacity 1.4s; }
+.gallery-opening-header { position: absolute; top: max(36px, env(safe-area-inset-top)); left: 6vw; right: 6vw; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.gallery-opening-brand { display: flex; align-items: center; gap: 17px; font: 11px/1.6 system-ui, sans-serif; letter-spacing: .24em; color: #c6b489; }
+.gallery-opening-brand::before { content: ""; width: 38px; height: 1px; background: #b69960; }
+.gallery-opening button { appearance: none; cursor: pointer; font-family: inherit; color: inherit; }
+.gallery-opening button:focus-visible { outline: 2px solid #f2d999; outline-offset: 6px; }
+.gallery-opening-skip { position: relative; min-height: 44px; border: 0; padding: 8px 0 8px 20px; color: #d6c9ac !important; background: transparent; font: 12px/1.5 system-ui, sans-serif !important; }
+.gallery-opening-letter { position: relative; box-sizing: border-box; width: 46%; max-width: 600px; margin: 0; padding: clamp(144px, 23vh, 230px) 0 100px 9vw; transition: opacity .65s, transform 1s; }
+.gallery-opening-kicker { margin: 0 0 27px; color: #a99b7d; font: 10px/1.6 system-ui, sans-serif; letter-spacing: .25em; }
+.gallery-opening-letter h2 { margin: 0 0 28px; font-size: clamp(23px, 2.4vw, 37px); line-height: 1.7; font-weight: 400; letter-spacing: .1em; }
+.gallery-opening-letter p:not(.gallery-opening-kicker) { margin: 0 0 20px; font-size: clamp(14px, 1.15vw, 17px); line-height: 2.3; letter-spacing: .08em; color: #c4bdad; }
+.gallery-opening-letter p em { color: #e9d5a2; font-style: normal; }
+.gallery-opening-actions { display: flex; align-items: center; gap: 24px; margin-top: 36px; }
+.gallery-opening-enter { display: flex; justify-content: space-between; align-items: center; gap: 32px; min-height: 54px; min-width: 184px; padding: 14px 23px; background: #bfaa7320; border: 1px solid #b8a16a; font-size: 15px; letter-spacing: .16em; transition: background .2s; }
+.gallery-opening-enter:hover { background: #bfaa733b; }
+.gallery-opening-enter:disabled { opacity: .4; cursor: wait; }
+.gallery-opening-sound { min-height: 44px; padding: 9px 0; border: 0; background: none; font: 11px/1.5 system-ui, sans-serif !important; color: #aaa38f !important; }
+.gallery-opening-status { display: block; margin-top: 16px; max-width: 300px; color: #888d84; font: 10px/1.7 system-ui, sans-serif; letter-spacing: .06em; }
+.gallery-opening-footnote { position: absolute; bottom: 28px; left: 6vw; color: #92876c; font: 9px/1.6 system-ui, sans-serif; letter-spacing: .3em; }
+.gallery-opening-title { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; pointer-events: none; opacity: var(--opening-title-opacity, 0); text-align: center; text-shadow: 0 2px 20px #000, 0 0 40px #000; }
+.gallery-opening-title strong { font-size: clamp(36px, 6vw, 80px); font-weight: 400; letter-spacing: .2em; }
+.gallery-opening-title span { font: 10px/1.8 system-ui, sans-serif; letter-spacing: .35em; }
+.gallery-opening-title p { margin: 24px 0 0; font-size: 13px; letter-spacing: .1em; }
+.gallery-opening [hidden] { display: none !important; }
+.gallery-opening[data-phase="opening"] .gallery-opening-letter { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+.gallery-opening[data-phase="opening"]::before { opacity: .25; }
+.gallery-opening[data-phase="opening"] .gallery-opening-footnote { opacity: 0; }
+body.is-gallery-opening { overflow: hidden; }
+body.is-gallery-opening .gallery-3d-viewport { position: fixed !important; inset: 0 !important; z-index: 1000; width: 100vw !important; height: 100dvh !important; min-height: 0 !important; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+body.is-gallery-opening .gallery-3d-viewport > :not(canvas), body.is-gallery-opening .gallery-3d-viewport::after { visibility: hidden; }
+body.is-gallery-opening :is(.gallery-topbar, .gallery-3d-heading, .gallery-sound, .gallery-ledger, .site-build-version) { visibility: hidden; }
+@media (max-width: 700px) {
+  .gallery-opening::before { background: linear-gradient(0deg, #070e10fa 0%, #070e10f2 38%, #070e1070 76%, #070e1060); }
+  .gallery-opening-header { top: max(14px, env(safe-area-inset-top)); left: 24px; right: 24px; }
+  .gallery-opening-brand { font-size: 9px; gap: 12px; letter-spacing: .16em; }
+  .gallery-opening-brand::before { width: 22px; }
+  .gallery-opening-letter { width: 100%; max-width: none; padding: max(25dvh, 115px) 28px 70px; }
+  .gallery-opening-kicker { margin-bottom: 18px; font-size: 9px; }
+  .gallery-opening-letter h2 { font-size: 24px; margin-bottom: 22px; letter-spacing: .04em; }
+  .gallery-opening-letter p:not(.gallery-opening-kicker) { font-size: 14px; line-height: 2.1; margin-bottom: 14px; }
+  .gallery-opening-actions { margin-top: 26px; gap: 26px; }
+  .gallery-opening-footnote { left: 28px; bottom: 20px; font-size: 8px; }
+  .gallery-opening-title strong { font-size: 36px; }
+  .gallery-opening-title span { font-size: 8px; letter-spacing: .24em; }
+}
+@media (max-height: 600px) {
+  .gallery-opening-letter { padding-top: 105px; padding-bottom: 55px; }
+  .gallery-opening-letter h2 { margin-bottom: 14px; font-size: 24px; }
+  .gallery-opening-letter p:not(.gallery-opening-kicker) { font-size: 13px; line-height: 1.8; margin-bottom: 12px; }
+  .gallery-opening-kicker { margin-bottom: 12px; }
+  .gallery-opening-actions { margin-top: 18px; }
+  .gallery-opening-footnote { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gallery-opening *, .gallery-opening::before { transition: none !important; animation: none !important; }
+}
