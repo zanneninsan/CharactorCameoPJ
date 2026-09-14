@@ -143,11 +143,18 @@
     },
     {
       "label": "満足教ティザー",
-      "url": "./manzokukyo/",
-      "canonicalUrl": "zannenin/manzokukyo/",
+      "url": "./manzokukyo-preview/",
+      "canonicalUrl": "zannenin/manzokukyo-preview/",
       "type": "teaser",
       "displayUrl": "満足教",
       "description": "カルトでダークな満足教ティザーサイト"
+    },
+    {
+      "label": "アニメティザー",
+      "url": "../anime/manzokukyo-zannenin-cute/",
+      "canonicalUrl": "anime/manzokukyo-zannenin-cute/",
+      "type": "teaser",
+      "displayUrl": "満足教の残念院さん"
     }
   ],
   "hiddenPages": [
