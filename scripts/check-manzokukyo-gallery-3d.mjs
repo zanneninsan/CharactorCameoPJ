@@ -65,7 +65,7 @@ function createHarness(text = source) {
   const frames = records.map((record, index) => ({ roomIndex: Math.floor(index / 6), side: index % 2 === 0 ? -1 : 1, z: -3 - Math.floor((index % 6) / 2) * 4.5 - Math.floor(index / 6) * 16, width: 2.12, height: 2.12 * 1080 / 768 }));
   class Vector3 { constructor(x, y, z) { Object.assign(this, { x, y, z }); } }
   const context = vm.createContext({ loop: null, stage, catalog, canvas, records, frames, camera, aimedIndex: null, viewport: { classList: { remove() {} } },
-    canWalk: () => true, stopWalk: () => {}, document: { querySelectorAll: queryAll }, motion: { matches: false },
+    canWalk: () => true, stopWalk: () => {}, document: { querySelectorAll: queryAll, addEventListener() {} }, motion: { matches: false },
     listButton: query('[data-gallery-3d-list]'),
     gallery: { play: (name, options) => sounds.push({ name, options }), showRecord: index => { inspections.push(index); return true; } },
     T: { Vector3, MathUtils: { degToRad: degrees => degrees * Math.PI / 180 } },
@@ -81,7 +81,7 @@ function createHarness(text = source) {
     "listButton.addEventListener('click'",
     "for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener",
     "for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.addEventListener",
-    "for (const button of document.querySelectorAll('[data-gallery-restart]')) button.addEventListener",
+    "document.addEventListener('gallery-reset'",
     "canvas.addEventListener('keydown'",
   ];
   vm.runInContext(`let selected = 0, selectedIndex = 0, mode = 'overview';\nconst exhibition = { select, overview, stop: stopWalk, state: () => ({ room: Math.floor(selectedIndex / 6) + 1 }) };\n${markers.map(marker => declaration(text, marker)).join('\n')}\nupdateSelection(0);`, context);

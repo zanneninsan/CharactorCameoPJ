@@ -247,7 +247,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   }
   for (const choice of choices) choice.addEventListener('click', () => { const mode = choice.getAttribute('data-gallery-loop-mode'); if ((mode === 'loop') !== active) void setMode(mode); });
   function reset() { clearTransient(); if (debugSelection) { void prepare('DEBUG / 同じ展示を再開', '仮押しを破棄しました。保存済みの検印は変更しません。'); return; } state = newLoop(state.best); if (active) void prepare('初回の展示へ', '検印と連続正解をリセットしました。最高記録は残っています。'); else { render(); canvas.focus({ preventScroll: true }); } }
-  q('[data-gallery-loop-restart]').addEventListener('click', () => { if (!busy) gallery.resetGallery(); });
+  q('[data-gallery-loop-restart]').addEventListener('click', () => { if (!busy) gallery.requestResetGallery(); });
   q('[data-gallery-loop-ledger]').addEventListener('click', () => { exhibition.stop(); document.querySelector('[data-ledger-toggle]').click(); });
   q('[data-gallery-loop-retry]').addEventListener('click', () => { void prepare('展示を読み込み直しています', 'この巡回の内容は変わりません。'); });
   q('[data-gallery-loop-ui]').hidden = false;

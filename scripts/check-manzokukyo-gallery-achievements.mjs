@@ -28,18 +28,22 @@ class Element {
   setAttribute(name, value) { this[name] = value; }
   querySelector(name) { return this.children[name]; }
   querySelectorAll() { return cards; }
-  focus() {}
-  showModal() { this.open = true; }
+  focus(options) { this.focusOptions = options; }
+  showModal() { this.open = true; this.scrollTop = 900; }
   close() { this.open = false; }
 }
 const cards = galleryDebugOptions.slice(1).map(() => Object.assign(new Element(), { children: { strong: new Element(), small: new Element() } }));
-const dialog = Object.assign(new Element(), { children: Object.fromEntries(['[data-achievement-count]', '[data-achievement-complete]', '[data-achievements-close]', '[data-achievements-viewing]', '[data-viewing-confirm]', '[data-viewing-accept]', '[data-viewing-cancel]'].map(key => [key, new Element()])) });
+const dialog = Object.assign(new Element(), { children: Object.fromEntries(['#gallery-achievements-title', '[data-achievement-count]', '[data-achievement-complete]', '[data-achievements-close]', '[data-achievements-viewing]', '[data-viewing-confirm]', '[data-viewing-accept]', '[data-viewing-cancel]'].map(key => [key, new Element()])) });
 const trigger = new Element(); let busy = false, stopped = 0, viewing = false, switches = 0;
 globalThis.document = { querySelector: selector => selector === '[data-gallery-achievements]' ? dialog : dialog.open ? dialog : null, querySelectorAll: () => [trigger] };
 values.clear(); const displayBook = createGalleryAchievements(galleryDebugOptions, storage);
 const board = mountAchievementBoard({ achievements: displayBook, canvas: { focus() {} }, exhibition: { stop() { stopped++; } }, canOpen: () => !busy, isViewing: () => viewing, enterViewing: () => { switches++; viewing = true; } });
 assert.equal(trigger.textContent, '実績 0 / 19'); assert.ok(cards.every(card => card.children.strong.textContent === '？？？'));
 busy = true; trigger.events.click(); assert.equal(dialog.open, false); busy = false; trigger.events.click(); assert.equal(dialog.open, true); assert.equal(stopped, 1);
+assert.equal(dialog.scrollTop, 0, 'first open starts at the heading');
+assert.deepEqual(dialog.children['#gallery-achievements-title'].focusOptions, { preventScroll: true });
+dialog.scrollTop = 600; dialog.children['[data-achievements-close]'].events.click(); trigger.events.click();
+assert.equal(dialog.scrollTop, 0, 'reopening after reading the bottom starts at the heading');
 displayBook.record('receding-exit', true); board.render(); assert.equal(cards.filter(card => card.children.strong.textContent !== '？？？').length, 1);
 assert.equal(dialog.children['[data-achievement-complete]'].hidden, true);
 for (const option of galleryDebugOptions.slice(1)) displayBook.record(option.kind, true);

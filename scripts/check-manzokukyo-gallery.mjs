@@ -80,11 +80,12 @@ export function createHarness({ saved = {}, blockedStorage = false, reduced = fa
   const store = new Map(Object.entries(saved));
   const writes = [], sounds = [], navigation = [], listeners = new Map(), frames = new Map();
   let frameId = 0, now = 1000, soundEnables = 0, soundSilences = 0;
-  const elements = Object.fromEntries(['page', 'dialog', 'collect', 'imprint', 'note', 'form', 'answer', 'submit', 'message', 'exit', 'ledger', 'wordTray', 'undo', 'ceremony', 'stage', 'continueButton', 'skipButton'].map(name => [name, new Element()]));
+  const elements = Object.fromEntries(['page', 'dialog', 'collect', 'imprint', 'note', 'form', 'answer', 'submit', 'message', 'exit', 'ledger', 'wordTray', 'undo', 'ceremony', 'stage', 'continueButton', 'skipButton', 'resetDialog'].map(name => [name, new Element()]));
   const root = new Element();
   const galleryFrames = records.map(record => root.querySelector(`[data-gallery-index="${record.number - 1}"]`));
-  const document = { hidden: false, body: new Element(), documentElement: new Element(),
-    querySelector: selector => selector === '[data-gallery-index]' ? galleryFrames[0] : root.querySelector(selector),
+  const resetEvents = [];
+  const document = { dispatchEvent: event => resetEvents.push(event.type), hidden: false, body: new Element(), documentElement: new Element(),
+    querySelector: selector => selector === 'dialog[open]' ? [elements.dialog, elements.ceremony, elements.resetDialog].find(element => element.open) : selector === '[data-gallery-index]' ? galleryFrames[0] : root.querySelector(selector),
     querySelectorAll: selector => selector === '[data-gallery-index]' ? galleryFrames : [],
     addEventListener: (type, callback) => listeners.set(`document:${type}`, callback) };
   const audioState = { enabled: soundEnabled, musicPlaying: soundEnabled, musicVolume: .37, effectsVolume: .52, consentGiven: true, track: { id: 'truth', label: 'Truth chamber' } };
@@ -98,7 +99,7 @@ export function createHarness({ saved = {}, blockedStorage = false, reduced = fa
     setMusicVolume(value) { soundMutations.push('musicVolume'); audioState.musicVolume = value; },
     setEffectsVolume(value) { soundMutations.push('effectsVolume'); audioState.effectsVolume = value; } };
   const sandbox = {
-    console, loadGalleryImage, cancelGalleryImage, ...elements, records, assetVersionQuery,
+    console, Event, loadGalleryImage, cancelGalleryImage, ...elements, records, assetVersionQuery,
     seals: records.filter(record => record.seal).sort((a, b) => a.seal.order - b.seal.order),
     reducedMotion: { matches: reduced }, document, sound: sharedSound,
     room: { navigate: destination => navigation.push(destination) },
@@ -111,8 +112,8 @@ export function createHarness({ saved = {}, blockedStorage = false, reduced = fa
   const stateStart = source.indexOf('const storageKey =');
   const stateEnd = source.indexOf('const playing =', stateStart);
   assert.ok(stateStart > -1 && stateEnd > stateStart);
-  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery', 'resetGallery', 'setExpedition', 'confirmSeal', 'celebrateSeals'];
-  const executable = [source.slice(stateStart, stateEnd), declaration('const playing ='), declaration('const solved ='), declaration('const exitHref ='),
+  const functionNames = ['play', 'stopSounds', 'stopTimeline', 'syncModalLock', 'tick', 'animate', 'setLedger', 'scrollToArea', 'renderPuzzle', 'showRecord', 'closeRecord', 'collectSeal', 'finishRelease', 'beginCeremony', 'closeCeremony', 'submitWord', 'leaveGallery', 'resetGallery', 'requestResetGallery', 'closeResetConfirmation', 'setExpedition', 'confirmSeal', 'celebrateSeals'];
+  const executable = ['let resetOpener;', source.slice(stateStart, stateEnd), declaration('const playing ='), declaration('const solved ='), declaration('const exitHref ='),
     ...functionNames.map(name => declaration(`function ${name}(`)),
     declaration("document.addEventListener('visibilitychange'"), declaration("window.addEventListener('pagehide'"), declaration("window.addEventListener('pageshow'"),
     'globalThis.readState = () => ({found:[...found], viewed:[...viewed], count:found.size, cleared, phase, elapsed:timeline?.elapsed ?? null, currentIndex:current, currentRecord:dialog.open ? records[current].number : null});',
@@ -132,13 +133,26 @@ export function createHarness({ saved = {}, blockedStorage = false, reduced = fa
     const event = { button: 0, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, ...modifiers };
     call('leaveGallery', event); return event;
   }
-  return { call, run, visibility, event, clickExit, elements, galleryFrames, store, writes, sounds, navigation, frames, soundMutations, soundState: () => sharedSound.state(),
+  return { resetEvents, call, run, visibility, event, clickExit, elements, galleryFrames, store, writes, sounds, navigation, frames, soundMutations, soundState: () => sharedSound.state(),
     state: () => JSON.parse(JSON.stringify(context.readState())), counters: () => ({ soundEnables, soundSilences }) };
 }
 
 const sealsKey = 'manzokukyo-gallery-seals-v2', clearedKey = 'manzokukyo-gallery-cleared-v2';
 const sealNumbers = canonicalSeals.map(record => record.number);
 const allSeals = { [sealsKey]: JSON.stringify(sealNumbers) };
+const cancelledReset = createHarness({ saved: { ...allSeals, [clearedKey]: '1' } });
+const beforeCancel = cancelledReset.state();
+assert.equal(cancelledReset.call('requestResetGallery'), true);
+assert.equal(cancelledReset.elements.resetDialog.open, true);
+assert.match(cancelledReset.elements.resetDialog.querySelector('[data-reset-warning]').textContent, /最高記録と異変の実績は残ります/);
+assert.equal(cancelledReset.elements.resetDialog.querySelector('[data-reset-cancel]').focused, true);
+cancelledReset.call('closeResetConfirmation');
+assert.deepEqual(cancelledReset.state(), beforeCancel, 'cancelling reset preserves progress');
+assert.equal(cancelledReset.writes.length, 0); assert.deepEqual(cancelledReset.resetEvents, [], 'cancel never moves the camera');
+cancelledReset.call('requestResetGallery'); cancelledReset.call('closeResetConfirmation', true);
+assert.equal(cancelledReset.state().count, 0); assert.equal(cancelledReset.state().cleared, false);
+assert.deepEqual(cancelledReset.resetEvents, ['gallery-reset']);
+cancelledReset.call('closeResetConfirmation', true); assert.equal(cancelledReset.resetEvents.length, 1, 'double accept cannot reset twice');
 const fresh = createHarness();
 assert.equal(fresh.state().count, 0);
 assert.equal(fresh.elements.answer.disabled, true);
@@ -257,6 +271,7 @@ function assertReplayReset(harness, { writable = true } = {}) {
   const previousEffects = [...harness.sounds];
   const writeCount = harness.writes.length;
   harness.call('resetGallery');
+  assert.deepEqual(harness.resetEvents, ['gallery-reset']);
   assert.equal(harness.state().count, 0);
   assert.deepEqual(harness.state().viewed, []);
   assert.equal(harness.state().cleared, false);

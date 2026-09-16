@@ -54,7 +54,12 @@ export function mountAchievementBoard({ achievements, canvas, exhibition, canOpe
     });
   }
   function resetConfirmation() { if (confirmation) confirmation.hidden = true; }
-  function open() { if (disposed || !canOpen() || document.querySelector('dialog[open]')) return; resetConfirmation(); exhibition.stop(); render(); dialog.showModal(); }
+  function open() {
+    if (disposed || !canOpen() || document.querySelector('dialog[open]')) return;
+    resetConfirmation(); exhibition.stop(); render(); dialog.showModal();
+    dialog.querySelector('#gallery-achievements-title').focus({ preventScroll: true });
+    dialog.scrollTop = 0;
+  }
   function close() { resetConfirmation(); dialog.close(); canvas.focus({ preventScroll: true }); exhibition.wake?.(); }
   viewing?.addEventListener('click', () => {
     if (disposed || !dialog.open || !canOpen() || isViewing()) return;

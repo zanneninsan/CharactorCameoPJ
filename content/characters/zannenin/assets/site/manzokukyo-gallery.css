@@ -615,3 +615,11 @@ dialog.gallery-ceremony {
   .gallery-ceremony-stage[data-phase="gather"] .gallery-orbit-seal { animation: none !important; opacity: 1; }
   .gallery-ceremony-stage[data-phase="release"] .gallery-orbit-seal { animation: none !important; opacity: 0; }
 }
+
+.gallery-reset-confirm { box-sizing: border-box; width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid #ccb679; border-radius: 12px; color: #f4e6cb; background: #192a2b; }
+.gallery-reset-confirm::backdrop { background: #070d14cf; }
+.gallery-reset-confirm h2 { margin: 0 0 16px; font-size: 22px; }
+.gallery-reset-confirm p { font: 14px/1.9 system-ui; }
+.gallery-reset-confirm > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.gallery-reset-confirm button { min-height: 44px; padding: 10px 16px; border: 1px solid #d9bd7f; border-radius: 4px; background: transparent; color: #f4e6cb; cursor: pointer; }
+.gallery-reset-confirm [data-reset-accept] { background: #ddc48b; color: #172323; }

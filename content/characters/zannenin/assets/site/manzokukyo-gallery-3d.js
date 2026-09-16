@@ -57,8 +57,8 @@ stage.querySelector('[data-gallery-3d-overview]').addEventListener('click', () =
 listButton.addEventListener('click', () => { setCatalog(catalog.hidden); if (!catalog.hidden) catalog.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'start' }); });
 for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener('click', () => { exhibition?.overview(Number(button.getAttribute('data-gallery-3d-room-jump'))); gallery.play('step-1', { level: .35 }); });
 for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.addEventListener('click', () => { const index = Number(button.dataset.galleryIndex); updateSelection(index); exhibition?.select(index); });
-for (const button of document.querySelectorAll('[data-gallery-restart]')) button.addEventListener('click', () => {
-  exhibition?.overview(0, true); canvas.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'center' }); canvas.focus({ preventScroll: true });
+document.addEventListener('gallery-reset', () => {
+  canvas.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'center' }); canvas.focus({ preventScroll: true });
 });
 // Large viewing stays in the normal HTML image viewer, without perspective or cropping.
 const lightbox = document.querySelector('[data-gallery-lightbox]');
@@ -90,6 +90,7 @@ function createExhibition(T) {
   const plane = new T.PlaneGeometry(1, 1); geometry.add(plane);
   const stone = material({ color: 0xc7c2ad, roughness: .88 });
   const baseStone = material({ color: 0x3c4646, roughness: .72 });
+  const wainscot = material({ color: 0x08633f, roughness: .62 });
   const cornice = material({ color: 0xe0d8bd, roughness: .7 });
   const gold = material({ color: 0xc8a65c, metalness: .72, roughness: .32 });
   const black = material({ color: 0x1d2224, roughness: .6 });
@@ -114,7 +115,7 @@ function createExhibition(T) {
   }
   for (const side of [-1, 1]) {
     box(scene, [.32, 6.4, 69], [side * 5.55, 3.15, -30], stone);
-    box(scene, [.22, .85, 69], [side * 5.33, .43, -30], baseStone);
+    box(scene, [.22, .85, 69], [side * 5.33, .43, -30], wainscot);
     box(scene, [.24, .065, 69], [side * 5.29, .9, -30], gold);
     box(scene, [.28, .13, 69], [side * 5.28, 5.15, -30], cornice);
     box(scene, [.32, .04, 69], [side * 5.25, 5.25, -30], gold);
@@ -143,6 +144,7 @@ function createExhibition(T) {
   box(extension, [11.4, .18, 18], [0, 6.45, -73.5], cornice);
   for (const side of [-1, 1]) {
     box(extension, [.32, 6.4, 18], [side * 5.55, 3.15, -73.5], stone);
+    box(extension, [.22, .85, 18], [side * 5.33, .43, -73.5], wainscot);
     box(extension, [.24, .065, 18], [side * 5.29, .9, -73.5], gold);
   }
   for (const parity of [0, 1]) {
@@ -407,8 +409,7 @@ function createExhibition(T) {
   }
   function stopWalk() {
     heldKeys.clear(); heldPointers.clear(); walked = 0; down = null;
-    sprintLatched = false; sprintButton.setAttribute('aria-pressed', 'false');
-    sprintButton.textContent = 'ダッシュ OFF';
+    // Release movement inputs without changing the player's dash toggle.
     for (const button of walkButtons) button.classList.remove('is-held');
   }
   function finishOpening() {
@@ -624,7 +625,7 @@ function createExhibition(T) {
   }
   void loadVisitors();
   return { select, overview, prepareLoop, inspectionImage, wake, finishOpening, hasVisitors: () => Boolean(visitor) && !disposed && !lost, hasImageErrors: () => failed.size > 0 || pending.size > 0, stop: stopWalk,
-    state: () => ({ ready: !disposed && !lost, opening: opening?.snapshot(), lighting: decor.snapshot(), sand: sand.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
+    state: () => ({ ready: !disposed && !lost, opening: opening?.snapshot(), lighting: decor.snapshot(), sand: sand.snapshot(), otherWorld: otherWorld.snapshot(), renderStats: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }, spatial: spatial.snapshot(), achievements: loop?.achievements(), loop: loop?.snapshot(), visitor: { ...(visitor?.snapshot() || { loaded: false }), loading: visitorLoading, error: visitorError }, selectedRecord: selectedIndex + 1, room: activeRoom + 1, mode, moving, sprintLatched, walking: heldKeys.size > 0 || heldPointers.size > 0, position: camera.position.toArray(), yaw: orientation.setFromQuaternion(camera.quaternion, 'YXZ').y, aimedRecord: aimedIndex === null ? null : aimedIndex + 1, loadedRecords: [...loaded.keys()].map(n => n + 1).sort((a, b) => a - b), failedRecords: [...failed].map(n => n + 1), imageFit: 'contain', textureColorSpace: 'srgb', cameraAspect: camera.aspect }) };
 }
 
 const register = tool => { try { (window.ManzokukyoRoom?.registerTool ? window.ManzokukyoRoom.registerTool(tool) : document.modelContext?.registerTool(tool)); } catch {} };

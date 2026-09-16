@@ -70,7 +70,7 @@ globalThis.matchMedia = () => ({ matches: false });
 globalThis.setTimeout = callback => timers.push(callback);
 let imageErrors = false, visitorsReady = false, wakes = 0, throwPreparation = false;
 let randomDraw = 0, drawNormal = false;
-const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
+const gallery = { state: () => shared.state(), play: name => sounds.push(name), ...Object.fromEntries(['setExpedition', 'confirmSeal', 'celebrateSeals', 'resetGallery', 'requestResetGallery'].map(name => [name, (...args) => shared.call(name, ...args)])) };
 const ui = mountGalleryLoop({ stage: new Element(), canvas: new Element(), records, assetVersionQuery: 'test', gallery, random: () => drawNormal ? 0 : visitorsReady ? .7 : [.9, 2.5 / 13, .9][randomDraw++ % 3],
   exhibition: { stop() {}, wake() { wakes++; }, hasVisitors: () => visitorsReady, hasImageErrors: () => imageErrors, prepareLoop(anomaly, round) { if (throwPreparation) throw Error('graphics failure'); preparations.push({ anomaly, round }); return new Promise(resolve => imageLoads.push(resolve)); } } });
 async function finish(ready = true) { for (const resolve of imageLoads.splice(0)) resolve(ready); for (const timer of timers.splice(0)) timer(); for (let i = 0; i < 6; i++) await Promise.resolve(); }
@@ -142,7 +142,9 @@ assert.equal(shared.state().count, 6); assert.equal(shared.elements.ceremony.ope
 shared.call('closeCeremony'); assert.equal(shared.call('submitWord', 'ちがう').accepted, false);
 assert.equal(shared.call('submitWord', 'あかいとびら').accepted, true); shared.run(4600);
 assert.equal(shared.state().cleared, true); assert.equal(shared.elements.exit.getAttribute('aria-disabled'), 'false');
-nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
+shared.call('closeCeremony');
+nodes.get('[data-gallery-loop-restart]').fire('click');
+assert.equal(shared.elements.resetDialog.open, true); shared.call('closeResetConfirmation', true); await finish();
 assert.equal(ui.snapshot().round, 0); assert.equal(ui.snapshot().best, 4); assert.equal(preparations.at(-1).anomaly, null);
 assert.equal(shared.state().count, 0); assert.equal(shared.state().cleared, false); assert.equal(shared.elements.ceremony.open, false);
 visitorsReady = true; drawNormal = false;
@@ -209,7 +211,9 @@ assert.equal(ui.active, false, 'leaving debug restores viewing mode when entered
 applying = ui.startDebug({ kind: 'satisfaction' }); await finish(); await applying;
 changing = ui.setMode('loop'); await finish(); await changing;
 assert.equal(ui.debug, false); assert.equal(ui.snapshot().round, 0, 'explicit play mode ends debug with the normal learning lap');
-nodes.get('[data-gallery-loop-restart]').fire('click'); await finish();
+shared.call('closeCeremony');
+nodes.get('[data-gallery-loop-restart]').fire('click');
+assert.equal(shared.elements.resetDialog.open, true); shared.call('closeResetConfirmation', true); await finish();
 assert.equal(preparations.at(-1).anomaly, null, 'reset clears the running-row anomaly');
 const returning = ui.startDebug({ kind: 'giant-darenin' }); await Promise.resolve(); ui.fallback(); await finish(); await returning;
 assert.equal(ui.active, false, 'late preparation cannot re-enable a failed 3D scene');

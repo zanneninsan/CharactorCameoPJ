@@ -104,8 +104,13 @@ stage.fire('keydown', { code: 'KeyW' }); stage.fire('focusout', { relatedTarget:
 sprintButton.fire('click'); assert.equal(context.sprintLatched, true);
 buttons.find(button => button.action === 'forward').fire('pointerdown', { pointerId: 100, button: 0 });
 assert.ok(steps.at(-1).has('sprint')); assert.ok(steps.at(-1).has('forward'));
-window.fire('blur'); assert.equal(context.sprintLatched, false); assert.equal(sprintButton['aria-pressed'], 'false');
-sprintButton.fire('click'); sprintButton.fire('click'); assert.equal(context.sprintLatched, false);
+window.fire('blur'); assert.equal(context.sprintLatched, true); assert.equal(sprintButton['aria-pressed'], 'true');
+assert.equal(heldPointers.size, 0, 'blur releases movement but retains dash');
+vm.runInContext('stopWalk()', context); assert.equal(context.sprintLatched, true, 'room preparation and modal stops retain dash');
+stage.fire('focusout', { relatedTarget: null }); assert.equal(context.sprintLatched, true);
+buttons.find(button => button.action === 'forward').fire('click', { detail: 0 }); assert.ok(steps.at(-1).has('sprint'));
+sprintButton.fire('click'); assert.equal(context.sprintLatched, false);
+vm.runInContext('stopWalk()', context); assert.equal(context.sprintLatched, false, 'OFF also survives stops');
 
 const options = { htmlPage: value => value, escapeHtml: String, assetVersionQuery: 'v=test' };
 const primary = renderGallery3DExperience({ id: 'zannenin', theme: {} }, options);

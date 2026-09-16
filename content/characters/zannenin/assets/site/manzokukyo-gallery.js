@@ -65,10 +65,35 @@ const stage = ceremony.querySelector('.gallery-ceremony-stage');
 const continueButton = ceremony.querySelector('[data-ceremony-continue]');
 const skipButton = ceremony.querySelector('[data-ceremony-skip]');
 
+const resetDialog = document.createElement('dialog');
+resetDialog.className = 'gallery-reset-confirm';
+resetDialog.setAttribute('aria-labelledby', 'gallery-reset-title');
+resetDialog.setAttribute('aria-describedby', 'gallery-reset-warning');
+resetDialog.innerHTML = '<h2 id="gallery-reset-title">最初から遊び直しますか？</h2><p id="gallery-reset-warning" data-reset-warning></p><div><button type="button" data-reset-cancel autofocus>キャンセル</button><button type="button" data-reset-accept>リセットして最初から</button></div>';
+document.body.append(resetDialog);
+let resetOpener;
+function requestResetGallery() {
+  if (expedition?.busy || document.querySelector('dialog[open]')) return false;
+  resetOpener = document.activeElement;
+  resetDialog.querySelector('[data-reset-warning]').textContent = expedition?.debug ? 'デバッグ展示を入口からやり直します。通常プレイの記録は変わりません。' : '集めた検印・仮押し中の印・扉の解錠状態・現在の連続正解がリセットされます。最高記録と異変の実績は残ります。';
+  resetDialog.showModal(); syncModalLock();
+  resetDialog.querySelector('[data-reset-cancel]').focus({ preventScroll: true });
+  return true;
+}
+function closeResetConfirmation(accept = false) {
+  if (!resetDialog.open) return;
+  resetDialog.close(); syncModalLock();
+  if (accept && !expedition?.busy) resetGallery();
+  else resetOpener?.focus({ preventScroll: true });
+}
+resetDialog.querySelector('[data-reset-cancel]').addEventListener('click', () => closeResetConfirmation());
+resetDialog.querySelector('[data-reset-accept]').addEventListener('click', () => closeResetConfirmation(true));
+resetDialog.addEventListener('cancel', event => { event.preventDefault(); closeResetConfirmation(); });
+
 for (const host of [form, ledger.querySelector('.gallery-ledger-panel')]) {
   const restart = document.createElement('button'); restart.type = 'button'; restart.className = 'gallery-restart'; restart.dataset.galleryRestart = '';
   restart.textContent = '↺ もう一度遊ぶ'; restart.title = 'この画廊の検印と解錠状態をリセットして、最初から遊ぶ';
-  restart.addEventListener('click', resetGallery); host.append(restart);
+  restart.addEventListener('click', requestResetGallery); host.append(restart);
 }
 
 const audioPanel = document.createElement('aside'); audioPanel.className = 'gallery-sound'; audioPanel.setAttribute('aria-label', '画廊の音');
@@ -102,7 +127,7 @@ audioPanel.querySelector('[data-gallery-effects]').addEventListener('change', ()
 
 function stopTimeline() { cancelAnimationFrame(frameId); timeline = null; lastTime = 0; }
 function syncModalLock() {
-  const open = dialog.open || ceremony.open;
+  const open = dialog.open || ceremony.open || resetDialog.open;
   document.documentElement.classList.toggle('gallery-modal-open', open);
   document.body.classList.toggle('gallery-modal-open', open);
 }
@@ -151,6 +176,7 @@ function renderPuzzle() {
   exit.textContent = cleared ? '赤い懺悔室へ進む →' : '検印を照合すると扉が開く';
 }
 function resetGallery() {
+  if (expedition?.busy) return false;
   if (expedition?.debug) { if (!expedition.busy) expedition.reset(); return; }
   stopTimeline(); stopSounds();
   dialog.close(); ceremony.close(); syncModalLock();
@@ -162,6 +188,8 @@ function resetGallery() {
   renderPuzzle(); message.textContent = '画廊の記録を白紙に戻しました。もう一度、六つの検印を探そう。';
   play('gallery-reveal', { level: .45 });
   if (expedition) expedition.reset(); else scrollToArea(document.querySelector('[data-gallery-index="0"]'));
+  document.dispatchEvent(new Event('gallery-reset'));
+  return true;
 }
 function showRecord(index, openingButton) {
   if (phase !== 'idle' || ceremony.open) return false;
@@ -306,4 +334,4 @@ function confirmSeal(number) {
 function celebrateSeals() { if (found.size === 6 && !cleared && phase === 'idle') beginCeremony('gather'); }
 
 // The expedition commits only seals carried through a correctly chosen exit.
-export { showRecord, play, state, toggleSound, setExpedition, confirmSeal, celebrateSeals, resetGallery };
+export { showRecord, play, state, toggleSound, setExpedition, confirmSeal, celebrateSeals, resetGallery, requestResetGallery };
