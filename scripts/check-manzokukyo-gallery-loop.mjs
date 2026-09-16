@@ -155,6 +155,19 @@ await ui.cross('back'); await finish();
 assert.equal(shared.state().count, 0, 'retreating from the four runners scores without filing the provisional seal');
 assert.match(nodes.get('[data-gallery-loop-transition-note]').textContent, /4体/);
 
+// Contact uses the same transaction as a wrong exit, exactly once.
+const beforeCaught = ui.snapshot();
+inspectSeal(5); ui.collect();
+assert.equal(await ui.failRush(), false, 'open artwork pauses collisions'); close();
+assert.equal(await ui.failRush(), true);
+assert.equal(ui.snapshot().streak, 0); assert.equal(ui.snapshot().best, beforeCaught.best);
+assert.equal(ui.snapshot().heldSeal, null); assert.equal(shared.state().count, 0);
+assert.equal(nodes.get('[data-gallery-loop-transition]').getAttribute('data-result'), 'caught');
+const caughtRound = ui.snapshot().round;
+assert.equal(await ui.failRush(), false); assert.equal(await ui.cross('back'), false);
+assert.equal(ui.snapshot().round, caughtRound, 'collision and exit cannot judge one round twice');
+await finish();
+
 // Forced exhibitions share the real transition path but must never affect a save.
 inspectSeal(5); assert.equal(ui.collect(), true);
 assert.equal(ui.startDebug({ kind: 'normal' }), false, 'inspection blocks switching'); close();
@@ -193,6 +206,12 @@ for (const option of galleryDebugOptions) {
   applying = ui.startDebug({ kind: option.kind, index: 23 }); await finish(); assert.equal(await applying, true);
   assert.deepEqual(preparations.at(-1).anomaly, option.kind === 'normal' ? null : option.record ? { kind: option.kind, index: 23 } : { kind: option.kind });
 }
+applying = ui.startDebug({ kind: 'darenin-rush' }); await finish(); await applying;
+const rushReplay = structuredClone(preparations.at(-1));
+assert.equal(await ui.failRush(), true); await finish();
+assert.deepEqual(preparations.at(-1), rushReplay);
+assert.deepEqual([...shared.store], saves); assert.deepEqual([...storage], bestSave);
+assert.deepEqual(ui.achievements(), achievementsBeforeDebug, 'debug collision never writes achievements');
 applying = ui.startDebug({ kind: 'negative', index: 0 }); await finish(false); assert.equal(await applying, false);
 assert.equal(ui.canDebug(), true, 'failed loads permit choosing a different exhibit or leaving');
 throwPreparation = true;
@@ -210,6 +229,7 @@ leaving = ui.stopDebug(); await finish(); await leaving;
 assert.equal(ui.active, false, 'leaving debug restores viewing mode when entered there');
 applying = ui.startDebug({ kind: 'satisfaction' }); await finish(); await applying;
 changing = ui.setMode('loop'); await finish(); await changing;
+assert.equal(await ui.failRush(), false, 'normal laps cannot be failed by stale visitor contacts');
 assert.equal(ui.debug, false); assert.equal(ui.snapshot().round, 0, 'explicit play mode ends debug with the normal learning lap');
 shared.call('closeCeremony');
 nodes.get('[data-gallery-loop-restart]').fire('click');

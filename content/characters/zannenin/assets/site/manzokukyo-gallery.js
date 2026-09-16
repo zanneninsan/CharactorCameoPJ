@@ -114,7 +114,7 @@ function updateSound(state) {
   audioPanel.querySelector('[data-gallery-sound-invite]').hidden = consent;
   audioPanel.querySelector('[data-gallery-silent]').hidden = consent;
 }
-const sound = createSound(audio, { soundPath: new URL('sounds/', previewRoot).href, extraSounds: ['gallery-world-wind', 'gallery-reveal', 'gallery-collect', 'gallery-complete', 'gallery-unseal', 'gallery-door'], onChange: updateSound, onError(text) { audioPanel.querySelector('[data-gallery-sound-status]').textContent = text; } });
+const sound = createSound(audio, { soundPath: new URL('sounds/', previewRoot).href, extraSounds: ['truth-denied', 'gallery-world-wind', 'gallery-reveal', 'gallery-collect', 'gallery-complete', 'gallery-unseal', 'gallery-door'], onChange: updateSound, onError(text) { audioPanel.querySelector('[data-gallery-sound-status]').textContent = text; } });
 updateSound(sound.state());
 function play(name, options = {}) { const cancel = sound.play(name, options); if (cancel) { playing.add(cancel); return () => { playing.delete(cancel); cancel(); }; } }
 function stopSounds() { for (const cancel of playing) cancel(); playing.clear(); }

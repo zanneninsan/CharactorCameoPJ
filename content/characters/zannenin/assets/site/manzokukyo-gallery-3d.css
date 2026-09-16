@@ -581,3 +581,53 @@ body:not(.has-gallery-3d) .gallery-3d-catalog[hidden],
   .gallery-loop-bag { flex-basis: 100%; }
   .gallery-loop-rule > div { width: min(360px, 45vw); }
 }
+
+/* Contact is a brief interruption, never a second input surface. */
+.gallery-loop-touch { position: absolute; inset: 0; z-index: 7; pointer-events: none; display: grid; place-items: end center; padding: 12% 20px; box-shadow: inset 0 0 100px 25px #321726bb; background: radial-gradient(ellipse at center, transparent 32%, #40253288); animation: gallery-touch 1.7s ease-out both; }
+.gallery-loop-touch span { color: #ffeacb; text-shadow: 0 2px 8px #000; font: 500 clamp(20px, 3vw, 30px)/1.5 "Yu Mincho", serif; letter-spacing: .22em; }
+@keyframes gallery-touch { 0% { opacity: 0; } 12%,65% { opacity: 1; } 100% { opacity: 0; } }
+.gallery-loop-caught { display: none; }
+.gallery-loop-transition[data-result="caught"] { background: radial-gradient(ellipse at 50% 20%, #69594a 0, #271e29 48%, #120f16 100%); color: #f4d5aa; overflow: hidden; }
+.gallery-loop-transition[data-result="caught"] > span { color: #d4ad84; }
+.gallery-loop-transition[data-result="caught"] .gallery-loop-eye { display: none; }
+.gallery-loop-transition[data-result="caught"] .gallery-loop-caught { display: flex; justify-content: center; gap: 3%; width: min(680px, 95%); height: clamp(100px, 18vh, 190px); margin-bottom: 36px; animation: gallery-caught 650ms cubic-bezier(.08,.7,.2,1) both; }
+.gallery-loop-caught > i { position: relative; display: flex; align-items: center; justify-content: center; gap: 7%; flex: 1; border-radius: 48% 46% 22% 24%; background: linear-gradient(145deg,#ddd6bf,#ada28e 80%); box-shadow: inset 0 -13px #736859, 0 15px 40px #0007; transform: rotate(-3deg); }
+.gallery-loop-caught > i:nth-child(even) { transform: rotate(4deg); }
+.gallery-loop-caught b { width: 32%; aspect-ratio: 1.1; border: clamp(2px, .4vw, 5px) solid #332e2b; border-radius: 50%; background: #eee4c8; box-shadow: inset -6px 0 #968977; }
+.gallery-loop-caught i::after { content: ""; position: absolute; width: 24%; height: 4%; background: #843e48; top: 80%; }
+@keyframes gallery-caught { from { transform: scale(.35); opacity: .4; } 65% { transform: scale(1.12); } to { transform: scale(1); opacity: 1; } }
+/* A seal is struck, then a small illuminated ritual unfolds over the artwork. */
+.gallery-loop-inspection > div { position: relative; }
+.gallery-loop-inspection footer { position: relative; z-index: 2; }
+.gallery-seal-imprint { position: absolute; inset: 0 0 auto; height: 70svh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; isolation: isolate; background: radial-gradient(ellipse, #244b43d9, #0c191de8 75%); color: #f6e5b6; }
+.gallery-seal-imprint > p { z-index: 1; font: 10px/1.6 system-ui; letter-spacing: .28em; margin: 26px 0 8px; }
+.gallery-seal-imprint > em { z-index: 1; font: 500 clamp(16px, 2.5vw, 23px)/1.7 "Yu Mincho", serif; letter-spacing: .16em; }
+.gallery-seal-mark { position: relative; display: grid; place-items: center; width: clamp(128px, 24vh, 210px); aspect-ratio: 1; border: 3px double #f9dd94; border-radius: 50%; outline: 1px solid #b99353; outline-offset: 9px; background: radial-gradient(circle, #345d51, #142e2b); box-shadow: inset 0 0 30px #dfbe6222, 0 0 45px #e7c88033; }
+.gallery-seal-mark::before { content: ""; position: absolute; inset: 13px; border: 1px solid #c8a360; border-radius: inherit; }
+.gallery-seal-mark strong { font: 500 clamp(50px, 10vh, 90px)/1 "Yu Mincho", serif; text-shadow: 0 0 25px #fbeab480; }
+.gallery-seal-mark span, .gallery-seal-mark small { font: 10px/1.4 "Yu Mincho", serif; letter-spacing: .35em; }
+.gallery-seal-mark span { padding-top: 14px; } .gallery-seal-mark small { padding-bottom: 14px; }
+.gallery-seal-orbit { position: absolute; width: clamp(260px, 48vh, 460px); aspect-ratio: 1; top: 50%; left: 50%; translate: -50% -62%; border: 1px solid #d4b97166; border-radius: 50%; box-shadow: 0 0 0 13px #e8c8820a, 0 0 0 14px #d4b97133, inset 0 0 65px #ddc58122; }
+.gallery-seal-orbit::before, .gallery-seal-orbit::after { content: ""; position: absolute; inset: 12%; border: 1px solid #dbc27c55; transform: rotate(45deg); }
+.gallery-seal-orbit::after { transform: rotate(15deg); }
+.gallery-seal-rays { position: absolute; inset: -60%; background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0 13deg, #eec77916 15deg, transparent 18deg 30deg); opacity: 0; }
+.gallery-seal-dust { position: absolute; width: 1px; height: 1px; left: 50%; top: 42%; }
+.gallery-seal-dust i { position: absolute; width: 3px; height: 10px; border-radius: 50%; background: #ffe2a3; box-shadow: 0 0 9px #f4d18a; transform: rotate(calc(var(--i) * 15deg)) translateY(-72px); opacity: 0; }
+.gallery-seal-imprint[data-phase="gather"] .gallery-seal-mark { animation: gallery-seal-gather .38s ease-in both; }
+.gallery-seal-imprint[data-phase="press"] .gallery-seal-mark { transform: scale(.94); box-shadow: 0 0 90px #f4d18aaa; }
+.gallery-seal-imprint[data-phase="bloom"] .gallery-seal-mark { animation: gallery-seal-press .6s ease-out both; }
+.gallery-seal-imprint[data-phase="bloom"] .gallery-seal-orbit { animation: gallery-seal-orbit 1.1s ease-out both; }
+.gallery-seal-imprint[data-phase="bloom"] .gallery-seal-rays, .gallery-seal-imprint[data-phase="settle"] .gallery-seal-rays { opacity: 1; }
+.gallery-seal-imprint[data-phase="bloom"] .gallery-seal-dust i { animation: gallery-seal-dust 1.1s ease-out both; }
+.gallery-seal-imprint[data-phase="settle"] { animation: gallery-seal-settle 1.35s ease-in both; }
+@keyframes gallery-seal-gather { from { transform: scale(1.8); opacity: 0; } to { transform: scale(1.12); opacity: 1; } }
+@keyframes gallery-seal-press { from { transform: scale(.94); box-shadow: 0 0 90px #f4d18aaa; } to { transform: scale(1); } }
+@keyframes gallery-seal-orbit { from { transform: scale(.5) rotate(-12deg); opacity: .1; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+@keyframes gallery-seal-dust { 10% { opacity: 1; } to { transform: rotate(calc(var(--i) * 15deg)) translateY(calc(-150px - var(--i) * 3px)); opacity: 0; } }
+@keyframes gallery-seal-settle { 0%,45% { opacity: 1; } 100% { opacity: 0; } }
+.gallery-seal-imprint[hidden], .gallery-loop-touch[hidden] { display: none; }
+@media (max-width: 760px) { .gallery-seal-imprint { height: 62svh; } }
+@media (prefers-reduced-motion: reduce) {
+  .gallery-seal-imprint, .gallery-seal-imprint *, .gallery-loop-touch, .gallery-loop-caught { animation: none !important; }
+  .gallery-seal-dust, .gallery-seal-rays { display: none; }
+}

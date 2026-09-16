@@ -1,3 +1,4 @@
+import { mountGalleryFeedback } from './manzokukyo-gallery-feedback.js';
 import { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 export { galleryImagePath } from './manzokukyo-gallery-artworks.js';
 import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image.js';
@@ -48,8 +49,8 @@ export function paintingAppearance(index, anomaly) {
     negative: anomaly?.kind === 'negative' && anomaly.index === index };
 }
 export function judgeLoop(state, direction, random = Math.random, options) {
-  if (!['forward', 'back'].includes(direction)) throw Error('Choose a corridor exit.');
-  const correct = Boolean(state.anomaly) === (direction === 'back');
+  if (!['forward', 'back'].includes(direction) && !(direction === 'contact' && state.anomaly?.kind === 'darenin-rush')) throw Error('Choose a corridor exit.');
+  const correct = direction !== 'contact' && Boolean(state.anomaly) === (direction === 'back');
   const streak = correct ? state.streak + (state.round === 0 ? 0 : 1) : 0;
   return { correct, baseline: state.round === 0, previous: state.anomaly,
     next: { round: state.round + 1, streak, best: Math.max(state.best, streak), anomaly: chooseAnomaly(random, options) } };
@@ -131,7 +132,9 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     q('[data-gallery-loop-retry]').hidden = true;
   }
   function rememberBest() { try { localStorage.setItem(bestKey, String(state.best)); } catch {} }
+  const feedback = mountGalleryFeedback({ stage, modal, play: gallery.play, reduced });
   async function prepare(title, note, result = 'loading', duration = 0) {
+    feedback.cancel();
     const token = ++epoch;
     busy = true; retry = false; exhibition.stop(); render(); notice(title, note, result);
     let ready = false;
@@ -150,12 +153,14 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     busy = false; veil.hidden = true; render(); if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true }); exhibition.wake?.();
     return true;
   }
-  async function cross(direction) {
+  async function resolveRound(direction) {
     if (!active || busy || disposed || document.querySelector('dialog[open]')) return false;
-    if (exhibition.hasImageErrors()) {
+    if (direction === 'contact' && state.anomaly?.kind !== 'darenin-rush') return false;
+    if (exhibition.hasImageErrors() && direction !== 'contact') {
       void prepare('展示を確認しています', '画像を読み込み直しています。この巡回の判定と展示内容は変わりません。');
       return false;
     }
+    if (direction === 'contact') gallery.play('truth-denied', { level: .7, rate: .8 });
     // The lap being judged is already encountered for the NEXT draw, even when
     // its verdict is wrong. Persisting the achievement still happens below.
     const encounteredKinds = achievements.encounteredKinds();
@@ -164,7 +169,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     if (debugSelection) {
       heldSeal = null;
       gallery.play(verdict.correct ? 'gallery-unseal' : 'transmission', { level: .5 });
-      void prepare(verdict.correct ? 'DEBUG / 判断は正解' : 'DEBUG / 判断は不正解', `${describeAnomaly(state.anomaly)} 検印・記録は保存せず、同じ異変で再開します。`, verdict.correct ? 'correct' : 'wrong', 1500);
+      void prepare(direction === 'contact' ? 'DEBUG / 接触して失敗' : verdict.correct ? 'DEBUG / 判断は正解' : 'DEBUG / 判断は不正解', `${describeAnomaly(state.anomaly)} 検印・記録は保存せず、同じ異変で再開します。`, direction === 'contact' ? 'caught' : verdict.correct ? 'correct' : 'wrong', 2200);
       return true;
     }
     achievements.record(state.anomaly?.kind, verdict.correct);
@@ -173,11 +178,17 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     heldSeal = null;
     state = verdict.next; rememberBest();
     gallery.play(verdict.correct ? 'gallery-unseal' : 'transmission', { level: verdict.correct ? .55 : .65 });
-    const title = verdict.baseline && verdict.correct ? '正常な展示を記憶しました' : verdict.correct ? '判断は、正しかった。' : 'また、最初から。';
+    const title = direction === 'contact' ? '満足の列に、呑まれた。' : verdict.baseline && verdict.correct ? '正常な展示を記憶しました' : verdict.correct ? '判断は、正しかった。' : 'また、最初から。';
     const sealResult = confirmed ? `検印「${confirmed.fragment}」を持ち帰りました。${confirmed.count} / 6` : verdict.correct && verdict.previous ? '異変を見破りました。引き返した周回の仮押しは消えます。検印は、異変のない回廊を奥まで進むと持ち帰れます。' : carried !== null && !verdict.correct ? '仮押しの印が消えました。持ち帰り済みの検印は残っています。' : verdict.correct ? '今回は仮押しなし。次の巡回で金色の印を探してください。' : '連続正解が 00 に戻りました。持ち帰り済みの検印は残っています。';
     const note = verdict.baseline && verdict.correct ? 'ここからは検印を仮押しし、異変のない回廊を奥まで進むと持ち帰れます。異変があれば引き返してください。' : `${describeAnomaly(verdict.previous)} ${sealResult}`;
-    void prepare(title, note, verdict.correct ? 'correct' : 'wrong', 2200).then(ready => { if (ready && confirmed?.complete && active && !disposed) gallery.celebrateSeals(); });
+    void prepare(title, direction === 'contact' ? `誰念院さんに接触しました。${sealResult}` : note, direction === 'contact' ? 'caught' : verdict.correct ? 'correct' : 'wrong', direction === 'contact' ? 3000 : 2200).then(ready => { if (ready && confirmed?.complete && active && !disposed) gallery.celebrateSeals(); });
     return true;
+  }
+  function cross(direction) { return ['forward', 'back'].includes(direction) ? resolveRound(direction) : false; }
+  function failRush() { return resolveRound('contact'); }
+  function reactHand(pan) {
+    if (!active || busy || disposed || state.anomaly?.kind !== 'frame-hand' || document.querySelector('dialog[open]')) return false;
+    feedback.hand(pan); return true;
   }
   function inspect(index) {
     if (!active || busy || !Number.isInteger(index) || index < 0 || index >= records.length || document.querySelector('dialog[open]')) return false;
@@ -212,10 +223,10 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     const record = records[inspected];
     if (!active || busy || !modal.open || !imageReady || state.round === 0 || heldSeal !== null || !record?.seal || gallery.state().found.includes(record.number)) return false;
     heldSeal = record.number; renderInspection(); render();
-    gallery.play('gallery-collect', { level: .7, rate: .95 + record.seal.order * .015 });
+    feedback.imprint(record);
     return true;
   }
-  function closeInspection() { cancelGalleryImage(image); modal.close(); canvas.focus({ preventScroll: true }); }
+  function closeInspection() { feedback.closeSeal(); cancelGalleryImage(image); modal.close(); canvas.focus({ preventScroll: true }); }
   modal.querySelector('[data-gallery-loop-inspection-close]').addEventListener('click', closeInspection);
   collectButton.addEventListener('click', collect);
   modal.addEventListener('cancel', event => { event.preventDefault(); closeInspection(); });
@@ -224,7 +235,7 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
     const open = document.querySelector('dialog[open]');
     return available && !disposed && (!busy || retry) && gallery.state().phase === 'idle' && (!open || open === document.querySelector('[data-gallery-debug]'));
   }
-  function clearTransient() { cancelGalleryImage(image); heldSeal = null; inspected = null; imageReady = false; modal.close(); exhibition.stop(); }
+  function clearTransient() { feedback.cancel(); cancelGalleryImage(image); heldSeal = null; inspected = null; imageReady = false; modal.close(); exhibition.stop(); }
   function startDebug(value) {
     const selection = validateDebugSelection(value);
     if (!canDebug() || !selection || (galleryDebugOptions.find(option => option.kind === selection.kind).visitors && !exhibition.hasVisitors?.())) return false;
@@ -251,11 +262,12 @@ export function mountGalleryLoop({ stage, canvas, records, assetVersionQuery, ga
   q('[data-gallery-loop-ledger]').addEventListener('click', () => { exhibition.stop(); document.querySelector('[data-ledger-toggle]').click(); });
   q('[data-gallery-loop-retry]').addEventListener('click', () => { void prepare('展示を読み込み直しています', 'この巡回の内容は変わりません。'); });
   q('[data-gallery-loop-ui]').hidden = false;
-  window.addEventListener('pagehide', event => { if (!event.persisted) { disposed = true; ++epoch; debugUI?.dispose(); achievementUI?.dispose(); } });
+  window.addEventListener('pagehide', event => { feedback.cancel(); if (!event.persisted) { disposed = true; ++epoch; debugUI?.dispose(); achievementUI?.dispose(); } });
+  document.addEventListener?.('visibilitychange', () => { if (document.hidden) feedback.cancel(); });
   render();
   // Let the caller install the controller before the asynchronous preparation.
   queueMicrotask(() => { void prepare('正常な展示を開いています', '最初の一周で、絵の配置を覚えてください。'); });
-  const controller = { get active() { return active; }, get busy() { return busy; }, get debug() { return Boolean(debugSelection); }, inspect, collect, closeInspection, cross, setMode, reset, canDebug, startDebug, stopDebug, refreshDebug: () => debugUI?.render(),
+  const controller = { get active() { return active; }, get busy() { return busy; }, get debug() { return Boolean(debugSelection); }, inspect, collect, closeInspection, cross, failRush, reactHand, setMode, reset, canDebug, startDebug, stopDebug, refreshDebug: () => debugUI?.render(),
     snapshot: () => ({ active, busy, debug: debugSelection ? { ...debugSelection } : null, round: state.round, streak: state.streak, best: state.best, baseline: state.round === 0, inspectionOpen: modal.open, inspectedRecord: modal.open ? records[inspected]?.number : null, heldSeal, filedSeals: gallery.state().count }),
     achievements: () => achievements.snapshot(),
     fallback: () => { ++epoch; available = false; busy = false; active = false; if (checkpoint) state = checkpoint.state; checkpoint = null; debugSelection = null; clearTransient(); debugUI?.dispose(); achievementUI?.dispose(); veil.hidden = true; render(); q('[data-gallery-loop-ui]').hidden = true; gallery.setExpedition(null); } };

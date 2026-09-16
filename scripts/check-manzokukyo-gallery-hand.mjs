@@ -33,8 +33,19 @@ for (const index of [0, 1, 22, 23]) {
   const palm = targets.find(mesh => mesh.position.y === -.08);
   const at = palm.getWorldPosition(new T.Vector3());
   const ray = new T.Raycaster(camera.position, at.clone().sub(camera.position).normalize());
-  assert.equal(ray.intersectObjects(targets)[0].object.userData.index, index, 'the actual hand opens the matching painting');
+  assert.equal(ray.intersectObjects(targets)[0].object.userData.index, index, 'hand hit retains the matching painting identity');
+  assert.equal(ray.intersectObjects(targets)[0].object.userData.galleryAction, 'hand');
+  assert.equal(hand.touch(), true); assert.equal(hand.touch(), false, 'holding/tapping cannot restart the grasp');
+  for (let n = 0; n < 6; n++) hand.update(.05, camera);
+  assert.ok(finger.rotation.x > .8 && hand.root.scale.z > 1.5, 'fingers close as the hand reaches out');
+  const grasp = hand.root.scale.z;
+  hand.update(.05, camera, { paused: true }); assert.equal(hand.root.scale.z, grasp);
+  for (let n = 0; n < 40; n++) hand.update(.05, camera);
+  assert.equal(hand.reacting, false); assert.equal(hand.root.position.z, 0);
+  assert.equal(hand.touch({ reduced: true }), true);
+  hand.update(.05, camera, { reduced: true }); assert.equal(hand.root.position.z, 0);
   hand.setAnomaly(null);
+  assert.equal(hand.reacting, false); assert.equal(hand.touch(), false);
   assert.equal(targets.length, 0); assert.equal(hand.root.parent, null); assert.equal(hand.root.visible, false);
 }
 for (const index of [NaN, -1, 24, null, '1']) { hand.setAnomaly({ kind: 'frame-hand', index }); assert.equal(hand.root.visible, false); }

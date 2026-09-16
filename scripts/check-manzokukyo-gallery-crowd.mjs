@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as T from '../content/static-sites/zannenin/manzokukyo-preview/vendor/three.module.js';
 import { GLTFLoader, cloneSkeleton } from '../content/static-sites/zannenin/manzokukyo-preview/vendor/GLTFLoader.js';
-import { loadGalleryVisitors, rushLanes, createRushState, advanceRush } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-visitor.js';
+import { loadGalleryVisitors, rushLanes, createRushState, advanceRush, rushTouches } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-visitor.js';
 import { chooseAnomaly, judgeLoop, paintingAppearance, newLoop, describeAnomaly, satisfactionLabel } from '../content/characters/zannenin/assets/site/manzokukyo-gallery-loop.js';
 import { renderGallery3DExperience } from './render-manzokukyo-gallery-3d.mjs';
 
@@ -35,7 +35,7 @@ const frozen = createRushState();
 for (const mode of [{ paused: true }, { inspecting: true }]) {
   const before = structuredClone(frozen); advanceRush(frozen, .05, { z: .8 }, mode); assert.deepEqual(frozen, before);
 }
-advanceRush(frozen, NaN, { z: .8 }); assert.ok(Object.values(frozen).every(Number.isFinite));
+advanceRush(frozen, NaN, { z: .8 }); assert.ok(['z', 'elapsed', 'speed', 'steps'].every(key => Number.isFinite(frozen[key])));
 advanceRush(frozen, .05, { z: .8 }, { reduced: true }); assert.equal(frozen.z, -8); assert.equal(frozen.speed, 0);
 
 let downloads = 0, closed = 0;
@@ -115,6 +115,7 @@ for (let i = 0; i < 200; i++) crowd.update(.05, { x: 0, z: .8 });
 assert.ok(crowd.snapshot().people.every(actor => actor.decisions > 0));
 assert.equal(steps.length, 0, 'normal visitors do not trigger the running sound');
 crowd.setAnomaly(anomaly);
+assert.equal(crowd.update(0, { x: 0, z: .8 }), true, 'the render loop stays awake during the initial rush windup');
 for (let i = 0; i < 260; i++) {
   crowd.update(.05, { x: 0, z: .8 });
   const state = crowd.snapshot();
@@ -122,7 +123,7 @@ for (let i = 0; i < 260; i++) {
   assert.ok(state.people.every(actor => actor.kind === 'darenin'));
   assert.deepEqual(state.people.map(actor => actor.position[0]), rushLanes);
   assert.equal(new Set(state.people.map(actor => actor.position[1])).size, 1, 'row remains perfectly aligned');
-  assert.ok(state.formation.z <= -4.5 && state.formation.z >= -58, 'stops ahead of the player');
+  assert.ok(state.formation.z <= 3.6 && state.formation.z >= -58, 'stays inside the corridor');
   if (i === 160) {
     scene.updateMatrixWorld(true);
     for (const mesh of skins) { mesh.skeleton.update(); mesh.computeBoundingBox(); }
@@ -132,7 +133,10 @@ for (let i = 0; i < 260; i++) {
     }
   }
 }
-assert.ok(crowd.snapshot().formation.z > -4.6);
+assert.ok(crowd.snapshot().formation.z > 0);
+assert.equal(crowd.snapshot().formation.contact, true);
+assert.equal(crowd.takeRushContact(), true);
+assert.equal(crowd.takeRushContact(), false, 'one contact signal per round');
 assert.ok(steps.length > 5, 'running sound follows the visible approach');
 const stopped = JSON.stringify(crowd.snapshot()), soundCount = steps.length;
 for (let i = 0; i < 200; i++) crowd.update(.05, { x: 0, z: .8 }, { paused: true });
@@ -143,8 +147,8 @@ assert.ok(crowd.snapshot().people.every(actor => actor.behavior === 'watching'))
 crowd.setAnomaly(anomaly);
 const mobile = new T.PerspectiveCamera(49, .65, .1, 100);
 for (let i = 0; i < 300; i++) crowd.update(.05, { x: 0, z: .8 }, { camera: mobile });
-assert.ok(crowd.snapshot().formation.z < -10, 'narrow view keeps all four within the viewing angle');
-crowd.setAnomaly(null); crowd.update(.05, { x: 0, z: .8 });
+assert.equal(crowd.snapshot().formation.contact, true, 'mobile contact uses the same physical distance');
+crowd.setAnomaly(null); assert.equal(crowd.takeRushContact(), false); crowd.update(.05, { x: 0, z: .8 });
 assert.equal(crowd.snapshot().count, 2, 'new lap restores both usual visitors');
 assert.equal(scene.children.filter(object => object.visible).length, 2);
 const giant = scene.getObjectByName('Giant Darenin bust');
@@ -207,3 +211,18 @@ const mobilePolite = createBowingState();
 for (let i = 0; i < 1600; i++) advanceBowing(mobilePolite, .05, { x: 0, z: .8 }, { camera: { aspect: .5 } });
 assert.ok(.8 - mobilePolite.z > 4.35, 'on mobile the bowing pair stays far enough away to remain visible');
 assert.ok(mobilePolite.cycles > 5);
+
+// Swept collisions across every lane, including a fast diagonal dash.
+for (const x of rushLanes) {
+  assert.equal(rushTouches({ x, z: 2 }, { x, z: -2 }, 0, .3), true);
+  assert.equal(rushTouches({ x, z: 0 }, { x, z: 0 }, -2, 2), true);
+}
+assert.equal(rushTouches({ x: 4.4, z: 2 }, { x: 4.4, z: -2 }, 0, .3), false, 'wall-side evasion remains possible');
+assert.equal(rushTouches({ x: NaN, z: 0 }, { x: 0, z: 0 }, 0, 1), false);
+const accessibleRush = createRushState();
+advanceRush(accessibleRush, .05, { x: -.9, z: .8 }, { reduced: true });
+assert.equal(accessibleRush.contact, false, 'placing reduced-motion figures does not sweep from the far end');
+advanceRush(accessibleRush, .05, { x: -.9, z: -8 }, { paused: true, reduced: true });
+assert.equal(accessibleRush.contact, false, 'modal pauses contact detection');
+advanceRush(accessibleRush, .05, { x: -.9, z: -8 }, { reduced: true });
+assert.equal(accessibleRush.contact, true, 'walking into stationary figures still counts');

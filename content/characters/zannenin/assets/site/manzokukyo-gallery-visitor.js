@@ -232,19 +232,41 @@ function createGalleryVisitor(T, { scene, figure, kind = 'darenin', spawn, share
 }
 
 export const rushLanes = [-2.7, -.9, .9, 2.7];
-export function createRushState() { return { z: -58, elapsed: 0, speed: 0, steps: 0 }; }
+export function createRushState() { return { z: -58, elapsed: 0, speed: 0, steps: 0, contact: false, viewer: null, reducedPlaced: false }; }
+// Sweep in relative space: running/dashing cannot tunnel through a body.
+export function rushTouches(previous, current, fromZ, toZ, radius = .96) {
+  if (![previous?.x, previous?.z, current?.x, current?.z, fromZ, toZ].every(Number.isFinite)) return false;
+  return rushLanes.some(x => {
+    const ax = previous.x - x, az = previous.z - fromZ;
+    const dx = current.x - previous.x, dz = current.z - toZ - az;
+    const length = dx * dx + dz * dz;
+    const t = length ? clamp(-(ax * dx + az * dz) / length, 0, 1) : 0;
+    return Math.hypot(ax + dx * t, az + dz * t) <= radius;
+  });
+}
 export function advanceRush(state, seconds, viewer, { paused = false, reduced = false, inspecting = false, camera } = {}) {
-  if (paused || inspecting) return state;
-  // Stop where the whole row remains legible, including on narrow screens.
-  const distance = Math.max(5.3, camera ? 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) : 0);
-  if (reduced) { state.z = -Math.max(8, distance); state.speed = 0; return state; }
+  if (paused || inspecting) { state.viewer = null; return state; }
+  if (state.contact) return state;
   const dt = clamp(Number.isFinite(seconds) ? seconds : 0, 0, .05);
-  state.elapsed += dt;
-  const target = Math.min(1.4, viewer.z - distance);
-  const previous = state.z;
-  if (state.elapsed > 1.3) state.z += Math.min(Math.max(0, target - state.z), dt * 5.2);
-  state.speed = dt ? (state.z - previous) / dt : state.speed;
-  if (state.speed > .1) state.steps += dt;
+  let previous = state.z;
+  if (reduced) {
+    // Set a stationary, readable formation once; changing the viewport must not
+    // sweep invisible bodies across the player or drag them with the camera.
+    if (!state.reducedPlaced) {
+      state.reducedPlaced = true;
+      const distance = Math.max(8, camera ? 3.5 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect) : 0);
+      state.z = -distance; previous = state.z;
+    }
+    state.speed = 0;
+  } else {
+    state.elapsed += dt;
+    if (state.elapsed > 1.3) state.z = Math.min(3.6, state.z + dt * 5.2);
+    state.speed = dt ? (state.z - previous) / dt : state.speed;
+    if (state.speed > .1) state.steps += dt;
+  }
+  state.contact = rushTouches(state.viewer || viewer, viewer, previous, state.z);
+  state.viewer = { x: viewer.x, z: viewer.z };
+  if (state.contact) state.speed = 0;
   return state;
 }
 
@@ -342,14 +364,14 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
   const copies = rushLanes.map(() => createGalleryVisitor(T, { scene, figure: cloneSkeleton(template), sharedFinish, spawn: { x: -1.65, z: -5.4, wait: 1.8 } }));
   const everyone = [official, ...copies];
   let portraitFrame = null, bowing = false, bow = createBowingState();
-  let rushing = false, giantActive = false, giantTime = 0, rush = createRushState(), disposed = false, step = 0;
+  let rushing = false, giantActive = false, giantTime = 0, rush = createRushState(), disposed = false, step = 0, contactDelivered = false;
   const api = {
     setAnomaly(anomaly) {
       if (disposed) return;
       watching = anomaly?.kind === 'watching-crowd'; watch = createWatchingState(); spectators.visible = false;
       bowing = anomaly?.kind === 'bowing-visitors'; bow = createBowingState();
       portraitFrame = anomaly?.kind === 'returned-portrait' ? frames[anomaly.index] : null;
-      rushing = anomaly?.kind === 'darenin-rush'; rush = createRushState(); step = 0;
+      rushing = anomaly?.kind === 'darenin-rush'; rush = createRushState(); step = 0; contactDelivered = false;
       giantActive = anomaly?.kind === 'giant-darenin'; giantTime = 0;
       giant.visible = giantActive; giant.position.set(-1.1, 0, -60.6); giant.rotation.set(0, Math.PI, 0);
       bust.rotation.set(0, 0, 0);
@@ -363,6 +385,9 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       let moving = false;
       if (rushing) {
         advanceRush(rush, dt, viewer, options);
+        // Keep rendering through the initial stillness; otherwise the demand
+        // loop can sleep before the runners ever take their first step.
+        moving = !options.paused && !options.inspecting && !options.reduced && !rush.contact && rush.z < 3.6;
         copies.forEach((actor, index) => {
           moving = actor.update(dt, viewer, { ...options, formation: { x: rushLanes[index], z: rush.z, yaw: Math.PI, speed: rush.speed } }) || moving;
         });
@@ -404,7 +429,11 @@ export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleto
       return moving;
     },
     isVisible: () => spectators.visible || giant.visible || everyone.some(actor => actor.isVisible()),
-    snapshot: () => ({ loaded: true, ...(bowing ? { bowing: { ...bow } } : {}), ...(watching ? { watching: { ...watch, count: watch.revealed ? 24 : 0 } } : {}), count: (rushing ? 4 : giantActive ? 3 : 2) + (watching && watch.revealed ? 24 : 0), people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, framing: 'bust', position: giant.position.toArray(), yaw: giant.rotation.y + bust.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed } } : {}) }),
+    takeRushContact() {
+      if (!rushing || !rush.contact || contactDelivered || disposed) return false;
+      contactDelivered = true; return true;
+    },
+    snapshot: () => ({ loaded: true, ...(bowing ? { bowing: { ...bow } } : {}), ...(watching ? { watching: { ...watch, count: watch.revealed ? 24 : 0 } } : {}), count: (rushing ? 4 : giantActive ? 3 : 2) + (watching && watch.revealed ? 24 : 0), people: everyone.map(actor => actor.snapshot()).filter(actor => actor.enabled), ...(giantActive ? { giant: { visible: giant.visible, framing: 'bust', position: giant.position.toArray(), yaw: giant.rotation.y + bust.rotation.y } } : {}), ...(rushing ? { formation: { z: rush.z, speed: rush.speed, contact: rush.contact } } : {}) }),
     dispose() {
       if (disposed) return; disposed = true;
       for (const actor of everyone) actor.dispose();

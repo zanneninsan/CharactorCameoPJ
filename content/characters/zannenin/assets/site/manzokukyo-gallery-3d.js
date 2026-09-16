@@ -511,7 +511,8 @@ function createExhibition(T) {
     const handMoving = frameHand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const spatialMoving = spatial.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
     const sandMoving = sand.update(dt, camera, { paused: Boolean(paused), reduced: motion.matches });
-    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving || worldMoving || sandMoving;
+    const visitorMoving = visitor?.update(dt, camera.position, { paused: Boolean(paused || loop?.busy), reduced: motion.matches, inspecting: mode === 'artwork', camera }) || handMoving || spatialMoving || worldMoving || sandMoving;
+    if (!paused && !loop?.busy && visitor?.takeRushContact()) { void loop?.failRush(); }
     // Wandering uses at most 30 rendered frames/sec while the camera is still;
     // keyboard movement keeps the existing responsive refresh rate.
     const visitorVisible = visitor?.isVisible() || frameHand.isVisible() || spatial.isVisible() || otherWorld.isVisible() || sand.isVisible();
@@ -531,6 +532,15 @@ function createExhibition(T) {
   const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(viewport);
   const intersection = new IntersectionObserver(entries => { inView = entries[0].isIntersecting; last = 0; if (inView) wake(); else { otherWorld.silence(); stopWalk(); } }, { rootMargin: '80px' }); intersection.observe(canvas);
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
+  function activateHit(hit) {
+    if (hit.object.userData.galleryAction === 'hand') {
+      if (frameHand.touch({ reduced: motion.matches })) {
+        loop?.reactHand(pointer.x); wake();
+      }
+      return;
+    }
+    inspect(hit.object.userData.index);
+  }
   let down;
   canvas.addEventListener('pointerdown', event => {
     if (event.button !== 0 || !canWalk() || down) return;
@@ -555,7 +565,7 @@ function createExhibition(T) {
     if (dragged || !canWalk()) return;
     const rect = canvas.getBoundingClientRect(); pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera); const hit = raycaster.intersectObjects(targets)[0];
-    if (hit) inspect(hit.object.userData.index);
+    if (hit) activateHit(hit);
   });
   canvas.addEventListener('pointercancel', () => { down = null; });
   canvas.addEventListener('lostpointercapture', () => { down = null; });
@@ -583,6 +593,9 @@ function createExhibition(T) {
     if (!loop?.active && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) { event.preventDefault(); select((selected + (event.key === 'ArrowRight' ? 1 : 23)) % 24); }
     if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
       event.preventDefault();
+      pointer.set(0, 0); raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.intersectObjects(targets)[0];
+      if (hit?.object.userData.galleryAction === 'hand') { activateHit(hit); return; }
       const index = mode === 'walking' || loop?.active ? findAimedRecord() : selected;
       if (index !== null) inspect(index);
     }

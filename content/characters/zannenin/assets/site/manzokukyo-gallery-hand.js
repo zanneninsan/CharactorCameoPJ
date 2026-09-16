@@ -39,7 +39,7 @@ export function mountFrameHand(T, { frames, targets }) {
   limb(root, [.82, -.03, .91], [.84, .1, 1.04], .058);
   oval(root, [.84, .1, 1.04], [.06, .07, .06]);
   oval(root, [.84, .12, 1.087], [.04, .048, .012], nail);
-  let active = false, nearby = false, phase = 0, disposed = false;
+  let active = false, nearby = false, phase = 0, disposed = false, reaction = 0;
   function detach() {
     root.removeFromParent();
     for (const mesh of meshes) { const index = targets.indexOf(mesh); if (index >= 0) targets.splice(index, 1); }
@@ -48,21 +48,41 @@ export function mountFrameHand(T, { frames, targets }) {
     root,
     setAnomaly(anomaly) {
       if (disposed) return;
-      detach(); phase = 0; nearby = false;
+      detach(); phase = 0; nearby = false; reaction = 0; root.position.set(0, 0, 0); root.scale.set(1, 1, 1);
       active = anomaly?.kind === 'frame-hand' && Number.isInteger(anomaly.index) && Boolean(frames[anomaly.index]);
       root.visible = active;
       for (const finger of fingers) finger.rotation.x = 0;
       if (active) {
         frames[anomaly.index].group.add(root);
-        for (const mesh of meshes) { mesh.userData.index = anomaly.index; targets.push(mesh); }
+        for (const mesh of meshes) { mesh.userData.index = anomaly.index; mesh.userData.galleryAction = 'hand'; targets.push(mesh); }
       }
     },
+    touch({ reduced = false } = {}) {
+      if (!active || disposed || reaction > 0) return false;
+      reaction = 1.7;
+      // The same brief grasp remains visible without a lunge in reduced motion.
+      fingers.forEach(finger => { finger.rotation.x = reduced ? 1 : .25; });
+      return true;
+    },
+    get reacting() { return reaction > 0; },
     update(dt, camera, { paused = false, reduced = false } = {}) {
       if (!active || disposed) return false;
       const position = root.getWorldPosition(new T.Vector3());
       nearby = position.distanceTo(camera.position) < 18;
-      if (paused || reduced || !nearby) return false;
-      phase += Math.max(0, Math.min(Number.isFinite(dt) ? dt : 0, .05));
+      if (paused || (!nearby && reaction <= 0)) return false;
+      const step = Math.max(0, Math.min(Number.isFinite(dt) ? dt : 0, .05));
+      if (reaction > 0) {
+        reaction = Math.max(0, reaction - step);
+        const elapsed = 1.7 - reaction;
+        const grip = Math.min(1, elapsed / .18) * Math.min(1, reaction / .55);
+        fingers.forEach((finger, i) => { finger.rotation.x = grip * (1.25 - i * .1); });
+        // Keep the cuff inside the painting as the arm stretches outward.
+        root.position.z = 0;
+        root.scale.z = reduced ? 1 : 1 + grip;
+        return true;
+      }
+      if (reduced) return false;
+      phase += step;
       fingers.forEach((finger, i) => { finger.rotation.x = .08 * Math.sin(phase * 1.3 + i * .35); });
       return true;
     },
