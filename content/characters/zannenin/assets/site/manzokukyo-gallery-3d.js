@@ -58,7 +58,12 @@ listButton.addEventListener('click', () => { setCatalog(catalog.hidden); if (!ca
 for (const button of stage.querySelectorAll('[data-gallery-3d-room-jump]')) button.addEventListener('click', () => { exhibition?.overview(Number(button.getAttribute('data-gallery-3d-room-jump'))); gallery.play('step-1', { level: .35 }); });
 for (const button of catalog.querySelectorAll('[data-gallery-index]')) button.addEventListener('click', () => { const index = Number(button.dataset.galleryIndex); updateSelection(index); exhibition?.select(index); });
 document.addEventListener('gallery-reset', () => {
-  canvas.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'center' }); canvas.focus({ preventScroll: true });
+  canvas.scrollIntoView({ behavior: motion.matches ? 'instant' : 'smooth', block: 'center' });
+  if (exhibition?.state().ready && opening?.restart()) {
+    // Normal play already started prepareLoop in reset(); viewing mode needs
+    // its own preparation so the replay waits for the entrance paintings too.
+    if (!loop?.active) void exhibition.prepareLoop(null, 0);
+  } else canvas.focus({ preventScroll: true });
 });
 // Large viewing stays in the normal HTML image viewer, without perspective or cropping.
 const lightbox = document.querySelector('[data-gallery-lightbox]');

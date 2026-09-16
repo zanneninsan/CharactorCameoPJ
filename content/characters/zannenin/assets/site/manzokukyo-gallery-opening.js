@@ -82,11 +82,26 @@ export function mountGalleryOpening({ gallery, wake = () => {}, onFinish = () =>
   enter.addEventListener('click', begin); skip.addEventListener('click', () => finish());
   dialog.addEventListener('cancel', event => { event.preventDefault(); finish(); });
   sound.addEventListener('click', async () => { await gallery.toggleSound(); if (!disposed) soundLabel(); });
+  function restart() {
+    if (disposed) return false;
+    cancelSound?.(); cancelSound = null;
+    try { storage?.removeItem(openingKey); } catch {}
+    active = true; elapsed = 0; phase = 'waiting'; ready = false;
+    dialog.dataset.phase = phase; dialog.dataset.ready = 'false';
+    dialog.style.setProperty('--opening-title-opacity', '0');
+    letter.removeAttribute('aria-hidden'); letter.inert = false; title.hidden = true;
+    enter.disabled = true; status.textContent = '展示を準備しています。';
+    doc.body.classList.add('is-gallery-opening');
+    if (!dialog.open) dialog.showModal();
+    soundLabel(); skip.focus({ preventScroll: true }); wake();
+    return true;
+  }
   if (!seen) {
     active = true; doc.body.classList.add('is-gallery-opening'); dialog.showModal(); soundLabel();
     skip.focus({ preventScroll: true });
   }
   return {
+    restart,
     get active() { return active; },
     get elapsed() { return elapsed; },
     setReady(value) {

@@ -26,7 +26,7 @@ function harness({ seen = false, denied = false, reduced = false } = {}) {
   let finishes = 0, sounds = 0, canceled = 0, enabled = false;
   const doc = { body: { classList: { add: value => classes.add(value), remove: value => classes.delete(value) } }, querySelector: () => dialog };
   class Element extends EventTarget {
-    dataset = {}; style = { setProperty() {} }; attributes = new Map();
+    dataset = {}; style = { values: new Map(), setProperty(key, value) { this.values.set(key, value); } }; attributes = new Map();
     focus() { doc.activeElement = this; }
     setAttribute(key, value) { this.attributes.set(key, value); }
     removeAttribute(key) { this.attributes.delete(key); }
@@ -37,6 +37,7 @@ function harness({ seen = false, denied = false, reduced = false } = {}) {
   const controller = mountGalleryOpening({ doc, reduced: motion, storage: {
     getItem(key) { if (denied) throw Error('denied'); return entries.get(key); },
     setItem(key, value) { if (denied) throw Error('denied'); entries.set(key, value); },
+    removeItem(key) { if (denied) throw Error('denied'); entries.delete(key); },
   }, onFinish() { finishes++; }, gallery: { state: () => ({ sound: { enabled } }),
     async toggleSound() { enabled = !enabled; }, play() { sounds++; return () => canceled++; } } });
   const click = name => nodes.get(`[data-opening-${name}]`).dispatchEvent(new Event('click'));
@@ -49,14 +50,36 @@ for (let i = 0; i < 50; i++) h.controller.advance(.05);
 assert(h.controller.active); assert.equal(h.entries.size, 0, 'no marker until arrival completes');
 for (let i = 0; i < 80; i++) h.controller.advance(.05);
 assert.deepEqual(h.stats(), { finishes: 1, sounds: 1, canceled: 1 }); assert.equal(h.entries.get(openingKey), '1');
-assert(!h.dialog.open); assert.equal(h.classes.size, 0); h.controller.dispose(); assert.equal(h.stats().finishes, 1);
+assert(!h.dialog.open); assert.equal(h.classes.size, 0);
+assert.equal(h.controller.restart(), true);
+assert.deepEqual(h.controller.snapshot(), { active: true, ready: false, phase: 'waiting', elapsed: 0 });
+assert(h.dialog.open); assert(h.classes.has('is-gallery-opening')); assert(!h.entries.has(openingKey));
+assert.equal(h.dialog.dataset.phase, 'waiting'); assert.equal(h.dialog.dataset.ready, 'false');
+assert.equal(h.dialog.style.values.get('--opening-title-opacity'), '0');
+assert.equal(h.nodes.get('[data-opening-letter]').inert, false);
+assert(!h.nodes.get('[data-opening-letter]').attributes.has('aria-hidden'));
+assert.equal(h.nodes.get('[data-opening-title]').hidden, true);
+assert.equal(h.nodes.get('[data-opening-enter]').disabled, true);
+h.click('enter'); assert.equal(h.controller.snapshot().phase, 'waiting', 'replay waits for fresh exhibition preparation');
+h.controller.setReady(true); h.click('enter');
+for (let i = 0; i < 125; i++) h.controller.advance(.05);
+assert.deepEqual(h.stats(), { finishes: 2, sounds: 2, canceled: 2 });
+assert.equal(h.entries.get(openingKey), '1'); assert(!h.dialog.open);
+h.controller.dispose(); assert.equal(h.stats().finishes, 2);
+assert.equal(h.controller.restart(), false, 'disposed opening cannot reopen');
 h = harness(); h.click('skip'); assert.equal(h.stats().finishes, 1); assert.equal(h.entries.get(openingKey), '1');
 h = harness({ seen: true }); assert(!h.controller.active); assert.equal(h.classes.size, 0);
+assert(h.controller.restart()); h.controller.setReady(true); h.click('skip'); assert.equal(h.entries.get(openingKey), '1');
+h.controller.restart(); h.controller.setReady(true); h.click('enter'); h.controller.advance(.05);
+h.controller.restart(); assert.equal(h.stats().canceled, 1, 'restarting cancels the previous arrival sound');
+assert.equal(h.controller.elapsed, 0); h.click('skip');
 h = harness({ denied: true }); h.click('skip'); assert(!h.controller.active);
+assert(h.controller.restart()); h.controller.setReady(true); h.click('skip'); assert(!h.controller.active);
 h = harness({ reduced: true }); h.controller.setReady(true); h.click('enter'); assert.equal(h.stats().sounds, 0); assert(!h.controller.active);
+assert(h.controller.restart()); h.controller.setReady(true); h.click('enter'); assert.equal(h.stats().sounds, 0); assert(!h.controller.active);
 h = harness(); h.controller.setReady(true); h.click('enter'); h.motion.matches = true; h.controller.advance(.05); assert(!h.controller.active);
 h = harness(); h.dialog.dispatchEvent(new Event('cancel', { cancelable: true })); assert(!h.controller.active);
 h = harness(); h.controller.fallback(); assert.equal(h.entries.size, 0); assert(!h.controller.active);
 h = harness(); h.click('sound'); await Promise.resolve(); assert.equal(h.nodes.get('[data-opening-sound]').textContent, '音：オン');
 h.controller.dispose(); assert.equal(h.entries.size, 0);
-console.log('Gallery opening: clear camera path, door reset, entry, skip, session marker, denied storage, sound, reduced motion and fallback passed.');
+console.log('Gallery opening: clear camera path, door reset, entry, replay after completion/skip, readiness, session marker, denied storage, sound, reduced motion and fallback passed.');

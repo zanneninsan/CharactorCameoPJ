@@ -47,6 +47,21 @@ function declaration(text, marker) {
   throw Error(`Cannot isolate actual declaration: ${marker}`);
 }
 
+// Dispatch the actual reset listener in both game modes and without WebGL.
+for (const [active, available] of [[true, true], [false, true], [true, false]]) {
+  const document = new Element('<div>'), canvas = new Element('<canvas>');
+  let replays = 0, preparations = 0;
+  vm.runInNewContext(declaration(source, "document.addEventListener('gallery-reset'"), {
+    document, canvas, motion: { matches: false }, loop: { active },
+    opening: { restart() { replays++; return true; } },
+    exhibition: { state: () => ({ ready: available }), prepareLoop() { preparations++; } },
+  });
+  document.dispatch('gallery-reset');
+  assert.equal(replays, available ? 1 : 0, 'replay requires a working exhibition');
+  assert.equal(preparations, available && !active ? 1 : 0, 'viewing mode prepares the entrance; normal reset must not prepare it twice');
+  assert.equal(Boolean(canvas.focused), !available, 'replay keeps focus in the opening dialog');
+}
+
 function createHarness(text = source) {
   const elements = tags.map(tag => new Element(tag));
   const queryAll = selector => {
