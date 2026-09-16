@@ -75,7 +75,7 @@ let resetOpener;
 function requestResetGallery() {
   if (expedition?.busy || document.querySelector('dialog[open]')) return false;
   resetOpener = document.activeElement;
-  resetDialog.querySelector('[data-reset-warning]').textContent = expedition?.debug ? 'デバッグ展示を入口からやり直します。通常プレイの記録は変わりません。' : '集めた検印・仮押し中の印・扉の解錠状態・現在の連続正解がリセットされます。最高記録と異変の実績は残ります。';
+  resetDialog.querySelector('[data-reset-warning]').textContent = expedition?.debug ? 'デバッグ展示を入口からやり直します。通常プレイの記録は変わりません。' : '集めた検印・仮押し中の印・扉の解錠状態・現在の連続正解がリセットされます。最高記録と異変の実績は残ります。最初の案内と入場演出から、もう一度始めます。';
   resetDialog.showModal(); syncModalLock();
   resetDialog.querySelector('[data-reset-cancel]').focus({ preventScroll: true });
   return true;
