@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { buildAnimeTeaserCute } from "./build-anime-teaser-cute.mjs";
 import { buildManzokukyoPreview } from "./build-manzokukyo-preview.mjs";
+import { teaserFaviconLinks } from "./build-teaser-favicons.mjs";
 import { resolveCharacterPageOverride } from "./page-overrides/index.mjs";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -10134,6 +10135,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <meta name="build-version" content="${escapeHtml(buildVersionLabel)}">
     <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
+    ${urlPath.startsWith('zannenin/manzokukyo/') ? teaserFaviconLinks(path.posix.relative(urlPath, 'zannenin/manzokukyo-preview/assets') + '/', siteVersion) : ''}
     <meta property="og:site_name" content="Character Canon">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:type" content="${escapeHtml(type)}">

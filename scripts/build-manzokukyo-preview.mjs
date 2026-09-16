@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
+import { buildTeaserFavicons, teaserFaviconLinks } from './build-teaser-favicons.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -19,6 +20,7 @@ function renderRoomShell({ title, assets, fallback, version, description, social
   ${description || ''}
   ${socialMetadata}
   <title>${escapeHtml(title)}</title>
+  ${teaserFaviconLinks(`${assets}assets/`, version)}
   <link rel="stylesheet" href="${escapeHtml(assets)}app.css">
   <script type="module" src="${escapeHtml(assets)}app.js?v=${version}"></script>
 </head>
@@ -67,6 +69,7 @@ export async function buildManzokukyoPreview() {
   if (!tiktok?.url || !games.length) throw Error('TikTok and games must be registered in character.json');
   for (const link of [tiktok, ...games]) if (!['https:', 'http:'].includes(new URL(link.url).protocol)) throw Error('Unsupported link protocol');
   await mkdir(path.join(output, 'assets'), { recursive: true });
+  await buildTeaserFavicons('manzokukyo', path.join(output, 'assets'));
   const gameLinks = games.map((game, index) => {
     const kind = { game: '公式ゲーム', 'fan-game': 'ファンゲーム', app: 'アプリ' }[game.type] || 'ゲーム';
     const credit = game.creatorLabel ? ` · ${game.creatorLabel}` : '';

@@ -1,4 +1,5 @@
-import { cp, mkdir, stat } from 'node:fs/promises';
+import { cp, mkdir, stat, readFile, writeFile } from 'node:fs/promises';
+import { buildTeaserFavicons, teaserFaviconLinks } from './build-teaser-favicons.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -16,7 +17,9 @@ export async function buildAnimeTeaserCute() {
   ];
   await Promise.all([...files.map(([input]) => stat(input)), stat(path.join(artwork, 'keyvisual-retouched.png'))]);
   await mkdir(path.join(output, 'assets'), { recursive: true });
-  await Promise.all(['index.html', 'styles.css', 'site.js'].map(name => cp(path.join(source, name), path.join(output, name))));
+  await Promise.all(['styles.css', 'site.js'].map(name => cp(path.join(source, name), path.join(output, name))));
+  await writeFile(path.join(output, 'index.html'), (await readFile(path.join(source, 'index.html'), 'utf8')).replace('{{TEASER_FAVICONS}}', teaserFaviconLinks('./assets/')), 'utf8');
+  await buildTeaserFavicons('anime-cute', path.join(output, 'assets'));
   for (const [input, name, height] of files) {
     await sharp(input).resize({ height, withoutEnlargement: true }).webp({ quality: 95, alphaQuality: 100 }).toFile(path.join(output, 'assets', name));
   }

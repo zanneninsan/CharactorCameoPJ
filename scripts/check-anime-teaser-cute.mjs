@@ -15,7 +15,7 @@ for (const [, target] of html.matchAll(/aria-(?:controls|labelledby)="([^"]+)"/g
   for (const id of target.split(' ')) assert(ids.includes(id), `Missing accessible target: ${id}`);
 }
 for (const [, target] of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) {
-  assert((await stat(path.join(output, target))).isFile(), `Missing asset: ${target}`);
+  assert((await stat(path.join(output, decodeURIComponent(target.split(/[?#]/)[0])))).isFile(), `Missing asset: ${target}`);
 }
 for (const name of ['zannenin.webp', 'believer-f.webp', 'believer-b.webp', 'title-logo.png', 'emblem.png']) {
   const metadata = await sharp(path.join(output, 'assets', name)).metadata();

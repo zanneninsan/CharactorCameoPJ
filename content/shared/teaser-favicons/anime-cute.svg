@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>アニメティザー・にっこりした残念院さん</title>
+  <rect x="1" y="1" width="62" height="62" rx="18" fill="#f3a9b9"/>
+  <circle cx="32" cy="30" r="25" fill="#fff3cb"/>
+  <g stroke="#626676" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M17 20C5 13 5 36 5 51Q11 55 16 48L20 26M47 20C59 13 59 36 59 51Q53 55 48 48L44 26" fill="#edf0fa"/>
+    <path d="M10 26L9 47M54 26L55 47" fill="none" stroke="#b8bfd5"/>
+    <path d="M16 29C11 9 26 6 32 10C40 5 55 13 48 30" fill="#fffdf7"/>
+    <path d="M17 29C14 24 12 29 15 35L18 37M47 29C50 24 52 29 49 35L46 37" fill="#f9cec5"/>
+    <path d="M16 26C20 26 22 16 28 15L32 17L36 15C42 16 44 26 48 26L46 39Q44 47 32 51Q20 47 18 39Z" fill="#fff0df"/>
+    <path d="M17 25Q24 22 28 15M47 25Q40 22 36 15M32 10L32 13" fill="none" stroke="#b8bfd5"/>
+    <path d="M21 29Q24 27 27 29M37 29Q40 27 43 29" fill="none"/>
+    <path d="M20 33Q24 31 28 33M36 33Q40 31 44 33" fill="none" stroke-width="2.3"/>
+    <g fill="#77718c" stroke="none"><ellipse cx="24" cy="35" rx="2.8" ry="3.8"/><ellipse cx="40" cy="35" rx="2.8" ry="3.8"/></g>
+    <g fill="white" stroke="none"><circle cx="25" cy="33.5" r="1"/><circle cx="41" cy="33.5" r="1"/></g>
+    <path d="M28 41H36Q35 47 32 47Q29 47 28 41Z" fill="#b96476" stroke-width="1.2"/>
+    <path d="M29 41H32L30.5 43.5Z" fill="white" stroke="none"/>
+    <path d="M24 49L32 52L40 49L46 60H18Z" fill="#202a30" stroke="#e7b958"/>
+  </g>
+  <g fill="#eea2a5"><ellipse cx="20.5" cy="39" rx="3.5" ry="1.7"/><ellipse cx="43.5" cy="39" rx="3.5" ry="1.7"/></g>
+  <path d="M32 51L36 55L32 59L28 55Z" fill="#e7b958"/>
+  <path d="M52 9C48 4 44 10 48 13L52 17L56 13C60 10 56 4 52 9Z" fill="#df638b" stroke="#fff3cb" stroke-width="1.4"/>
+</svg>
