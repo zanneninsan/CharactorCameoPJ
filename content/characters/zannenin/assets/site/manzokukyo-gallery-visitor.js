@@ -63,7 +63,7 @@ export function advanceVisitor(state, seconds, viewer, random = Math.random) {
 }
 
 export async function loadGalleryVisitor(T, { scene, url, Loader, kind = 'darenin' }) {
-  const GLTFLoader = Loader || (await import(new URL('../../manzokukyo-preview/vendor/GLTFLoader.js', import.meta.url))).GLTFLoader;
+  const GLTFLoader = Loader || (await import(new URL('../../manzokukyo/vendor/GLTFLoader.js', import.meta.url))).GLTFLoader;
   const gltf = await new GLTFLoader().loadAsync(url.href);
   return createGalleryVisitor(T, { scene, figure: gltf.scene, kind });
 }
@@ -332,7 +332,7 @@ export function createGiantBustGeometry(T, figure) {
 // the three extra actors stay hidden outside the running-row anomaly.
 export async function loadGalleryVisitors(T, { scene, urls, Loader, cloneSkeleton, onStep = () => {}, frames = [] }) {
   if (!Loader || !cloneSkeleton) {
-    const url = new URL('../../manzokukyo-preview/vendor/GLTFLoader.js', import.meta.url);
+    const url = new URL('../../manzokukyo/vendor/GLTFLoader.js', import.meta.url);
     url.search = new URL(import.meta.url).search;
     const module = await import(url);
     Loader ||= module.GLTFLoader; cloneSkeleton ||= module.cloneSkeleton;

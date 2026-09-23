@@ -74,7 +74,7 @@ new MutationObserver(() => { original.href = largeImage.src; }).observe(largeIma
 updateSelection(0);
 
 try {
-  const THREE = await import(new URL('../../manzokukyo-preview/vendor/three.module.js', import.meta.url));
+  const THREE = await import(new URL('../../manzokukyo/vendor/three.module.js', import.meta.url));
   exhibition = createExhibition(THREE);
   document.body.classList.add('has-gallery-3d'); setCatalog(false);
   loading.textContent = '絵を掛けています。';

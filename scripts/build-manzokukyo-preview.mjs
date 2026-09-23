@@ -8,15 +8,26 @@ import { buildTeaserFavicons, teaserFaviconLinks } from './build-teaser-favicons
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const relativeUrl = (from, to) => path.relative(from, to).split(path.sep).join('/') || '.';
+const siteRoot = new URL((process.env.SITE_URL || process.env.GITHUB_PAGES_URL || 'https://zanneninsan.github.io/CharactorCameoPJ/').replace(/\/?$/, '/'));
 
-function renderRoomShell({ title, assets, fallback, version, description, socialMetadata = '' }) {
+function renderPreviewRedirect(destination, canonical) {
+  return `<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow">
+<link rel="canonical" href="${escapeHtml(canonical)}"><title>満足教へ移動</title>
+<script>location.replace(${JSON.stringify(destination)} + location.search + location.hash);</script>
+<noscript><meta http-equiv="refresh" content="0;url=${escapeHtml(destination)}"></noscript>
+</head><body><a href="${escapeHtml(destination)}">満足教へ</a></body></html>`;
+}
+
+function renderRoomShell({ title, assets, fallback, version, description, canonical, robots, socialMetadata = '' }) {
   return `<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121922">
-  <meta name="robots" content="noindex, nofollow">
+  <meta name="robots" content="${robots}">
+  <link rel="canonical" href="${escapeHtml(canonical)}">
   ${description || ''}
   ${socialMetadata}
   <title>${escapeHtml(title)}</title>
@@ -41,6 +52,7 @@ function renderRoomShell({ title, assets, fallback, version, description, social
 }
 
 function renderRoomView(html, { base, legacy = false, novelScript, version }) {
+  html = html.replace(/<base\b[^>]*>/gi, '');
   if (!/<head\b[^>]*>/i.test(html) || !/<body\b[^>]*>/i.test(html)) throw Error('Room view must be a complete HTML document');
   // Resolve the bridge against views/ before the original page's base takes effect.
   let view = html.replace(/<head\b[^>]*>/i, match => `${match}\n  <script src="../room-bridge.js?v=${version}"></script>\n  <base href="${escapeHtml(base)}">\n  <meta name="robots" content="noindex, nofollow">`);
@@ -60,7 +72,9 @@ function renderRoomView(html, { base, legacy = false, novelScript, version }) {
 
 export async function buildManzokukyoPreview() {
   const source = path.join(root, 'content/static-sites/zannenin/manzokukyo-preview');
-  const output = path.join(root, 'dist/zannenin/manzokukyo-preview');
+  const output = path.join(root, 'dist/zannenin/manzokukyo');
+  const preview = path.join(root, 'dist/zannenin/manzokukyo-preview');
+  const archive = path.join(output, 'old');
   const artwork = path.join(root, 'content/characters/zannenin/assets/manzokukyo');
   const characterRoot = path.join(root, 'content/characters/zannenin');
   const character = JSON.parse(await readFile(path.join(characterRoot, 'character.json'), 'utf8'));
@@ -90,8 +104,8 @@ export async function buildManzokukyoPreview() {
   const views = path.join(output, 'views');
   await mkdir(views, { recursive: true });
   const rooms = [
-    { id: 'corridor', route: '', title: '満足教｜回廊', html, original: output, fallback: canonical },
-    { id: 'truth', route: 'truth', title: '真理の扉｜満足教', html: await readFile(path.join(source, 'truth/index.html'), 'utf8'), original: path.join(output, 'truth'), fallback: path.join(canonical, 'truth') },
+    { id: 'corridor', route: '', title: '満足教｜回廊', html, original: output },
+    { id: 'truth', route: 'truth', title: '真理の扉｜満足教', html: await readFile(path.join(source, 'truth/index.html'), 'utf8'), original: path.join(output, 'truth') },
     { id: 'gallery', route: 'truth/gallery', title: '記憶の画廊｜満足教', legacy: true },
     { id: 'gallery-3d', route: 'truth/gallery-3d', title: '記憶の画廊｜満足教', legacy: true },
     { id: 'red-house', route: 'truth/red-house', title: '赤い懺悔室｜満足教', legacy: true },
@@ -103,8 +117,8 @@ export async function buildManzokukyoPreview() {
     const shellDirectory = path.join(output, room.route);
     let roomHtml = room.html;
     if (roomHtml === undefined) {
-      try { roomHtml = await readFile(path.join(original, 'index.html'), 'utf8'); }
-      catch (error) { throw Error(`Build the canonical Manzokukyo pages before preview room ${room.id}`, { cause: error }); }
+      try { roomHtml = await readFile(path.join(archive, room.route, 'index.html'), 'utf8'); }
+      catch (error) { throw Error(`Build the standalone Manzokukyo pages before room ${room.id}`, { cause: error }); }
     }
     const view = renderRoomView(roomHtml, {
       base: `${relativeUrl(views, original)}/`,
@@ -114,18 +128,25 @@ export async function buildManzokukyoPreview() {
     });
     await writeFile(path.join(views, `${room.id}.html`), view, 'utf8');
     await mkdir(shellDirectory, { recursive: true });
+    const canonicalRoute = room.id === 'gallery-3d' ? 'truth/gallery' : room.route;
+    const canonicalUrl = new URL(`zannenin/manzokukyo/${canonicalRoute ? canonicalRoute + '/' : ''}`, siteRoot).href;
+    const description = roomHtml.match(/<meta\b(?=[^>]*\bname=["']description["'])[^>]*>/i)?.[0];
+    const descriptionText = description?.match(/content="([^"]*)"/)?.[1] || '';
+    const socialMetadata = (roomHtml.match(/<meta\b(?=[^>]*\b(?:property|name)=["'](?:og:|twitter:))[^>]*>/gi) || []).join('\n  ')
+      || `<meta property="og:type" content="website"><meta property="og:title" content="${escapeHtml(room.title)}"><meta property="og:description" content="${descriptionText}"><meta property="og:url" content="${escapeHtml(canonicalUrl)}"><meta property="og:image" content="${new URL('zannenin/assets/generated/ogp.png', siteRoot).href}"><meta name="twitter:card" content="summary_large_image">`;
     await writeFile(path.join(shellDirectory, 'index.html'), renderRoomShell({
       title: room.title,
       version,
-      description: roomHtml.match(/<meta\b(?=[^>]*\bname=["']description["'])[^>]*>/i)?.[0],
-      socialMetadata: ['gallery', 'gallery-3d'].includes(room.id)
-        ? (roomHtml.match(/<meta\b(?=[^>]*\b(?:property|name)=["'](?:og:|twitter:))[^>]*>/gi) || []).map(tag =>
-          /\bproperty=["']og:url["']/i.test(tag) ? tag.replace('/manzokukyo/', '/manzokukyo-preview/') : tag
-        ).join('\n  ')
-        : '',
+      description,
+      canonical: canonicalUrl,
+      robots: room.id === 'gallery-3d' ? 'noindex,follow' : 'index,follow,max-image-preview:large',
+      socialMetadata,
       assets: `${relativeUrl(shellDirectory, output)}/`,
-      fallback: `${relativeUrl(shellDirectory, room.fallback || original)}/`
+      fallback: `${relativeUrl(shellDirectory, path.join(archive, room.route))}/`
     }), 'utf8');
+    const previewDirectory = path.join(preview, room.route);
+    await mkdir(previewDirectory, { recursive: true });
+    await writeFile(path.join(previewDirectory, 'index.html'), renderPreviewRedirect(`${relativeUrl(previewDirectory, shellDirectory)}/`, canonicalUrl), 'utf8');
   }
   await mkdir(path.join(output, 'music'), { recursive: true });
   for (const name of ['truth-chamber-bgm.flac', 'truth-chamber-bgm.mp3']) await cp(path.join(source, 'music', name), path.join(output, 'music', name));
@@ -149,6 +170,6 @@ export async function buildManzokukyoPreview() {
     await sharp(input).resize(size).flatten({ background: '#15191e' }).webp({ quality: 88 }).toFile(path.join(output, 'assets', outputName));
   }
   await cp(path.join(artwork, 'satisfaction-bgm.m4a'), path.join(output, 'assets/satisfaction-bgm.m4a'));
-  console.log('Manzokukyo preview: /zannenin/manzokukyo-preview/');
+  console.log('Manzokukyo: /zannenin/manzokukyo/ (archive: old/, preview URLs redirect)');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await buildManzokukyoPreview();

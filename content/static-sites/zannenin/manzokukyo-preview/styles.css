@@ -165,3 +165,7 @@ h1 { font-weight: 400; font-size: clamp(82px, 9vw, 138px); letter-spacing: .15em
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+.site-footer { position: relative; z-index: 2; padding: 12px 24px 200px; text-align: right; }
+.site-footer a { color: var(--muted, #a9a397); font-size: 11px; text-decoration: none; }
+.site-footer a:hover, .site-footer a:focus-visible { text-decoration: underline; }

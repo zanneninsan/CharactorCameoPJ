@@ -2,7 +2,7 @@ import { loadGalleryImage, cancelGalleryImage } from './manzokukyo-gallery-image
 const page = document.querySelector('[data-gallery-experience]');
 const { records, assetVersionQuery } = JSON.parse(document.querySelector('[data-gallery-records]').textContent);
 const room = window.ManzokukyoRoom;
-const previewRoot = new URL('../../manzokukyo-preview/', import.meta.url);
+const previewRoot = new URL('../../manzokukyo/', import.meta.url);
 const { createSound } = await import(new URL(`audio.js?${assetVersionQuery}`, previewRoot).href);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const seals = records.filter(record => record.seal).sort((a, b) => a.seal.order - b.seal.order);

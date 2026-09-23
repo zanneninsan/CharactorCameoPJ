@@ -21,7 +21,7 @@ for (const image of galleryMemeImages) {
 }
 const source = path.join(root, 'content/characters/zannenin/assets/site');
 const target = path.join(root, 'dist/zannenin/assets/site');
-const filename = path.join(root, 'dist/zannenin/manzokukyo/truth/gallery/index.html');
+const filename = path.join(root, 'dist/zannenin/manzokukyo/old/truth/gallery/index.html');
 const previous = await readFile(filename, 'utf8');
 const character = JSON.parse(await readFile(path.join(root, 'content/characters/zannenin/character.json'), 'utf8'));
 const files = ['manzokukyo-gallery-opening.js', 'manzokukyo-gallery-opening.css', 'manzokukyo-gallery-sand.js', 'manzokukyo-gallery-world.js', 'manzokukyo-gallery-decor.js', 'manzokukyo-gallery-uncanny.js', 'manzokukyo-gallery-artworks.js', 'manzokukyo-gallery-image.js', 'manzokukyo-gallery.css', 'manzokukyo-gallery.js', 'manzokukyo-gallery-3d.css', 'manzokukyo-gallery-3d.js', 'manzokukyo-gallery-walk.js', 'manzokukyo-gallery-loop.js', 'manzokukyo-gallery-feedback.js', 'manzokukyo-gallery-hand.js', 'manzokukyo-gallery-visitor.js', 'manzokukyo-gallery-spatial.js', 'manzokukyo-gallery-achievements.js'];
@@ -47,7 +47,7 @@ for (const route of ['gallery', 'gallery-3d']) {
   const canonical = new URL(options.urlPath, deploymentRoot).href;
   let head = originalHead.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(options.title)} | Character Canon</title>`);
   head = head.replace(/<link\b(?=[^>]*\brel="canonical")[^>]*>/i, `<link rel="canonical" href="${escapeHtml(canonical)}">`);
-  head = setMeta(head, 'name', 'robots', options.robots || 'index,follow,max-image-preview:large');
+  head = setMeta(head, 'name', 'robots', 'noindex,follow');
   head = setMeta(head, 'name', 'description', options.description);
   head = setMeta(head, 'property', 'og:title', options.title);
   head = setMeta(head, 'property', 'og:description', options.description);
@@ -63,7 +63,7 @@ for (const route of ['gallery', 'gallery-3d']) {
   head = setMeta(head, 'name', 'twitter:image', imageUrl);
   head = setMeta(head, 'name', 'twitter:title', options.title);
   head = setMeta(head, 'name', 'twitter:description', options.description);
-  const output = path.join(root, 'dist/zannenin/manzokukyo/truth', route, 'index.html');
+  const output = path.join(root, 'dist/zannenin/manzokukyo/old/truth', route, 'index.html');
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, head + '\n' + options.body + '\n' + previous.slice(footer), 'utf8');
 }
