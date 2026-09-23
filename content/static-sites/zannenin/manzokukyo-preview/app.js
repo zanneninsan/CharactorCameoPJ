@@ -53,7 +53,7 @@ function navigate(href, { historyMode = 'push', reload = false } = {}) {
     if (current !== record || record.ready) return;
     clearTimeout(record.timeout); loading.hidden = true; error.hidden = false;
     host.setAttribute('aria-busy', 'false');
-    error.querySelector('[data-fallback]').href = new URL(`../manzokukyo/${room.old}`, appRoot).href;
+    error.querySelector('[data-fallback]').href = new URL(`old/${room.old}`, appRoot).href;
   }
   frame.addEventListener('error', fail);
   frame.addEventListener('load', () => {

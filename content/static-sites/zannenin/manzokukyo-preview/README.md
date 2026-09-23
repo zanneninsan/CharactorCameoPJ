@@ -1,14 +1,14 @@
-# 満足教ティザー・回廊と真理の扉の仮案
+# 満足教・回廊と真理の扉
 
-- 確認URL: `/zannenin/manzokukyo-preview/`
-- 既存入口: `/zannenin/manzokukyo/`
-- 扉の移動先: `/zannenin/manzokukyo-preview/truth/`（3D版の真理の扉）
+- 正式URL: `/zannenin/manzokukyo/`
+- 旧ティザー: `/zannenin/manzokukyo/old/`（フッターの `old` から移動）
+- 扉の移動先: `/zannenin/manzokukyo/truth/`（3D版の真理の扉）
 - 合言葉の正解後: `/zannenin/manzokukyo/truth/gallery/`（既存の記憶の画廊）
 
-回廊と、その先にある真理の扉の比較用ページ。室内・オブジェ・扉はThree.jsで描画する。
+満足教の正式サイト。回廊と、その先にある真理の扉を備える。室内・オブジェ・扉はThree.jsで描画する。
 一枚絵の回廊は使用しない。回廊の既存BGMと、額の中の紹介画像・アニメ画像を再利用する。
 文章・オブジェは試作で、公式設定の追加ではない。
-検索結果には載せない設定とし、サイトマップには追加していない。旧ティザーの右上に「新ティザーを試す（仮）」のリンクを設置している。
+正式URLを検索・共有用URLとし、従来のサイトマップURLを引き継ぐ。旧プレビューの各部屋はクエリとハッシュを保持して正式URLへ転送する。旧ティザーと各部屋の単独表示は `old/` 配下に保存し、検索対象から外す。読み込み失敗時・JavaScript無効時も単独表示へ移動できる。
 
 対象ページのみ生成:
 
@@ -16,7 +16,7 @@
 node scripts/build-manzokukyo-preview.mjs
 ```
 
-通常のサイトビルドにも組み込み済み。出力先は `dist/zannenin/manzokukyo-preview/`。
+通常のサイトビルドにも組み込み済み。出力先は `dist/zannenin/manzokukyo/`。ソースフォルダとビルドスクリプトの既存名は継続する。対象ページだけの再生成は、通常ビルドで `old/` の単独ページを生成してから実行する。
 生成物は直接編集しない。
 
 - 最初に音あり／音なしを選ぶ。音ありの場合だけBGM・効果音を有効化する。

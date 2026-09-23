@@ -1,3 +1,4 @@
+import { archiveManzokukyoPage } from "./manzokukyo-archive.mjs";
 import { renderGallery3DExperience } from "./render-manzokukyo-gallery-3d.mjs";
 import { buildGalleryRoomImages } from "./build-manzokukyo-gallery-images.mjs";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
@@ -98,7 +99,7 @@ async function build() {
           await writeFile(path.join(characterDir, "fanworks.html"), renderFanworkGuidelines(character), "utf8");
         }
         if (character.id === "zannenin") {
-          const manzokukyoDir = path.join(characterDir, "manzokukyo");
+          const manzokukyoDir = path.join(characterDir, "manzokukyo", "old");
           const manzokukyoNovelDir = path.join(manzokukyoDir, "novel");
           const manzokukyoTruthDir = path.join(manzokukyoDir, "truth");
           const manzokukyoGalleryDir = path.join(manzokukyoTruthDir, "gallery");
@@ -112,13 +113,13 @@ async function build() {
           await mkdir(manzokukyoGallery3DDir, { recursive: true });
           await mkdir(manzokukyoRedHouseDir, { recursive: true });
           await mkdir(manzokukyoArchiveDir, { recursive: true });
-          await writeFile(path.join(manzokukyoDir, "index.html"), renderManzokukyoTeaser(character), "utf8");
-          await writeFile(path.join(manzokukyoNovelDir, "index.html"), renderManzokukyoNovel(character), "utf8");
-          await writeFile(path.join(manzokukyoTruthDir, "index.html"), renderManzokukyoTruth(character), "utf8");
-          await writeFile(path.join(manzokukyoGalleryDir, "index.html"), renderManzokukyoGallery(character), "utf8");
-          await writeFile(path.join(manzokukyoGallery3DDir, "index.html"), renderGallery3DExperience(character, { htmlPage, escapeHtml, alias: true, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` }), "utf8");
-          await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), renderManzokukyoRedHouse(character), "utf8");
-          await writeFile(path.join(manzokukyoArchiveDir, "index.html"), renderManzokukyoArchiveNovel(character), "utf8");
+          await writeFile(path.join(manzokukyoDir, "index.html"), archiveManzokukyoPage(renderManzokukyoTeaser(character), ""), "utf8");
+          await writeFile(path.join(manzokukyoNovelDir, "index.html"), archiveManzokukyoPage(renderManzokukyoNovel(character), "novel"), "utf8");
+          await writeFile(path.join(manzokukyoTruthDir, "index.html"), archiveManzokukyoPage(renderManzokukyoTruth(character), "truth"), "utf8");
+          await writeFile(path.join(manzokukyoGalleryDir, "index.html"), archiveManzokukyoPage(renderManzokukyoGallery(character), "truth/gallery"), "utf8");
+          await writeFile(path.join(manzokukyoGallery3DDir, "index.html"), archiveManzokukyoPage(renderGallery3DExperience(character, { htmlPage, escapeHtml, alias: true, assetVersionQuery: `${assetVersionQuery}&gallery=${encodeURIComponent(buildRevision)}` }), "truth/gallery-3d"), "utf8");
+          await writeFile(path.join(manzokukyoRedHouseDir, "index.html"), archiveManzokukyoPage(renderManzokukyoRedHouse(character), "truth/red-house"), "utf8");
+          await writeFile(path.join(manzokukyoArchiveDir, "index.html"), archiveManzokukyoPage(renderManzokukyoArchiveNovel(character), "truth/red-house/archive"), "utf8");
           await copyStaticSite(character, characterDir, "desktopchillko");
         }
         for (const page of hiddenPages(character)) {
@@ -7675,7 +7676,7 @@ function renderManzokukyoTeaser(character) {
         }
       </style>
       <main class="mk-page" data-ritual-state="running">
-        <a class="mk-preview-link" href="../manzokukyo-preview/">新ティザーを試す（仮） →</a>
+        <a class="mk-preview-link" href="../manzokukyo/">満足教へ →</a>
         <canvas class="mk-abyss-canvas" data-mk-abyss aria-hidden="true"></canvas>
         <section class="mk-hero">
           <div class="mk-banner" aria-hidden="true"></div>
@@ -10135,7 +10136,7 @@ function htmlPage({ title, body, theme, description, urlPath = "", imagePath, ty
     <meta name="build-version" content="${escapeHtml(buildVersionLabel)}">
     <meta name="format-detection" content="telephone=no">
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-    ${urlPath.startsWith('zannenin/manzokukyo/') ? teaserFaviconLinks(path.posix.relative(urlPath, 'zannenin/manzokukyo-preview/assets') + '/', siteVersion) : ''}
+    ${urlPath.startsWith('zannenin/manzokukyo/') ? teaserFaviconLinks(path.posix.relative(urlPath, 'zannenin/manzokukyo/assets') + '/', siteVersion) : ''}
     <meta property="og:site_name" content="Character Canon">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:type" content="${escapeHtml(type)}">

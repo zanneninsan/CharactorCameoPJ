@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process';
 // bridge that keeps audio alive; they neither rebuild pages nor decode media.
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
-const previewPath = 'zannenin/manzokukyo-preview/';
+const previewPath = 'zannenin/manzokukyo/';
+const oldPreviewPath = 'zannenin/manzokukyo-preview/';
 const canonicalPath = 'zannenin/manzokukyo/';
 const rooms = [
   { id: 'corridor', route: '', legacy: false },
@@ -89,6 +90,11 @@ async function checkAssetReferences(html, elements, documentUrl, deployment, con
 
 for (const room of rooms) {
   const shell = await readFile(path.join(dist, previewPath, room.route, 'index.html'), 'utf8');
+  const redirect = await readFile(path.join(dist, oldPreviewPath, room.route, 'index.html'), 'utf8');
+  const archived = await readFile(path.join(dist, canonicalPath, 'old', room.route, 'index.html'), 'utf8');
+  assert.match(redirect, /location\.search \+ location\.hash/);
+  assert.match(archived, /noindex,follow/);
+  assert.doesNotMatch(archived, /id="room-host"/);
   const view = await readFile(path.join(dist, previewPath, 'views', `${room.id}.html`), 'utf8');
   const shellTags = tags(shell);
   const viewTags = tags(view);
@@ -125,6 +131,12 @@ for (const room of rooms) {
       assert.equal(scriptUrls.filter(url => url.pathname === new URL('novel-view.js', previewUrl).pathname).length, 1, `${room.id}: shared-audio novel controller installed`);
       assert.ok(scriptUrls.every(url => !url.pathname.endsWith('/manzokukyo-novel.js')), `${room.id}: independent novel audio controller removed`);
     }
+    const archiveUrl = new URL(canonicalPath + 'old/' + room.route, deployment);
+    await checkAssetReferences(archived, tags(archived), archiveUrl, deployment, room.id + ' archive');
+    const redirectTarget = JSON.parse(redirect.match(/location\.replace\(("[^"]+")/)[1]);
+    assert.equal(new URL(redirectTarget, new URL(oldPreviewPath + room.route, deployment)).href, shellUrl.href);
+    const fallback = shellTags.find(element => element.attrs.has('data-fallback')).attrs.get('href');
+    assert.equal(new URL(fallback, shellUrl).href, archiveUrl.href, 'fallback does not loop to the shell');
     await checkAssetReferences(shell, shellTags, shellUrl, deployment, `${room.id} shell`);
     await checkAssetReferences(view, viewTags, viewUrl, deployment, `${room.id} view`);
   }
@@ -146,7 +158,7 @@ for (const room of rooms) {
 }
 
 const scripts = ['app.js', 'rooms.js', 'room-bridge.js', 'audio-session.js', 'audio.js', 'site.js', 'truth/site.js', 'novel-view.js'];
-for (const directory of [path.join(root, 'content/static-sites', previewPath), path.join(dist, previewPath)]) {
+for (const directory of [path.join(root, 'content/static-sites', oldPreviewPath), path.join(dist, previewPath)]) {
   for (const script of scripts) {
     const filename = path.join(directory, script);
     const result = spawnSync(process.execPath, ['--check', filename], { encoding: 'utf8', windowsHide: true });

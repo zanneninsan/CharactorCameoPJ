@@ -8,12 +8,12 @@ export const rooms = [
   { id: 'archive', path: 'truth/red-house/archive/', old: 'truth/red-house/archive/', title: '保管庫 — 満足教', music: 'corridor' },
   { id: 'novel', path: 'novel/', old: 'novel/', title: '満足教 — 物語', music: 'corridor' }
 ];
-const canonicalRoot = new URL('../manzokukyo/', appRoot);
+const previewRoot = new URL('../manzokukyo-preview/', appRoot);
 export function resolveRoom(href, base = appRoot) {
   const url = new URL(href, base);
   if (url.origin !== appRoot.origin) return null;
   const pathname = url.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/');
-  const room = rooms.find(item => [new URL(item.path, appRoot).pathname, new URL(item.old, canonicalRoot).pathname].includes(pathname));
+  const room = rooms.find(item => [new URL(item.path, appRoot).pathname, new URL(item.path, previewRoot).pathname].includes(pathname));
   return room ? { room, url: new URL(`${room.path}${url.search}${url.hash}`, appRoot) } : null;
 }
 export function roomTrack(room) {

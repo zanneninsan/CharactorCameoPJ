@@ -24,7 +24,7 @@ for (let n = 1; n <= 24; n++) {
   oldBytes += (await stat(path.join(generated, `${base}.webp`))).size;
   roomBytes += (await stat(path.join(generated, `${base}-room.webp`))).size;
 }
-for (const route of ['manzokukyo/truth/gallery/index.html', 'manzokukyo/truth/gallery-3d/index.html', 'manzokukyo-preview/views/gallery.html']) {
+for (const route of ['manzokukyo/old/truth/gallery/index.html', 'manzokukyo/old/truth/gallery-3d/index.html', 'manzokukyo/views/gallery.html', 'manzokukyo/views/gallery-3d.html']) {
   const html = await readFile(path.join(root, 'dist/zannenin', route), 'utf8');
   const images = [...html.matchAll(/<img\b[^>]*src="[^"]*gallery-(\d+)-room\.webp[^>]*>/g)];
   assert.equal(images.length, 24, `${route}: catalogue uses small images too`);
