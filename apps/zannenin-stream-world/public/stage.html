@@ -19,6 +19,8 @@
   </script>
 </head>
 <body>
+  <!-- 画面全体を覆う枠。1920x1080 の舞台がはみ出しても、スマホの画面幅が広がらないようにする -->
+  <div id="frame">
   <div id="stage" data-mode="confession" data-layout="full">
     <!-- ゲーム/スライド時の背景（ゲーム枠の内側は透過にできる） -->
     <div id="backdrop"><div id="hole"><canvas id="game"></canvas><div class="hole-label">ゲーム画面をここに重ねます（OBSでは ?obs=1 で透過）</div></div></div>
@@ -112,17 +114,20 @@
       </div>
     </div>
 
-    <!-- 視聴者用の音量（マウスを動かすと表示。?obs=1 では出さない） -->
-    <div id="volume" aria-label="音量">
-      <button id="vol-mute" type="button" aria-label="消音">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l6 6M22 9l-6 6"/></svg>
-      </button>
-      <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="1" aria-label="音量">
-    </div>
+  </div>
 
-    <div id="loading"><img src="assets/emblem.png" alt=""><div id="loading-text">懺悔室の扉をひらいています…</div><div class="bar"><i id="loading-bar"></i></div>
-      <div id="sound-gate" hidden><button class="enter">懺悔室へ入る</button><button class="silent">音なしで見る</button><p>BGM・効果音・声が流れます</p></div>
-    </div>
+  <!-- ここから下は舞台と一緒に縮めない（スマホでも読める・押せる大きさにする） -->
+  <!-- 視聴者用の音量（マウスを動かすと表示。?obs=1 では出さない） -->
+  <div id="volume" aria-label="音量">
+    <button id="vol-mute" type="button" aria-label="消音">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l6 6M22 9l-6 6"/></svg>
+    </button>
+    <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="1" aria-label="音量">
+  </div>
+
+  <div id="loading"><img src="assets/emblem.png" alt=""><div id="loading-text">懺悔室の扉をひらいています…</div><div class="bar"><i id="loading-bar"></i></div>
+    <div id="sound-gate" hidden><button class="enter">懺悔室へ入る</button><button class="silent">音なしで見る</button><p>BGM・効果音・声が流れます</p></div>
+  </div>
   </div>
 
   <script>
