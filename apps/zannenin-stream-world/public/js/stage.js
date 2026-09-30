@@ -21,11 +21,13 @@ if (params.has('clean')) stageEl.classList.add('clean');
 
 // ---------- 画面フィット ----------
 // 枠（#frame）の実寸で合わせる。innerWidth はスマホでは舞台のはみ出しで広がってしまうので使わない
+// 公開版では、更新の直後に「キャッシュに残った古いHTML＋新しいこのJS」の組み合わせになることがある。
+// 古いHTMLには枠がないので、枠がなくても起動できるようにしておく
 const frameEl = document.getElementById('frame');
 function fit() {
-  // 読み込み時にまだ大きさが決まっていない（非表示のタブ・OBSの非表示ソース等）ときはウィンドウの大きさで代用する
-  const w = frameEl.clientWidth || innerWidth;
-  const h = frameEl.clientHeight || innerHeight;
+  // 読み込み時にまだ大きさが決まっていない（非表示のタブ・OBSの非表示ソース等）ときや、枠がないときはウィンドウの大きさで代用する
+  const w = frameEl?.clientWidth || innerWidth;
+  const h = frameEl?.clientHeight || innerHeight;
   if (!w || !h) return;
   const s = Math.min(w / 1920, h / 1080);
   stageEl.style.transform = `translate(${(w - 1920 * s) / 2}px, ${(h - 1080 * s) / 2}px) scale(${s})`;
@@ -34,7 +36,7 @@ addEventListener('resize', fit);
 addEventListener('orientationchange', fit);
 visualViewport?.addEventListener('resize', fit);
 // 枠の大きさが後から決まったり変わったりしたら合わせ直す
-new ResizeObserver(fit).observe(frameEl);
+if (frameEl) new ResizeObserver(fit).observe(frameEl);
 fit();
 
 const overlay = new Overlay(stageEl);
