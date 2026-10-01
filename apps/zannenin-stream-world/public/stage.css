@@ -18,7 +18,9 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-body.obs, body.obs #stage { background: transparent; }
+/* 画面全体を覆う枠。舞台（1920x1080）がはみ出しても、スマホの表示幅が広がらないように固定して切り取る */
+#frame { position: fixed; inset: 0; overflow: hidden; background: #000; font-family: var(--sans); color: var(--pale); }
+body.obs, body.obs #frame, body.obs #stage { background: transparent; }
 
 #stage {
   position: absolute;
@@ -436,19 +438,20 @@ body.obs #hole canvas, body.obs #hole .hole-label { display: none; }
 
 /* ---------- 読み込み ---------- */
 #loading { position: absolute; inset: 0; z-index: 30; display: grid; place-content: center; justify-items: center; gap: 22px; background: var(--ink); transition: opacity 800ms; }
-#loading img { width: 160px; animation: glow 2s ease-in-out infinite; }
+#loading { padding: 0 16px; text-align: center; }
+#loading img { width: min(160px, 32vw); animation: glow 2s ease-in-out infinite; }
 @keyframes glow { 50% { filter: drop-shadow(0 0 22px rgba(243,210,122,.7)); } }
-#loading-text { font: 700 24px var(--serif); color: var(--gold-hi); letter-spacing: .15em; white-space: pre-line; }
-#loading .bar { width: 420px; height: 6px; border-radius: 3px; background: rgba(212,167,44,.2); overflow: hidden; }
+#loading-text { font: 700 clamp(16px, 4.5vw, 24px) var(--serif); color: var(--gold-hi); letter-spacing: .15em; white-space: pre-line; }
+#loading .bar { width: min(420px, 80vw); height: 6px; border-radius: 3px; background: rgba(212,167,44,.2); overflow: hidden; }
 #loading .bar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width 200ms; }
 #loading.done { opacity: 0; pointer-events: none; }
 #sound-gate { display: grid; justify-items: center; gap: 12px; margin-top: 10px; }
 #sound-gate[hidden] { display: none; }
-#sound-gate .enter { padding: 14px 44px; border-radius: 30px; border: 2px solid var(--gold-hi); background: linear-gradient(180deg, var(--crimson-hi), var(--crimson)); color: var(--pale); font: 800 28px var(--serif); letter-spacing: .2em; cursor: pointer; box-shadow: 0 0 30px rgba(243,210,122,.3); }
+#sound-gate .enter { padding: 14px clamp(28px, 8vw, 44px); border-radius: 30px; border: 2px solid var(--gold-hi); background: linear-gradient(180deg, var(--crimson-hi), var(--crimson)); color: var(--pale); font: 800 clamp(20px, 6vw, 28px) var(--serif); letter-spacing: .2em; cursor: pointer; box-shadow: 0 0 30px rgba(243,210,122,.3); }
 #sound-gate .enter:hover { box-shadow: 0 0 40px rgba(243,210,122,.55); }
 #sound-gate .silent { background: none; border: 0; color: rgba(255,243,196,.6); font: 700 18px var(--sans); text-decoration: underline; cursor: pointer; }
 #sound-gate p { margin: 0; color: rgba(255,243,196,.5); font: 500 16px var(--sans); }
-#loading.error #loading-text { color: #ff8a8a; font-family: var(--sans); font-size: 20px; max-width: 900px; text-align: center; line-height: 1.6; }
+#loading.error #loading-text { color: #ff8a8a; font-family: var(--sans); font-size: clamp(14px, 4vw, 20px); max-width: min(900px, 92vw); text-align: center; line-height: 1.6; }
 
 /* 配信UIを隠してワールドだけ映す（?clean=1） */
 #stage.clean #brand, #stage.clean #chips, #stage.clean #program, #stage.clean #ticker,
@@ -470,4 +473,5 @@ body.obs #volume { display: none; }
 #vol-mute .cross { display: none; }
 #volume.muted #vol-mute .wave { display: none; }
 #volume.muted #vol-mute .cross { display: inline; }
-#vol-slider { width: 220px; accent-color: var(--gold); height: 24px; cursor: pointer; }
+#vol-slider { width: min(220px, 50vw); accent-color: var(--gold); height: 24px; cursor: pointer; }
+@media (max-width: 480px) { #volume { left: 12px; bottom: 12px; } }
