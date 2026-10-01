@@ -24,7 +24,8 @@ const sharedContentDir = path.join(rootDir, "content", "shared");
 const staticSitesDir = path.join(rootDir, "content", "static-sites");
 const distDir = path.join(rootDir, "dist");
 const buildLockDir = path.join(rootDir, ".build-lock");
-const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? "https://zanneninsan.github.io/CharactorCameoPJ/");
+const defaultSiteUrl = "https://zanneninsan.github.io/CharactorCameoPJ/";
+const siteUrl = normalizeSiteUrl(process.env.SITE_URL ?? process.env.GITHUB_PAGES_URL ?? defaultSiteUrl);
 const sourceRepoUrl = normalizeRepoUrl(process.env.SOURCE_REPO_URL ?? "https://github.com/zanneninsan/CharactorCameoPJ");
 const sitemapLastmod = process.env.SITEMAP_LASTMOD ?? new Date().toISOString().slice(0, 10);
 const guestbookApiUrl = "https://script.google.com/macros/s/AKfycbwzBF_HTRBnv4JgcGitGN9zU9ZjfvmmtKr_nJ2RNwuwemWKeexbJiEZQ2DvQVwFc-hP/exec";
@@ -351,7 +352,20 @@ async function copyScripture() {
   } catch {
     return;
   }
-  await cp(sourceDir, path.join(distDir, "scripture"), { recursive: true });
+  const outDir = path.join(distDir, "scripture");
+  await cp(sourceDir, outDir, { recursive: true });
+  // HTMLの canonical・OGP・Twitter Card は、既定の公開URLで書いてある。
+  // SITE_URL / GITHUB_PAGES_URL で公開先を変えたときは、その <link> と <meta> のURLだけを公開先に合わせる。
+  if (siteUrl === defaultSiteUrl) return;
+  const publicUrl = escapeHtml(siteUrl);
+  const entries = await readdir(outDir, { recursive: true, withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".html")) continue;
+    const file = path.join(entry.parentPath ?? entry.path, entry.name);
+    const html = await readFile(file, "utf8");
+    const rewritten = html.replace(/<(?:link|meta)\b[^>]*>/g, (tag) => tag.split(defaultSiteUrl).join(publicUrl));
+    if (rewritten !== html) await writeFile(file, rewritten, "utf8");
+  }
 }
 
 async function copyPublishedDocs() {
