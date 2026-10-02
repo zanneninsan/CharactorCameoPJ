@@ -228,6 +228,28 @@ export function createCorridor(canvas, { onFrame, onUnavailable }) {
   for (const x of [-.8, .8]) box(portrait, [.09, 2.15, .13], [x, 2.27, .025], brass);
   for (const y of [1.23, 3.31]) box(portrait, [1.69, .09, .13], [0, y, .025], brass);
 
+  // A bound volume on a lectern opens the scripture's root page.
+  const scripture = station('scripture');
+  box(scripture, [.16, .56, .18], [0, 1.48, -.12], brass);
+  const book = new THREE.Group(); book.position.set(0, 2.1, .08); book.rotation.x = -.28; scripture.add(book);
+  box(book, [1.3, .1, .58], [0, -.8, -.04], brass);
+  box(book, [1.12, 1.48, .2], [0, 0, 0], ivory);
+  for (const z of [-.14, .14]) box(book, [1.2, 1.58, .065], [0, 0, z], blackMetal);
+  box(book, [.1, 1.58, .32], [-.57, 0, 0], blackMetal);
+  for (const y of [-.6, -.35, .35, .6]) box(book, [.13, .045, .34], [-.57, y, 0], brass);
+  for (const y of [-.65, .65]) box(book, [1.03, .018, .012], [.015, y, .18], brass);
+  const coverCanvas = document.createElement('canvas'); coverCanvas.width = 512; coverCanvas.height = 768;
+  const coverContext = coverCanvas.getContext('2d');
+  coverContext.fillStyle = '#151b21'; coverContext.fillRect(0, 0, 512, 768);
+  coverContext.strokeStyle = '#b99a60'; coverContext.lineWidth = 3; coverContext.strokeRect(30, 28, 452, 712);
+  coverContext.fillStyle = '#ead3a0'; coverContext.textAlign = 'center'; coverContext.textBaseline = 'middle';
+  coverContext.font = '96px "Yu Mincho", "Noto Serif JP", serif';
+  [...'満足聖典'].forEach((letter, index) => coverContext.fillText(letter, 256, 205 + index * 120));
+  const coverTexture = new THREE.CanvasTexture(coverCanvas); coverTexture.colorSpace = THREE.SRGBColorSpace;
+  const coverMaterial = new THREE.MeshBasicMaterial({ map: coverTexture }); materials.push(coverMaterial);
+  const cover = new THREE.Mesh(new THREE.PlaneGeometry(.96, 1.24), coverMaterial);
+  cover.position.set(.02, 0, .18); book.add(cover);
+
   // A small slotted box sits opposite the portrait, outside the numbered route stops.
   const offering = new THREE.Group(); offering.position.set(2.1, 0, -57); scene.add(offering);
   objects.offering = { group: offering, position: new THREE.Vector3(2.1, 1, -57), labelHeight: 1, meshes: [] };
