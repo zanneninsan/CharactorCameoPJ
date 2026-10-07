@@ -1870,7 +1870,7 @@ body.zannenin-home {
   .zn-hero-character {
     position: absolute;
     top: 78px;
-    right: -90px;
+    right: 0;
     bottom: auto;
     z-index: 0;
     display: block;
