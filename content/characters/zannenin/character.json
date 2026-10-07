@@ -331,8 +331,9 @@
     {
     "label": "基本三面図",
     "path": "assets/character-sheet-classic.png",
+    "showOriginal": true,
     "type": "outfit",
-    "description": "残念院さんの旧基本ビジュアル資料。正面、背面、顔アップ、側面の各ビュー。現行の顔・瞳色・通常教祖服は最優先のoutfit-reference.pngとprofileを優先する。"
+    "description": "残念院さんの基本ビジュアル資料。正面、背面、顔アップ、側面の各ビュー。現行の顔・瞳色・通常教祖服は最優先のoutfit-reference.pngとprofileを優先する。"
   },
   {
     "label": "通常教祖服・衣装設定画（最優先）",
