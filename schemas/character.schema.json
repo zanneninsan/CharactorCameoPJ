@@ -205,6 +205,7 @@
         "properties": {
           "label": { "type": "string" },
           "path": { "type": "string" },
+          "showOriginal": { "type": "boolean", "description": "Show a direct link to the unchanged PNG reference at path." },
           "type": { "type": "string" },
           "description": { "type": "string" }
         }

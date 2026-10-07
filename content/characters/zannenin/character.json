@@ -146,6 +146,7 @@
       "label": "満足教",
       "url": "./manzokukyo/",
       "canonicalUrl": "zannenin/manzokukyo/",
+      "icon": "assets/links/manzokukyo-icon.webp",
       "type": "teaser",
       "displayUrl": "満足教",
       "description": "カルトでダークな満足教サイト"
@@ -172,6 +173,7 @@
       "label": "アニメティザー",
       "url": "../anime/manzokukyo-zannenin-cute/",
       "canonicalUrl": "anime/manzokukyo-zannenin-cute/",
+      "icon": "assets/links/anime-teaser-icon.webp",
       "type": "teaser",
       "displayUrl": "満足教の残念院さん"
     }
@@ -331,8 +333,9 @@
     {
     "label": "基本三面図",
     "path": "assets/character-sheet-classic.png",
+    "showOriginal": true,
     "type": "outfit",
-    "description": "残念院さんの旧基本ビジュアル資料。正面、背面、顔アップ、側面の各ビュー。現行の顔・瞳色・通常教祖服は最優先のoutfit-reference.pngとprofileを優先する。"
+    "description": "残念院さんの基本ビジュアル資料。正面、背面、顔アップ、側面の各ビュー。現行の顔・瞳色・通常教祖服は最優先のoutfit-reference.pngとprofileを優先する。"
   },
   {
     "label": "通常教祖服・衣装設定画（最優先）",

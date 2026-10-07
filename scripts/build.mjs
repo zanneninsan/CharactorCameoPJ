@@ -9672,6 +9672,7 @@ function renderVisualReferenceCard(item, { hidden = false } = {}) {
       <figcaption>
         <strong>${escapeHtml(item.label)}</strong>
         ${item.description ? `<span>${escapeHtml(item.description)}</span>` : ""}
+        ${item.showOriginal ? `<a class="visual-original-link" href="./${escapeHtml(item.path)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.label)}のリファレンス原本を開く（PNG・無劣化、新しいタブ）">リファレンス原本を開く（PNG・無劣化）</a>` : ""}
       </figcaption>
     </figure>
   `;
@@ -11524,6 +11525,27 @@ h3 {
 
 .visual-card strong {
   color: var(--ink);
+}
+
+.visual-original-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 44px;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px solid currentColor;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.visual-original-link:hover,
+.visual-original-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .image-modal {
