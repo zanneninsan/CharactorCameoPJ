@@ -10455,11 +10455,11 @@ function renderClientScript() {
 
     const getLightboxItem = (link) => {
       const image = link.querySelector("img");
-      const caption = link.closest(".visual-card")?.querySelector("figcaption")?.innerText?.trim() ?? "";
+      const caption = link.closest(".visual-card")?.querySelector("figcaption");
       return {
         href: link.href,
         title: image?.alt || "Visual Reference",
-        caption
+        caption: caption?.cloneNode(true)
       };
     };
 
@@ -10467,7 +10467,7 @@ function renderClientScript() {
       currentImageIndex = (index + activeLightboxLinks.length) % activeLightboxLinks.length;
       const item = getLightboxItem(activeLightboxLinks[currentImageIndex]);
       modalTitle.textContent = item.title;
-      modalCaption.textContent = item.caption;
+      modalCaption.replaceChildren(...(item.caption?.childNodes ?? []));
       modalCount.textContent = (currentImageIndex + 1) + " / " + activeLightboxLinks.length;
       modalImage.src = item.href;
       modalImage.alt = item.title;
@@ -11567,8 +11567,7 @@ h3 {
 
 .image-modal-frame {
   display: grid;
-  max-height: 94vh;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
 }
 
 .image-modal-toolbar {
@@ -11683,11 +11682,17 @@ h3 {
 }
 
 .image-modal [data-modal-caption] {
+  display: grid;
+  gap: 4px;
   margin: 0;
   padding: 10px 14px 14px;
   color: rgba(255, 255, 255, 0.78);
   font-size: 0.9rem;
   line-height: 1.6;
+}
+
+.image-modal .visual-original-link {
+  color: #ffffff;
 }
 
 .guideline-layout {
@@ -13424,14 +13429,12 @@ body[data-design="modern"] .timeline li {
     max-width: calc(100vw - 16px);
     max-height: calc(100dvh - 16px);
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: auto;
   }
 
   .image-modal-frame {
     width: 100%;
     max-width: 100%;
-    max-height: calc(100dvh - 16px);
-    overflow: hidden;
   }
 
   .image-modal-toolbar {
