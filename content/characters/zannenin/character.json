@@ -146,6 +146,7 @@
       "label": "満足教",
       "url": "./manzokukyo/",
       "canonicalUrl": "zannenin/manzokukyo/",
+      "icon": "assets/links/manzokukyo-icon.webp",
       "type": "teaser",
       "displayUrl": "満足教",
       "description": "カルトでダークな満足教サイト"
@@ -172,6 +173,7 @@
       "label": "アニメティザー",
       "url": "../anime/manzokukyo-zannenin-cute/",
       "canonicalUrl": "anime/manzokukyo-zannenin-cute/",
+      "icon": "assets/links/anime-teaser-icon.webp",
       "type": "teaser",
       "displayUrl": "満足教の残念院さん"
     }
